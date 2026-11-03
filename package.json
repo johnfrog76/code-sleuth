@@ -17,7 +17,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node -e \"require('node:fs').chmodSync('dist/cli/main.js', 0o755)\"",
     "prepare": "npm run build",
     "pretest": "npm run build",
     "test": "vitest run",

@@ -13,6 +13,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Fixed
 
+- The build makes `dist/cli/main.js` executable itself, so `code-sleuth` runs after any rebuild, a re-clone under an old `npm link` among them, instead of answering "permission denied".
 - A clean `npm ci` no longer reports moderate vulnerabilities: the development tools' `minimatch` is overridden to 11.0.4, past the advisory. Nothing Code Sleuth runs used it.
 - `--toolkit` files in the repository's own ToolKit Space, the one whose address is its `origin`, rather than whichever Space is active. With no matching Space it falls back to the active one, and the footer says so.
 
