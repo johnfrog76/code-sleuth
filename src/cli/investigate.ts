@@ -116,7 +116,7 @@ export async function investigate(
 
   const examples = examplesLine(record);
   if (examples !== undefined) human(`${copy.run.examples}   ${examples}\n`);
-  human(`${copy.run.polish}     ${polishLine(record)}\n`);
+  human(`${copy.run.polish}     ${polishLine(record, polish.runnableCopy)}\n`);
   const toolkit = record.enhancements!.toolkit!;
   const line = toolkitLine(toolkit, goal.id, flags.toolkitSpace);
   // Without ToolKit the run ends with the upsell, once, on its own; with it, the ToolKit line.

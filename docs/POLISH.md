@@ -12,7 +12,8 @@ Only with **both** an Anthropic API key and `--polish` on the run.
 Copy `.env.example`, from the root of the clone or the package, to Code Sleuth's own folder, and fill in your
 API key. With no API key, the run prints the one line that does the copy for your platform -- `mkdir -p`,
 `cp` and `chmod 600` on macOS and Linux, `New-Item` and `Copy-Item` in PowerShell on Windows -- with the
-example's full path, wherever the package is (a clone, a global install or npx's cache), and the `.env`'s:
+example's full path, wherever the package is (a clone, a global install or npx's cache), and the `.env`'s.
+The case file keeps the same line with both paths in their `~` form, so a case you paste holds no home folder:
 
 | Platform | File |
 | --- | --- |

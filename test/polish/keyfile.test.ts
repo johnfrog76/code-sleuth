@@ -55,6 +55,9 @@ async function polishRun(options: {
   argv?: string[];
   /** Stand in a .env.example that is not there. */
   noExample?: boolean;
+  /** The home folder paths are shown from, and an example to use in place of the package's. */
+  home?: string;
+  example?: string;
 }) {
   return withScratch(async (scratch) => {
     const npm = stubNpm(scratch);
@@ -71,9 +74,15 @@ async function polishRun(options: {
         polishClient: client,
         ...(options.file === undefined ? {} : { keyFile: options.file }),
         ...(options.noExample ? { keyExample: join(scratch, "nowhere", ".env.example") } : {}),
+        ...(options.example === undefined ? {} : { keyExample: options.example }),
+        ...(options.home === undefined ? {} : { home: options.home }),
       }),
     );
-    return { result, keys, cases: everyFile(out), npmCalls: npm.calls() };
+    const caseFiles = (readdirSync(out, { recursive: true }) as string[]).filter((f) =>
+      /case\.(md|json)$/.test(f),
+    );
+    const records = caseFiles.map((f) => readFileSync(join(out, f), "utf8")).join("\n");
+    return { result, keys, cases: everyFile(out), records, npmCalls: npm.calls() };
   });
 }
 
@@ -172,13 +181,29 @@ describe("what a person reads", () => {
 });
 
 describe("where an API key goes, when there is none", () => {
-  it("names the .env and the line that copies the example there, in the case too", async () => {
+  it("prints the line runnable, both paths in full, in the terminal", async () => {
     await withScratch(async (home) => {
       const file = join(home, "code-sleuth", ".env");
-      const { result, cases } = await polishRun({ file });
+      const { result } = await polishRun({ file });
       const line = `Polish     No API key. The cards are as the sleuth wrote them. To add one, run \`${copyCommand(exampleFile()!, file)}\` and fill it in.`;
       expect(result.stdout).toContain(line + "\n");
-      expect(cases).toContain(copyCommand(exampleFile()!, file));
+    });
+  });
+
+  it("keeps the case file free of the home folder: the line is there in its ~ form", async () => {
+    await withScratch(async (home) => {
+      const file = join(home, "Library", "Application Support", "code-sleuth", ".env");
+      const example = join(home, "tools", "code-sleuth", ".env.example");
+      mkdirSync(dirname(example), { recursive: true });
+      writeFileSync(example, readFileSync(exampleFile()!, "utf8"));
+      for (const argv of [["--polish"], []]) {
+        const { result, records } = await polishRun({ file, example, home, argv });
+        expect(result.stdout).toContain(copyCommand(example, file));
+        expect(records).not.toContain(home);
+        const shown = copyCommand(shownPath(example, home), shownPath(file, home));
+        expect(records).toContain(shown);
+        expect(shown).toContain("'~");
+      }
     });
   });
 

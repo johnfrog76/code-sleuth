@@ -15,6 +15,8 @@ import type { Io } from "./refusal.js";
 
 export interface PreparedPolish {
   state: PolishState;
+  /** With no key, the copy line with both paths in full, for the terminal alone: the case keeps the ~ form. */
+  runnableCopy?: string;
   model: string;
   /** Set only with --polish and a key: no client exists without both. */
   client?: PolishClient;
@@ -36,7 +38,7 @@ export function preparePolish(asked: boolean, io: Io): PreparedPolish {
     fromEnv !== undefined
       ? copy.polish.fromEnvironment
       : key !== undefined && io.keyFile !== undefined
-        ? shownPath(io.keyFile)
+        ? shownPath(io.keyFile, io.home)
         : undefined;
   const from = keyFrom === undefined ? {} : { keyFrom };
   // With no key, where to put one: the .env, and the one line that copies the example there.
@@ -52,15 +54,22 @@ export function preparePolish(asked: boolean, io: Io): PreparedPolish {
     io.keyFile === undefined
       ? {}
       : {
-          keyFile: shownPath(io.keyFile),
-          ...(example === undefined ? {} : { keyCopy: copyCommand(example, io.keyFile) }),
+          keyFile: shownPath(io.keyFile, io.home),
+          // The case keeps the line in its ~ form, a record to read and paste; the terminal shows it runnable.
+          ...(example === undefined
+            ? {}
+            : { keyCopy: copyCommand(shownPath(example, io.home), shownPath(io.keyFile, io.home)) }),
         };
+  const runnable =
+    io.keyFile === undefined || example === undefined
+      ? {}
+      : { runnableCopy: copyCommand(example, io.keyFile) };
   const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
   if (!asked) {
     if (key !== undefined) return { state: { state: "off", reason: "no --polish", ...from }, model };
-    return { state: { state: "off", reason: "no --polish, no key", ...where }, model };
+    return { state: { state: "off", reason: "no --polish, no key", ...where }, model, ...runnable };
   }
-  if (key === undefined) return { state: { state: "off", reason: "no key", ...where }, model };
+  if (key === undefined) return { state: { state: "off", reason: "no key", ...where }, model, ...runnable };
   const client = (io.polishClient ?? messagesClient)(key, model);
   return { state: { state: "on", model, ...from }, model, client };
 }
