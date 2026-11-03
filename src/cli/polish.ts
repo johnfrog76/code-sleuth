@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import type { Card } from "../case/card.js";
 import type { PolishState } from "../case/record.js";
 import {
@@ -9,7 +10,7 @@ import {
 } from "../polish/client.js";
 import { polishCards } from "../polish/pass.js";
 import { copy } from "./copy.js";
-import { readKeyFile, shownPath } from "./keyFile.js";
+import { copyCommand, exampleFile, readKeyFile, shownPath } from "./keyFile.js";
 import type { Io } from "./refusal.js";
 
 export interface PreparedPolish {
@@ -38,7 +39,22 @@ export function preparePolish(asked: boolean, io: Io): PreparedPolish {
         ? shownPath(io.keyFile)
         : undefined;
   const from = keyFrom === undefined ? {} : { keyFrom };
-  const where = io.keyFile === undefined ? {} : { keyFile: shownPath(io.keyFile) };
+  // With no key, where to put one: the .env, and the one line that copies the example there.
+  const example =
+    io.keyFile === undefined
+      ? undefined
+      : io.keyExample === undefined
+        ? exampleFile()
+        : existsSync(io.keyExample)
+          ? io.keyExample
+          : undefined;
+  const where =
+    io.keyFile === undefined
+      ? {}
+      : {
+          keyFile: shownPath(io.keyFile),
+          ...(example === undefined ? {} : { keyCopy: copyCommand(example, io.keyFile) }),
+        };
   const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
   if (!asked) {
     if (key !== undefined) return { state: { state: "off", reason: "no --polish", ...from }, model };

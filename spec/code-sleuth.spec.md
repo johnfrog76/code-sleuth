@@ -389,7 +389,8 @@ Found by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1.
 **On** only with a key **and** `--polish` on the run or the Polish button on a card (D-CS19). The key is read
 from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and never written or printed
 (amended 2026-11-03). Without a key, `--polish` is not a refusal: the run goes ahead and says
-`No API key: copy .env.example to <file> and fill it in. The cards are as the sleuth wrote them.`
+`No API key. The cards are as the sleuth wrote them. To add one, run <copy line> and fill it in.`, where the copy
+line names the `.env.example` beside the running command and the `.env`, both in full and quoted.
 
 **The model** is the current Haiku model, by its id, held in one constant in the source and overridable by
 `CODE_SLEUTH_MODEL`. Small and fast is the point: a card is a short rewrite.

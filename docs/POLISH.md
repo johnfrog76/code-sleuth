@@ -10,7 +10,9 @@ Only with **both** an Anthropic API key and `--polish` on the run.
 ## Where the API key goes
 
 Copy `.env.example`, from the root of the clone or the package, to Code Sleuth's own folder, and fill in your
-API key:
+API key. With no API key, the run prints the one line that does the copy for your platform -- `mkdir -p`,
+`cp` and `chmod 600` on macOS and Linux, `New-Item` and `Copy-Item` in PowerShell on Windows -- with the
+example's full path, wherever the package is (a clone, a global install or npx's cache), and the `.env`'s:
 
 | Platform | File |
 | --- | --- |
@@ -32,9 +34,9 @@ with the command that fixes it. An API key already set in your environment wins 
 
 | You have | The run says |
 | --- | --- |
-| no API key, no `--polish` | `Polish  off. Add an API key (copy .env.example to ~/Library/Application Support/code-sleuth/.env and fill it in) and --polish to have the cards reworded.` |
+| no API key, no `--polish` | `Polish  off. Add an API key and --polish to have the cards reworded. To add one, run <the copy line> and fill it in.` |
 | an API key, no `--polish` | `Polish  an API key is set (from ~/Library/Application Support/code-sleuth/.env): add --polish to have the cards polished.` |
-| `--polish`, no API key | `Polish  No API key: copy .env.example to ~/Library/Application Support/code-sleuth/.env and fill it in. The cards are as the sleuth wrote them.` |
+| `--polish`, no API key | `Polish  No API key. The cards are as the sleuth wrote them. To add one, run <the copy line> and fill it in.` |
 | an API key and `--polish` | `Polish  5 of 5 cards polished by claude-haiku-5-5, with the API key from the environment.` |
 
 `--polish` without an API key is not a refusal: the run goes on. It is opt-in each time because it sends text

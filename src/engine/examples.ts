@@ -2,7 +2,7 @@ import { matchesGlob } from "node:path";
 import type { Evidence } from "./check.js";
 
 /**
- * Example locations: where a repository keeps deliberate bait -- a fake token, a home-folder path, a TODO --
+ * Example locations: where a repository keeps deliberate bait -- a fake token, a home-folder path, a marker --
  * for its own tests. A match there is shown and never counted (it makes no card and changes no verdict), and
  * the case says to check that it is fake: a real key committed into a fixture is still a real leak.
  */

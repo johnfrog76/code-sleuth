@@ -5,7 +5,10 @@ card for each thing that stands in the way. It reads the repository and never wr
 
 ## What you need
 
-- **Node 24** (the repository's `.nvmrc` names it).
+- **Node 24** (the repository's `.nvmrc` names it). Download it from [nodejs.org](https://nodejs.org/en/download),
+  or with a version manager: [nvm](https://github.com/nvm-sh/nvm) on macOS and Linux (`nvm install` in the
+  clone reads `.nvmrc`), [nvm-windows](https://github.com/coreybutler/nvm-windows) on Windows
+  (`nvm install 24`, then `nvm use 24`).
 - **git**, for the history checks. Without it, those checks read *not investigated* and say why.
 
 Code Sleuth is not on npm yet. You run it from a clone.
@@ -19,7 +22,12 @@ npm ci
 npm link
 ```
 
-`npm ci` installs and builds; `npm link` puts `code-sleuth` on your PATH. `code-sleuth --version` checks it.
+`npm ci` installs and builds: the build is the package's `prepare` script, which `npm ci` runs, and `npm link`
+runs again before it puts `code-sleuth` on your PATH. `code-sleuth --version` checks it.
+
+`npm ci` ends by reporting moderate vulnerabilities (12 today). They are all in the development tools, under
+ESLint, not in anything Code Sleuth runs: `npm audit --omit=dev` finds none. The one advisory behind them is
+tracked in the issues.
 
 ## The first run
 
@@ -53,15 +61,39 @@ CI; `--json` prints the record. Every flag, every refusal and the exit codes are
 
 ## Turn on the polish pass
 
-With an Anthropic API key in your environment, `--polish` has each card reworded to read more easily, and a
-rewrite that drops or changes a path, a number or a masked value is thrown away:
+With an Anthropic API key, `--polish` has each card reworded to read more easily, and a rewrite that drops or
+changes a path, a number or a masked value is thrown away.
+
+The API key goes in a `.env` in Code Sleuth's own folder, beside your cases, and nowhere else. From the clone,
+copy the example there, then open the copy and fill in your API key:
 
 ```sh
-export ANTHROPIC_API_KEY=...
+# macOS
+mkdir -p ~/Library/Application\ Support/code-sleuth
+cp .env.example ~/Library/Application\ Support/code-sleuth/.env
+chmod 600 ~/Library/Application\ Support/code-sleuth/.env
+
+# Linux
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/code-sleuth"
+cp .env.example "${XDG_DATA_HOME:-$HOME/.local/share}/code-sleuth/.env"
+chmod 600 "${XDG_DATA_HOME:-$HOME/.local/share}/code-sleuth/.env"
+```
+
+```powershell
+# Windows (PowerShell)
+New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\code-sleuth" | Out-Null
+Copy-Item .env.example "$env:LOCALAPPDATA\code-sleuth\.env"
+```
+
+Not working from a clone? Run Code Sleuth once with no API key: its Polish line names the `.env.example` that
+came with it and gives the one line that copies it into place, with both paths in full. Then:
+
+```sh
 code-sleuth --goal public --polish
 ```
 
-It sends each card's text, already masked, and nothing else. See [POLISH.md](POLISH.md).
+The Polish line says where the API key came from, never what it is. It sends each card's text, already
+masked, and nothing else. See [POLISH.md](POLISH.md).
 
 ## File the cards in ToolKit
 

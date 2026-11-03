@@ -62,7 +62,7 @@ export interface Filing {
 /** Whether the polish pass ran, and when it did not, the one thing that kept it off. */
 /**
  * `keyFrom` says where the API key came from -- `the environment` or the .env's path -- never the key. With no
- * key, `keyFile` is the .env it would be read from, so the case can say where to put one.
+ * key, `keyFile` is the .env it would be read from and `keyCopy` the command that puts the example there.
  */
 export type PolishState =
   | { state: "on"; model: string; keyFrom?: string }
@@ -71,6 +71,8 @@ export type PolishState =
       reason: "no --polish" | "no key" | "no --polish, no key";
       keyFrom?: string;
       keyFile?: string;
+      /** The one line that copies `.env.example` to `keyFile`, both paths in full and quoted. */
+      keyCopy?: string;
     };
 
 export interface Enhancements {

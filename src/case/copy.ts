@@ -87,12 +87,19 @@ export const copy = {
   },
 
   polish: {
-    offBoth: (keyFile?: string) =>
-      `off. Add an API key (${keyFile === undefined ? "see .env.example" : `copy .env.example to ${keyFile} and fill it in`}) and --polish to have the cards reworded.`,
+    offBoth: (keyFile?: string, keyCopy?: string) =>
+      keyFile === undefined
+        ? "off. Add an API key (see .env.example) and --polish to have the cards reworded."
+        : `off. Add an API key and --polish to have the cards reworded. ${copy.polish.addKey(keyFile, keyCopy)}`,
     keySet: (from?: string) =>
       `an API key is set${from === undefined ? "" : ` (from ${from})`}: add --polish to have the cards polished.`,
-    noKey: (keyFile?: string) =>
-      `No API key${keyFile === undefined ? "" : `: copy .env.example to ${keyFile} and fill it in`}. The cards are as the sleuth wrote them.`,
+    noKey: (keyFile?: string, keyCopy?: string) =>
+      `No API key. The cards are as the sleuth wrote them.${keyFile === undefined ? "" : ` ${copy.polish.addKey(keyFile, keyCopy)}`}`,
+    /** Where an API key goes, and the line that puts the example there when the example was found. */
+    addKey: (keyFile: string, keyCopy?: string) =>
+      keyCopy === undefined
+        ? `To add one, copy .env.example to ${keyFile} and fill it in.`
+        : `To add one, run \`${keyCopy}\` and fill it in.`,
     on: (polished: number, total: number, model: string, kept: string[], from?: string) =>
       `${polished} of ${total} card${total === 1 ? "" : "s"} polished by ${model}` +
       (from === undefined ? "" : `, with the API key from ${from}`) +

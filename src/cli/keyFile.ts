@@ -1,6 +1,7 @@
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { relative, sep } from "node:path";
+import { posix, relative, sep, win32 } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import { KEY_VARIABLE } from "../polish/client.js";
 
@@ -42,4 +43,30 @@ export function readKeyFile(path: string, platform: NodeJS.Platform = process.pl
 export function shownPath(path: string, home: string = homedir()): string {
   const rest = relative(home, path);
   return rest !== "" && !rest.startsWith("..") && !rest.startsWith(sep) ? `~${sep}${rest}` : path;
+}
+
+/**
+ * The `.env.example` beside the running command, at the package's root: found from this file's own place, so
+ * it is the right one for a clone, a global install or npx's cache alike. Undefined if it is not there.
+ */
+export function exampleFile(): string | undefined {
+  const path = fileURLToPath(new URL("../../.env.example", import.meta.url));
+  return existsSync(path) ? path : undefined;
+}
+
+/**
+ * One line that copies the example into place, with both paths quoted, for the platform's own shell: a POSIX
+ * shell on macOS and Linux (and the file made yours alone), PowerShell on Windows.
+ */
+export function copyCommand(
+  example: string,
+  keyFile: string,
+  platform: NodeJS.Platform = process.platform,
+): string {
+  if (platform === "win32") {
+    const q = (text: string) => `'${text.replace(/'/g, "''")}'`;
+    return `New-Item -ItemType Directory -Force ${q(win32.dirname(keyFile))} | Out-Null; Copy-Item ${q(example)} ${q(keyFile)}`;
+  }
+  const q = (text: string) => `'${text.replace(/'/g, "'\\''")}'`;
+  return `mkdir -p ${q(posix.dirname(keyFile))} && cp ${q(example)} ${q(keyFile)} && chmod 600 ${q(keyFile)}`;
 }
