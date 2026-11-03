@@ -5,17 +5,36 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { Refusal } from "../refusal.js";
 import { copy } from "./copy.js";
 
+/** Code Sleuth's own per-user folder, for this platform: the cases folder and the model key's .env live in it. */
+export function userFolder(
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  home: string = homedir(),
+): string {
+  if (platform === "darwin") return join(home, "Library", "Application Support", "code-sleuth");
+  if (platform === "win32") return join(env.LOCALAPPDATA ?? join(home, "AppData", "Local"), "code-sleuth");
+  return join(env.XDG_DATA_HOME || join(home, ".local", "share"), "code-sleuth");
+}
+
 /** The per-user cases folder, for this platform. Never inside a repository. */
 export function defaultCasesFolder(
   platform: NodeJS.Platform = process.platform,
   env: NodeJS.ProcessEnv = process.env,
   home: string = homedir(),
 ): string {
-  if (platform === "darwin") return join(home, "Library", "Application Support", "code-sleuth", "cases");
-  if (platform === "win32") {
-    return join(env.LOCALAPPDATA ?? join(home, "AppData", "Local"), "code-sleuth", "cases");
-  }
-  return join(env.XDG_DATA_HOME || join(home, ".local", "share"), "code-sleuth", "cases");
+  return join(userFolder(platform, env, home), "cases");
+}
+
+/**
+ * The one .env Code Sleuth reads, in its own per-user folder. Never one in the investigated repository or
+ * the current folder: that file holds someone else's secrets.
+ */
+export function defaultKeyFile(
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  home: string = homedir(),
+): string {
+  return join(userFolder(platform, env, home), ".env");
 }
 
 /**

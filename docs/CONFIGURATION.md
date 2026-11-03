@@ -7,7 +7,7 @@ never writes a setting anywhere.
 
 | Variable | Read by | Does |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | the polish pass | the model key. Read from here and nowhere else, never written or printed. With `--polish`, turns the polish pass on ([POLISH.md](POLISH.md)) |
+| `ANTHROPIC_API_KEY` | the polish pass | the API key, for people who set it in their environment rather than in Code Sleuth's `.env`. It wins over the file. Never written or printed. With `--polish`, turns the polish pass on ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
 | `CODE_SLEUTH_MODEL` | the polish pass | the model, in place of `claude-haiku-5-5` |
 | `NO_COLOR` | the terminal output | any value turns colour off |
 | `XDG_DATA_HOME` | the cases folder, on Linux | where the cases folder goes, in place of `~/.local/share` |
@@ -41,7 +41,7 @@ on.
 | `npm outdated --json --long` | `deps.outdated` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` | package names, to npm's configured registry. npm's own configuration decides where that is (`.npmrc`, a scoped or private registry), and Code Sleuth leaves it alone. Never a file's contents, the repository's path or its URL |
 | `npm audit --json` | `deps.advisories` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` | every locked package's name and version, to npm's configured registry, as `npm audit` always does. Never a file's contents, the repository's path or its URL |
 | `gh api /advisories` | `deps.advisories` | no npm, `gh` found, not `--offline`, and the same lockfile | the ecosystem (`npm`) and every locked package's name and version, to GitHub, in batches of fifty. Which advisory belongs to which locked version is worked out on the machine |
-| the polish request | `--polish` | a key in `ANTHROPIC_API_KEY` | each card's text, already masked, to `https://api.anthropic.com/v1/messages` ([POLISH.md](POLISH.md)) |
+| the polish request | `--polish` | an API key, from the environment or Code Sleuth's `.env` | each card's text, already masked, to `https://api.anthropic.com/v1/messages` ([POLISH.md](POLISH.md)) |
 
 With `--offline`, `deps.outdated` and `deps.advisories` read *not investigated*, with the reason `--offline`,
 and make no call. Code Sleuth sends nothing else: no telemetry, no update check. npm's own update notice and
@@ -60,6 +60,13 @@ Where every case is written. Never inside the repository it investigates.
 `--out <dir>` names another. Either way, a cases folder inside the repository is refused, and so is a
 repository that holds the cases folder (`code-sleuth ~`). Both compare real paths, links and letter case
 resolved. What is inside the folder is in [CASE-FILE.md](CASE-FILE.md).
+
+## Code Sleuth's own folder
+
+The cases folder sits in Code Sleuth's own per-user folder (`~/Library/Application Support/code-sleuth` on
+macOS, `$XDG_DATA_HOME/code-sleuth` or `~/.local/share/code-sleuth` on Linux, `%LOCALAPPDATA%\code-sleuth` on
+Windows). That folder also holds the one `.env` Code Sleuth reads, for the API key
+([POLISH.md](POLISH.md#where-the-api-key-goes)). `--out` moves the cases, never the `.env`.
 
 The cases folder also holds `machine-key`, a random key made on first use and readable by its owner only, which
 hashes secrets so two runs can tell it is the same secret.

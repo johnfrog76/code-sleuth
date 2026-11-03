@@ -27,6 +27,14 @@ for review.
 > Whether `gh` is signed in is not asked ahead, since asking calls GitHub: a `gh` that is not reads not
 > investigated with the reason.
 
+> **Amended 2026-11-03:** section 7's key. It is read from `ANTHROPIC_API_KEY`, in the environment or in Code
+> Sleuth's own `.env`, and never written or printed. The `.env` is the one in Code Sleuth's per-user folder,
+> beside the cases folder; no other is read, not the investigated repository's and not the current folder's.
+> It is parsed with `util.parseEnv`, never loaded, so the key never reaches a child process's environment, and
+> the environment wins over the file. The run names where the key came from, never the key; on POSIX it warns
+> once when others can read the file. `.env.example` ships at the root. What people read says "API key"; the
+> variable's name is in `.env.example` and in `docs/CONFIGURATION.md` alone.
+
 > **Amended 2026-11-03:** section 8.2's Space. Without `--toolkit-space`, the cards go to the Space whose
 > address is the repository's `origin` (a GitHub Space's `org` is the repository's URL; an Azure DevOps
 > Space's `org` is the organisation, and its `projects[].repo` lists the repository). The probe reports each
@@ -68,7 +76,7 @@ It is useful with nothing else installed, and better with each thing you add:
 | You have | You get |
 | --- | --- |
 | a repository | the investigation, the checklist and the cards, as markdown in a case file |
-| + a model key in the environment | the polish pass: each card rewritten to read well, with every fact kept |
+| + an API key, in Code Sleuth's `.env` or the environment | the polish pass: each card rewritten to read well, with every path, number and masked value kept |
 | + ToolKit installed | the cards filed as real ToolKit cards, in your own files, through ToolKit's own verb |
 
 No stage blocks another. ToolKit is the upsell: the cards show what ToolKit is for.
@@ -378,9 +386,10 @@ Found by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1.
 
 ## 7. The polish pass
 
-**On** only with a key in the environment (`ANTHROPIC_API_KEY`) **and** `--polish` on the run or the Polish
-button on a card (D-CS19). Without a key, `--polish` is not a refusal: the run goes ahead and says
-`No model key in the environment: the cards are as the sleuth wrote them.`
+**On** only with a key **and** `--polish` on the run or the Polish button on a card (D-CS19). The key is read
+from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and never written or printed
+(amended 2026-11-03). Without a key, `--polish` is not a refusal: the run goes ahead and says
+`No API key: copy .env.example to <file> and fill it in. The cards are as the sleuth wrote them.`
 
 **The model** is the current Haiku model, by its id, held in one constant in the source and overridable by
 `CODE_SLEUTH_MODEL`. Small and fast is the point: a card is a short rewrite.
@@ -568,7 +577,7 @@ Not investigated
 
 Case file  ~/Library/Application Support/code-sleuth/cases/widget-1a2b3c4d/2026-10-31-public-1/case.md
 Cards      5 in cards/
-Polish     a model key is set: add --polish to have the cards polished.
+Polish     an API key is set (from the environment): add --polish to have the cards polished.
 ToolKit    found (tk, Space 'widget'): add --toolkit to file the cards.
 ```
 

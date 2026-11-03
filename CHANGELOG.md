@@ -6,13 +6,14 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ## [Unreleased]
 
+### Added
+
+- The API key can live in a `.env` in Code Sleuth's own folder, beside the cases folder: copy `.env.example` there and fill it in. A key in your environment still wins. No other `.env` is read, the key never reaches a process Code Sleuth starts, the run says where the key came from and never what it is, and it warns when others can read the file.
+- A project contact, `codesleuth.project (at) outlook.com`, for conduct reports (`CODE_OF_CONDUCT.md`) and security reports (`SECURITY.md`, beside GitHub's private vulnerability reporting). It is written out, not linked, to slow down address scrapers.
+
 ### Fixed
 
 - `--toolkit` files in the repository's own ToolKit Space, the one whose address is its `origin`, rather than whichever Space is active. With no matching Space it falls back to the active one, and the footer says so.
-
-### Added
-
-- A project contact, `codesleuth.project (at) outlook.com`, for conduct reports (`CODE_OF_CONDUCT.md`) and security reports (`SECURITY.md`, beside GitHub's private vulnerability reporting). It is written out, not linked, to slow down address scrapers.
 
 ## [0.1.0] - 2026-11-03
 
@@ -32,7 +33,7 @@ The first release: the whole loop on one goal, going public. Run from a clone, t
   in the shape a ToolKit card's description takes.
 - Secrets are masked everywhere (`ghp_****9f`) and never stored; a keyed hash tells two runs it is the same
   secret.
-- `--polish`: with `ANTHROPIC_API_KEY` set, each card is reworded by Claude Haiku, and a rewrite that drops
+- `--polish`: with an API key set, each card is reworded by Claude Haiku, and a rewrite that drops
   or changes a path, a number, a masked value or the fingerprint is thrown away.
 - `--toolkit`: with ToolKit installed, each card is filed as a real ToolKit card through ToolKit's own
   command, once per check, after asking. `--yes`, `--refile`, `--toolkit-space` and `--toolkit-prefix`.

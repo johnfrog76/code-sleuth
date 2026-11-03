@@ -23,7 +23,8 @@ of them is a security problem:
 
 - It never writes into the repository it investigates.
 - A secret's value never appears in any output: the terminal, a case file, a card, or a polish request.
-- The model key is read from `ANTHROPIC_API_KEY` only, and is never written or printed.
+- The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and is
+  never written or printed. No other `.env` is read, and the key never reaches a process Code Sleuth starts.
 - It sends nothing over the network except the calls the run names on its `Out` line before it makes them:
   the dependency lookups, which `--offline` turns off, and the polish request you asked for with `--polish`
   ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)).

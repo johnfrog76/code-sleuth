@@ -39,7 +39,7 @@ It runs on your machine and sends nothing anywhere. Two things make it better, a
 | You have | You get |
 | --- | --- |
 | A repository | The investigation, the checklist, and card-ready issues as markdown |
-| An Anthropic API key in the environment, and `--polish` | Each card reworded by a small model, with every path, number and masked value checked to be unchanged |
+| An API key in Code Sleuth's `.env`, and `--polish` | Each card reworded by a small model, with every path, number and masked value checked to be unchanged |
 | ToolKit installed | Each card filed as a real ToolKit card |
 
 ## Quick start

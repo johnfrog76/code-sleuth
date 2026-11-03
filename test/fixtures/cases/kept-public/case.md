@@ -39,6 +39,6 @@
 - [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This makes a call off the machine, and --offline is set.
 - [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This needs npm on the PATH.
 
-Polish: off. Set ANTHROPIC_API_KEY and add --polish to have the cards reworded.
+Polish: off. Add an API key (see .env.example) and --polish to have the cards reworded.
 
 Want these as real cards, in your own files, on your own board? That's what ToolKit is for: https://johnfrog76.github.io/toolkit/

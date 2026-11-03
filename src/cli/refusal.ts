@@ -18,6 +18,8 @@ export interface Io {
   env?: NodeJS.ProcessEnv;
   /** The cases folder when no --out is given. Tests set it; the default is the per-user folder. */
   casesFolder?: string;
+  /** Code Sleuth's own .env, where the model key may be kept. The command sets it; a test sets a scratch one or none. */
+  keyFile?: string;
   /** Only for tests: the polish client, in place of the real request. */
   polishClient?: (key: string, model: string) => PolishClient;
   /** Only for tests: the one folder ToolKit is loaded from in the child shell. */

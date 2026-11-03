@@ -1,23 +1,44 @@
 # The polish pass
 
-With a model key, `--polish` has each card reworded to read more easily. Every path, number, masked value and
+With an API key, `--polish` has each card reworded to read more easily. Every path, number, masked value and
 the fingerprint survive, or the rewrite is thrown away and the card stays as Code Sleuth wrote it.
 
 ## When it runs
 
-Only with **both** an Anthropic API key in `ANTHROPIC_API_KEY` and `--polish` on the run. The key is read from
-that one variable and nowhere else, and it is never written: not to a case, a config file or a log, and never
-printed.
+Only with **both** an Anthropic API key and `--polish` on the run.
+
+## Where the API key goes
+
+Copy `.env.example`, from the root of the clone or the package, to Code Sleuth's own folder, and fill in your
+API key:
+
+| Platform | File |
+| --- | --- |
+| macOS | `~/Library/Application Support/code-sleuth/.env` |
+| Linux | `$XDG_DATA_HOME/code-sleuth/.env`, else `~/.local/share/code-sleuth/.env` |
+| Windows | `%LOCALAPPDATA%\code-sleuth\.env` |
+
+On macOS and Linux, make it yours alone: `chmod 600` on the file. If others can read it, the run warns once,
+with the command that fixes it. An API key already set in your environment wins over the file
+([CONFIGURATION.md](CONFIGURATION.md#environment-variables)).
+
+- **No other `.env` is read.** Not the investigated repository's, and not the one in the folder you run from:
+  those hold someone else's secrets.
+- **It is parsed, never loaded.** Only the API key is taken from the file, and nothing is added to the
+  environment, so npm, gh and ToolKit's shell, which Code Sleuth starts, never see it. It is held in memory for
+  the polish request alone.
+- **It is never written or printed:** not to a case, a config file or a log. The run says where the API key
+  came from, never what it is.
 
 | You have | The run says |
 | --- | --- |
-| no key, no `--polish` | `Polish  off. Set ANTHROPIC_API_KEY and add --polish to have the cards reworded.` |
-| a key, no `--polish` | `Polish  a model key is set: add --polish to have the cards polished.` |
-| `--polish`, no key | `Polish  No model key in the environment: the cards are as the sleuth wrote them.` |
-| a key and `--polish` | `Polish  5 of 5 cards polished by claude-haiku-5-5.` |
+| no API key, no `--polish` | `Polish  off. Add an API key (copy .env.example to ~/Library/Application Support/code-sleuth/.env and fill it in) and --polish to have the cards reworded.` |
+| an API key, no `--polish` | `Polish  an API key is set (from ~/Library/Application Support/code-sleuth/.env): add --polish to have the cards polished.` |
+| `--polish`, no API key | `Polish  No API key: copy .env.example to ~/Library/Application Support/code-sleuth/.env and fill it in. The cards are as the sleuth wrote them.` |
+| an API key and `--polish` | `Polish  5 of 5 cards polished by claude-haiku-5-5, with the API key from the environment.` |
 
-`--polish` without a key is not a refusal: the run goes on. It is opt-in each time because it sends text
-off the machine; a key in the environment alone never turns it on.
+`--polish` without an API key is not a refusal: the run goes on. It is opt-in each time because it sends text
+off the machine; an API key alone never turns it on.
 
 ## What is sent
 
@@ -67,4 +88,4 @@ a telemetry interface among them. That interface sends nothing on its own, but a
 project's lockfile should not have to take that on trust. The polish pass is one optional request whose
 failure changes nothing, so the SDK's retries and typed errors buy little here. Writing the request by hand
 also lets two guarantees be plain in the code: the address is fixed (`ANTHROPIC_BASE_URL` is ignored), and no
-client exists without a key from `ANTHROPIC_API_KEY`. The only runtime dependency stays `yaml`.
+client exists without an API key. The only runtime dependency stays `yaml`.

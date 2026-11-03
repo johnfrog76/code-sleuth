@@ -35,7 +35,7 @@ The record, for scripts and for a later run. `--json` prints the same object.
 | `openedAt`, `closedAt` | UTC, to the second |
 | `verdict` | `ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` |
 | `counts` | `smoking-gun`, `loose-end`, `hunch`, `clean`, `not-investigated` |
-| `enhancements` | `polish` (on with its model, or off and why) and `toolkit` (detected or not, the Space and how it was chosen -- `spaceFrom`: `flag`, `origin` or `active` -- and what was filed) |
+| `enhancements` | `polish` (on with its model, or off and why, with `keyFrom`: where the API key came from, `the environment` or the `.env`'s path, never the key; or with no key, `keyFile`: the `.env` it would be read from) and `toolkit` (detected or not, the Space and how it was chosen -- `spaceFrom`: `flag`, `origin` or `active` -- and what was filed) |
 | `exampleLocations` | the example locations in force: `globs` (the built-in `**/test/fixtures/**` and `**/__fixtures__/**`, then every `--examples` glob), `added` (the `--examples` globs alone) and `marker` (`code-sleuth:example`) |
 | `checks` | each check in the goal's order: `id`, `title`, `booksName`, `verdict`, and `weight`, `evidence`, `fix` and `card` when found, or `reason` when not investigated. Any check with matches in example locations also has `examples`, every one of them, never counted ([CHECKS.md](CHECKS.md#example-locations)) |
 

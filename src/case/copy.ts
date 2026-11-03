@@ -87,11 +87,15 @@ export const copy = {
   },
 
   polish: {
-    offBoth: "off. Set ANTHROPIC_API_KEY and add --polish to have the cards reworded.",
-    keySet: "a model key is set: add --polish to have the cards polished.",
-    noKey: "No model key in the environment: the cards are as the sleuth wrote them.",
-    on: (polished: number, total: number, model: string, kept: string[]) =>
+    offBoth: (keyFile?: string) =>
+      `off. Add an API key (${keyFile === undefined ? "see .env.example" : `copy .env.example to ${keyFile} and fill it in`}) and --polish to have the cards reworded.`,
+    keySet: (from?: string) =>
+      `an API key is set${from === undefined ? "" : ` (from ${from})`}: add --polish to have the cards polished.`,
+    noKey: (keyFile?: string) =>
+      `No API key${keyFile === undefined ? "" : `: copy .env.example to ${keyFile} and fill it in`}. The cards are as the sleuth wrote them.`,
+    on: (polished: number, total: number, model: string, kept: string[], from?: string) =>
       `${polished} of ${total} card${total === 1 ? "" : "s"} polished by ${model}` +
+      (from === undefined ? "" : `, with the API key from ${from}`) +
       (kept.length === 0 ? "." : `; ${kept.length} kept as written (${kept.join(", ")}).`),
   },
 

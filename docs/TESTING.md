@@ -26,6 +26,8 @@ npm run lint     # type check, ESLint and Prettier
   folder outside any repository (committing it when the test needs history), runs the test, and fails if the
   tree changed by a byte or its `git status` changed. A test fails any engine test that does not use it.
 - **No real cases folder.** The CLI helper (`test/helpers/cli.ts`) demands a scratch cases folder.
+- **No real `.env`.** A run in a test reads Code Sleuth's `.env` only when the test names a scratch one; the
+  command's own default is set by `src/cli/main.ts`, and its one test runs it with a scratch home.
 - **No network.** The polish client is stubbed, or given a fake `fetch`; ToolKit is a stub shell on a test-only
   PATH, and so are npm and gh (`test/helpers/npm.ts`), which log each call and answer from a scenario. A run
   given no PATH finds neither, so no other test can reach a registry or GitHub.

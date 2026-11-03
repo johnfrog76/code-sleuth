@@ -17,7 +17,7 @@ Options
   --out <dir>          where the case folder goes (never inside the repository)
   --deny <file>        a list of names that must not appear, one per line, kept outside the repository
   --all                hunches get cards too
-  --polish             have each card reworded by a model, every fact kept (needs ANTHROPIC_API_KEY)
+  --polish             have each card reworded by a model, every path and number kept (needs an API key)
   --offline            make no network call: the checks that would call out read not investigated
   --examples <glob>    another example location, beside test/fixtures/ and __fixtures__/; repeatable
   --json               print case.json to stdout, and the rest to stderr
@@ -64,6 +64,11 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
     "Keep the deny list outside the repository: committed there, it would publish the names it guards.",
   unknownWeight: (weight: string) => `I don't know the weight ${weight}.`,
   unknownWeightHint: "--fail-on takes smoking-gun or loose-end.",
+  polish: {
+    fromEnvironment: "the environment",
+    looseKeyFile: (path: string) =>
+      `Warning: ${path} can be read by other people on this machine. Make it yours alone: chmod 600 '${path.replace(/'/g, "'\\''")}'\n`,
+  },
   toolkit: {
     onlyWithToolkit: (flag: string) => `${flag} only goes with --toolkit.`,
     onlyWithToolkitHint: "Add --toolkit to file the cards in ToolKit, or leave the flag off.",

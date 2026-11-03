@@ -30,7 +30,7 @@ two are listed by `checks` and refused for a case until their checks are built
 | `--fail-on` | `smoking-gun` or `loose-end` | exits 1 when a finding at or above that weight is found |
 | `--offline` | | makes no network call: `deps.outdated` and `deps.advisories` read not investigated, "--offline" ([CONFIGURATION.md](CONFIGURATION.md#what-leaves-the-machine)) |
 | `--examples` | a glob | another example location, beside `test/fixtures/` and `__fixtures__/`; repeatable. A match there is shown and not counted ([CHECKS.md](CHECKS.md#example-locations)) |
-| `--polish` | | rewords each card with a model, every fact kept; needs `ANTHROPIC_API_KEY` ([POLISH.md](POLISH.md)) |
+| `--polish` | | rewords each card with a model, every path and number kept; needs an API key ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
 | `--toolkit` | | files the cards in ToolKit, after asking ([TOOLKIT.md](TOOLKIT.md)) |
 | `--yes` | | with `--toolkit`, files without asking |
 | `--refile` | | with `--toolkit`, files a check again though it is already filed |

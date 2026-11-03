@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createInterface } from "node:readline/promises";
+import { defaultKeyFile } from "../case/folder.js";
 import { run } from "./run.js";
 
 const terminal = {
@@ -13,6 +14,7 @@ process.exitCode = await run(process.argv.slice(2), {
   stderr: (text) => process.stderr.write(text),
   terminal,
   env: process.env,
+  keyFile: defaultKeyFile(),
   ...(terminal.stdin && terminal.stdout
     ? {
         ask: async (question: string) => {

@@ -9,6 +9,7 @@ import {
 } from "../polish/client.js";
 import { polishCards } from "../polish/pass.js";
 import { copy } from "./copy.js";
+import { readKeyFile, shownPath } from "./keyFile.js";
 import type { Io } from "./refusal.js";
 
 export interface PreparedPolish {
@@ -19,17 +20,33 @@ export interface PreparedPolish {
 }
 
 /**
- * On only with a key in ANTHROPIC_API_KEY -- read there and nowhere else -- and --polish. Without a key,
+ * On only with a key and --polish. The key is ANTHROPIC_API_KEY, from the environment, else from Code Sleuth's
+ * own .env (never one in the repository or the current folder); the environment wins. It is held here for the
+ * polish request alone, never written to the environment, and only where it came from is said. Without a key,
  * --polish is not a refusal: the run goes on and says so.
  */
 export function preparePolish(asked: boolean, io: Io): PreparedPolish {
   const env = io.env ?? {};
-  const key = env[KEY_VARIABLE]?.trim() || undefined;
+  const fromEnv = env[KEY_VARIABLE]?.trim() || undefined;
+  const file = io.keyFile === undefined ? {} : readKeyFile(io.keyFile);
+  if (file.loose && io.keyFile !== undefined) io.stderr(copy.polish.looseKeyFile(io.keyFile));
+  const key = fromEnv ?? file.key;
+  const keyFrom =
+    fromEnv !== undefined
+      ? copy.polish.fromEnvironment
+      : key !== undefined && io.keyFile !== undefined
+        ? shownPath(io.keyFile)
+        : undefined;
+  const from = keyFrom === undefined ? {} : { keyFrom };
+  const where = io.keyFile === undefined ? {} : { keyFile: shownPath(io.keyFile) };
   const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
-  if (!asked) return { state: { state: "off", reason: key ? "no --polish" : "no --polish, no key" }, model };
-  if (key === undefined) return { state: { state: "off", reason: "no key" }, model };
+  if (!asked) {
+    if (key !== undefined) return { state: { state: "off", reason: "no --polish", ...from }, model };
+    return { state: { state: "off", reason: "no --polish, no key", ...where }, model };
+  }
+  if (key === undefined) return { state: { state: "off", reason: "no key", ...where }, model };
   const client = (io.polishClient ?? messagesClient)(key, model);
-  return { state: { state: "on", model }, model, client };
+  return { state: { state: "on", model, ...from }, model, client };
 }
 
 /** Polishes the cards, one at a time, with a tick for each, and never prints their words or the key. */

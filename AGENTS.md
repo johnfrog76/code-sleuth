@@ -37,7 +37,9 @@ a fact lives in the one that owns it, and the others link to it.
    Windows, `npm` is a `.cmd` shim and goes through one spawn helper.
 7. **`toolkit/handoff.ps1` stays Windows PowerShell 5.1-clean**: no ternary, `??`, `?.`, `-AsHashtable`, or
    `&&` and `||` chains.
-8. **The model key is read from `ANTHROPIC_API_KEY` only** and never written anywhere. No telemetry.
+8. **The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and
+   never written or printed.** No other `.env` is read, and the key never reaches a child's environment. No
+   telemetry.
 9. **Check ids are goal-free** (`secrets.tree`); a goal is a list of ids with weights.
 10. **A refusal is one `Error:` line and one `Hint:` line, exit 2**, printed by `src/cli/refusal.ts`. Exit 1
     only from `--fail-on`.

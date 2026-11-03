@@ -81,9 +81,7 @@ describe("the polish pass", () => {
     );
     expect(result.code).toBe(0);
     expect(asked).toBe(0);
-    expect(result.stdout).toContain(
-      "Polish     No model key in the environment: the cards are as the sleuth wrote them.\n",
-    );
+    expect(result.stdout).toContain("Polish     No API key. The cards are as the sleuth wrote them.\n");
     expect(record.enhancements.polish).toEqual({ state: "off", reason: "no key" });
   });
 
@@ -96,9 +94,13 @@ describe("the polish pass", () => {
     );
     expect(asked).toBe(0);
     expect(result.stdout).toContain(
-      "Polish     a model key is set: add --polish to have the cards polished.\n",
+      "Polish     an API key is set (from the environment): add --polish to have the cards polished.\n",
     );
-    expect(record.enhancements.polish).toEqual({ state: "off", reason: "no --polish" });
+    expect(record.enhancements.polish).toEqual({
+      state: "off",
+      reason: "no --polish",
+      keyFrom: "the environment",
+    });
   });
 
   it("polishes every card it keeps, names the request before making it, and records each card's state", async () => {
@@ -112,7 +114,11 @@ describe("the polish pass", () => {
       "  Out   the polish request: each card's text, masked, to the Anthropic API (--polish)\n",
     );
     expect(result.stdout).toMatch(/^Polishing \d+ cards with claude-haiku-5-5 \.+ done\.$/m);
-    expect(record.enhancements.polish).toEqual({ state: "on", model: "claude-haiku-5-5" });
+    expect(record.enhancements.polish).toEqual({
+      state: "on",
+      model: "claude-haiku-5-5",
+      keyFrom: "the environment",
+    });
     const carded = record.checks.filter((c) => c.card);
     expect(carded.every((c) => c.polish?.state === "polished")).toBe(true);
     expect(Object.values(cards).every((text) => text.split("\n")[2]!.startsWith("In short: "))).toBe(true);
@@ -127,7 +133,7 @@ describe("the polish pass", () => {
     const secrets = record.checks.find((c) => c.id === "secrets.tree")!;
     expect(secrets.polish).toEqual({ state: "kept-original", reason: "path-dropped" });
     expect(result.stdout).toMatch(
-      /^Polish {5}\d+ of \d+ cards polished by claude-haiku-5-5; \d+ kept as written \(.*secrets\.tree: path-dropped.*\)\.$/m,
+      /^Polish {5}\d+ of \d+ cards polished by claude-haiku-5-5, with the API key from the environment; \d+ kept as written \(.*secrets\.tree: path-dropped.*\)\.$/m,
     );
   });
 

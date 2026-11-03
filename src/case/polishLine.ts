@@ -6,13 +6,13 @@ export function polishLine(record: CaseRecord): string | undefined {
   const polish = record.enhancements?.polish;
   if (polish === undefined) return undefined;
   if (polish.state === "off") {
-    if (polish.reason === "no --polish") return copy.polish.keySet;
-    if (polish.reason === "no key") return copy.polish.noKey;
-    return copy.polish.offBoth;
+    if (polish.reason === "no --polish") return copy.polish.keySet(polish.keyFrom);
+    if (polish.reason === "no key") return copy.polish.noKey(polish.keyFile);
+    return copy.polish.offBoth(polish.keyFile);
   }
   const carded = record.checks.filter((c) => c.polish !== undefined);
   const kept = carded.flatMap((c) =>
     c.polish!.state === "kept-original" ? [`${c.id}: ${c.polish!.reason}`] : [],
   );
-  return copy.polish.on(carded.length - kept.length, carded.length, polish.model, kept);
+  return copy.polish.on(carded.length - kept.length, carded.length, polish.model, kept, polish.keyFrom);
 }

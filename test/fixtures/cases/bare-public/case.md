@@ -45,6 +45,6 @@
 - [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This makes a call off the machine, and --offline is set.
 - [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This needs npm on the PATH.
 
-Polish: a model key is set: add --polish to have the cards polished.
+Polish: an API key is set: add --polish to have the cards polished.
 
 ToolKit: found (tk, Space 'widget'). To file these cards: `code-sleuth --goal public --toolkit`

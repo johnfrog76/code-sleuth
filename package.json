@@ -10,7 +10,8 @@
   "files": [
     "dist",
     "toolkit",
-    "src/polish/prompt.md"
+    "src/polish/prompt.md",
+    ".env.example"
   ],
   "engines": {
     "node": ">=24"

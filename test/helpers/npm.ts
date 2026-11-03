@@ -20,7 +20,7 @@ export interface NpmScenario {
 const STUB = String.raw`
 const fs = require("fs");
 const scenario = JSON.parse(fs.readFileSync(process.env.STUB_NPM_SCENARIO, "utf8"));
-fs.appendFileSync(process.env.STUB_NPM_LOG, JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd() }) + "\n");
+fs.appendFileSync(process.env.STUB_NPM_LOG, JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd(), key: process.env.ANTHROPIC_API_KEY ?? null }) + "\n");
 if (process.argv[2] === "audit") {
   const audit = scenario.audit ?? { vulnerabilities: {} };
   process.stdout.write(audit.raw !== undefined ? audit.raw : JSON.stringify({ auditReportVersion: 2, ...audit }));
@@ -41,7 +41,7 @@ export function stubNpm(folder: string, scenario: NpmScenario = {}) {
   writeFileSync(scenarioFile, JSON.stringify(scenario));
   return {
     env: { PATH: bin, STUB_NPM_LOG: log, STUB_NPM_SCENARIO: scenarioFile },
-    calls: (): { argv: string[]; cwd: string }[] =>
+    calls: (): { argv: string[]; cwd: string; key: string | null }[] =>
       existsSync(log)
         ? readFileSync(log, "utf8")
             .trim()
