@@ -24,6 +24,8 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
 - Docs change in the same pull request as the code they describe, and a change a user would notice adds a
   line to `CHANGELOG.md`.
 - Paste the results of `npm test` and `npm run lint` in the description.
+- CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test`, `npm run lint` and `npm run build` on Node 24
+  for every pull request and every push to main. It runs only while the repository is public.
 
 ## Code of conduct
 

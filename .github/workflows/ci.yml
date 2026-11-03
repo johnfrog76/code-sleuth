@@ -1,0 +1,36 @@
+# Tests, lint and build on every push to main and every pull request.
+#
+# The job runs only while the repository is public: a private repository here has no hosted minutes, so the
+# guard keeps it from failing until then, and it turns on by itself when the repository goes public.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # npm ci installs and builds, through prepare.
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
