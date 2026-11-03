@@ -1,0 +1,21 @@
+name: An improvement
+description: A check, a goal, or a change that would make Code Sleuth more helpful.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you want to know about a repository
+      description: The question you'd like Code Sleuth to answer, or answer better.
+    validations:
+      required: true
+  - type: textarea
+    id: should
+    attributes:
+      label: What Code Sleuth should do
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: How you'd know it was done

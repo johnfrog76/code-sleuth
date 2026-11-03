@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/johnfrog76/code-sleuth/security/advisories/new
+    about: Please don't open a public issue for a security problem. Report it here or to codesleuth.project (at) outlook.com; SECURITY.md says how it's handled.
+  - name: Read the docs
+    url: https://github.com/johnfrog76/code-sleuth/blob/main/docs/README.md
+    about: The quick start, every flag and refusal, every check, and the known gaps.

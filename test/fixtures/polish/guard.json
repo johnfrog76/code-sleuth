@@ -1,0 +1,106 @@
+{
+  "original": {
+    "title": "Remove committed secrets from the working tree",
+    "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+  },
+  "rows": [
+    {
+      "name": "a plainer rewrite that keeps every fact",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: Anyone who can read this repository can use it, so treat it as leaked.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": true
+      }
+    },
+    {
+      "name": "a rewrite that drops a path",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "path-dropped"
+      }
+    },
+    {
+      "name": "a rewrite that names a file the card did not",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead, for example in `config/secrets.ts`.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "path-added"
+      }
+    },
+    {
+      "name": "a rewrite that changes a line number",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` (around line 13) -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "number-changed"
+      }
+    },
+    {
+      "name": "a rewrite that guesses behind the mask",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_ab****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "masked-value-changed"
+      }
+    },
+    {
+      "name": "a rewrite that drops a checkbox",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "checkbox-count-changed"
+      }
+    },
+    {
+      "name": "an empty rewrite",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "   "
+      },
+      "expected": {
+        "kept": false,
+        "reason": "empty"
+      }
+    },
+    {
+      "name": "a rewrite with a heading of its own",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n## The fix\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "shape-changed"
+      }
+    },
+    {
+      "name": "a rewrite that loses the fingerprint",
+      "polished": {
+        "title": "Remove committed secrets from the working tree",
+        "body": "A secret in plain sight: anyone who can read the repository can use it.\n\n**Evidence**\n- `config/dev.ts:12` -- `token: \"ghp_****9f\"` (rule: github-token)\n- `scripts/deploy.sh:40` -- `KEY=****` (rule: assigned-secret)\n\n**What the books call it:** hard-coded credential\n\n**The fix**\nRevoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.\n\n**Done when**\n- [ ] Each secret is revoked where it was issued.\n- [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.\n\nFound by Code Sleuth."
+      },
+      "expected": {
+        "kept": false,
+        "reason": "check-id-dropped"
+      }
+    }
+  ]
+}

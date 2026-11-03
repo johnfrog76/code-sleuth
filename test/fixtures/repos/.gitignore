@@ -1,0 +1,4 @@
+# The fixture trees hold these folders on purpose: the reader is tested on skipping them.
+!node_modules/
+!dist/
+!build/

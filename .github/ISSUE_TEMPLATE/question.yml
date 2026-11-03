@@ -1,0 +1,17 @@
+name: A question
+description: Something the docs don't answer.
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: The docs start at docs/README.md; the command line is docs/CLI.md.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you've read or tried

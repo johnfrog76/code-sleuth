@@ -1,0 +1,71 @@
+<#
+  Code Sleuth's hand-off to ToolKit.
+
+  It runs ToolKit's own verb, the offline form of NewPrompt, with the values it is given and nothing else:
+  it never writes a card file and never passes -Now, -Force or any other switch. Every value arrives as its
+  own argument; no command is ever built from text.
+
+  Windows PowerShell 5.1-clean: no ternary, no ?? or ?., no -AsHashtable, no && or || chains.
+
+  -Probe        Resolve <prefix>NewPrompt (which loads ToolKit) and print one line:
+                CODE-SLEUTH-PROBE {"prefix":...,"space":...,"spaces":[...],"root":...}
+  -ModuleRoot   Only for Code Sleuth's own tests: the one folder ToolKit is loaded from, set inside this
+                shell, the way ToolKit's own suites isolate a checkout.
+  Exit codes    0 done; 2 ToolKit stated a refusal (it printed Error: and Hint:); 3 ToolKit is not here;
+                anything else a failure.
+#>
+param(
+    [switch]$Probe,
+    [string]$Prefix = 'tk',
+    [string]$Title,
+    [string]$Type,
+    [string]$Description,
+    [string]$ModuleRoot
+)
+
+if ($ModuleRoot) {
+    $env:PSModulePath = $ModuleRoot
+}
+
+$verb = $Prefix + 'NewPrompt'
+$command = Get-Command $verb -ErrorAction SilentlyContinue
+if ($null -eq $command) {
+    [Console]::Error.WriteLine("ToolKit's $verb is not available in this shell.")
+    exit 3
+}
+
+if ($Probe) {
+    # ToolKit's resolved settings, overrides included. $global:P20Config is what ToolKit's own code reads; it
+    # is not a promise to callers, so its absence leaves the values null rather than failing.
+    $config = $global:P20Config
+    $resolvedPrefix = $null
+    $space = $null
+    $spaces = $null
+    $root = $null
+    if ($null -ne $config) {
+        $resolvedPrefix = $config.CommandPrefix
+        $space = $config.ActiveSpace
+        $root = $config.PromptsRoot
+        $spaces = @()
+        foreach ($entry in @($config.Spaces)) {
+            if ($null -ne $entry -and $null -ne $entry.slug) { $spaces += [string]$entry.slug }
+        }
+    }
+    $answer = New-Object PSObject
+    $answer | Add-Member -NotePropertyName prefix -NotePropertyValue $resolvedPrefix
+    $answer | Add-Member -NotePropertyName space -NotePropertyValue $space
+    $answer | Add-Member -NotePropertyName spaces -NotePropertyValue $spaces
+    $answer | Add-Member -NotePropertyName root -NotePropertyValue $root
+    Write-Output ('CODE-SLEUTH-PROBE ' + (ConvertTo-Json -InputObject $answer -Compress -Depth 3))
+    exit 0
+}
+
+try {
+    & $verb -Title $Title -Type $Type -Description $Description
+}
+catch {
+    [Console]::Error.WriteLine($_.Exception.Message)
+    exit 1
+}
+if ($null -eq $LASTEXITCODE) { exit 0 }
+exit $LASTEXITCODE

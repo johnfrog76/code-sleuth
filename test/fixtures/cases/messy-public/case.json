@@ -1,0 +1,329 @@
+{
+  "caseFile": 1,
+  "tool": {
+    "name": "code-sleuth",
+    "version": "0.1.0"
+  },
+  "case": "2026-10-31-public-1",
+  "goal": "public",
+  "repo": {
+    "name": "messy",
+    "head": "4999d7895f5bfc1a9a8c84adfdf2c40577ea539a",
+    "branch": "main",
+    "dirty": false,
+    "remote": null
+  },
+  "openedAt": "2026-10-31T14:02:11Z",
+  "closedAt": "2026-10-31T14:02:11Z",
+  "verdict": "not-ready",
+  "counts": {
+    "smoking-gun": 1,
+    "loose-end": 8,
+    "hunch": 5,
+    "clean": 7,
+    "not-investigated": 3
+  },
+  "exampleLocations": {
+    "globs": [
+      "**/test/fixtures/**",
+      "**/__fixtures__/**"
+    ],
+    "added": [],
+    "marker": "code-sleuth:example"
+  },
+  "enhancements": {
+    "polish": {
+      "state": "off",
+      "reason": "no key"
+    },
+    "toolkit": {
+      "state": "detected",
+      "via": "cli",
+      "shell": "pwsh",
+      "prefix": "tk",
+      "space": "widget",
+      "filing": {
+        "filed": [
+          {
+            "check": "names.deny",
+            "card": "Bug K7M2",
+            "folder": "widget/backlog"
+          }
+        ],
+        "skipped": [
+          {
+            "check": "paths.machine",
+            "card": "Task H3RE",
+            "date": "2026-10-30"
+          }
+        ]
+      }
+    }
+  },
+  "checks": [
+    {
+      "id": "secrets.tree",
+      "title": "Secrets in the working tree",
+      "booksName": "hard-coded credential",
+      "verdict": "clean"
+    },
+    {
+      "id": "secrets.history",
+      "title": "Secrets in the history",
+      "booksName": "credential in version control history",
+      "verdict": "clean"
+    },
+    {
+      "id": "files.sensitive",
+      "title": "Key files and .env files",
+      "booksName": "sensitive file exposure",
+      "verdict": "clean"
+    },
+    {
+      "id": "license.file",
+      "title": "A license",
+      "booksName": "software license",
+      "verdict": "clean"
+    },
+    {
+      "id": "license.deps",
+      "title": "Dependency licenses",
+      "booksName": "license compliance",
+      "verdict": "not-investigated",
+      "reason": "There's a package.json and no package-lock.json: run npm install to make one, and commit it."
+    },
+    {
+      "id": "paths.machine",
+      "title": "Paths from somebody's machine",
+      "booksName": "hard-coded path",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": "scripts/build.sh",
+          "line": 4,
+          "excerpt": "cp -r dist /Users/alice/backup/widget/"
+        }
+      ],
+      "fix": "Replace each path with one relative to the repository, an environment variable, or a setting the person provides. Then check the commit history for the same path if the name in it should not be public.",
+      "card": "cards/02-replace-paths-from-a-developer-s-machine.md"
+    },
+    {
+      "id": "names.deny",
+      "title": "Names on the deny list",
+      "booksName": "information disclosure",
+      "verdict": "found",
+      "weight": "smoking-gun",
+      "evidence": [
+        {
+          "path": "src/app.js",
+          "line": 1,
+          "rule": "deny-list-line-2"
+        },
+        {
+          "path": "commit message",
+          "line": 1,
+          "commit": "4999d7895f5bfc1a9a8c84adfdf2c40577ea539a",
+          "rule": "deny-list-line-2"
+        }
+      ],
+      "fix": "Replace each name in the files listed, and reword the commit messages listed (git rebase -i, then reword) before the history is published. A name in a commit message that is already public stays public.",
+      "card": "cards/01-remove-names-on-the-deny-list.md"
+    },
+    {
+      "id": "files.large",
+      "title": "Large files",
+      "booksName": "repository bloat",
+      "verdict": "clean"
+    },
+    {
+      "id": "docs.readme",
+      "title": "A README that says how to start",
+      "booksName": "README",
+      "verdict": "clean"
+    },
+    {
+      "id": "docs.contributing",
+      "title": "A contributing guide",
+      "booksName": "contribution guidelines",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a CONTRIBUTING.md at the root, in .github/ or in docs/: how to set up, how to run the tests, and what a good issue and pull request look like.",
+      "card": "cards/03-add-a-contributing-guide.md"
+    },
+    {
+      "id": "docs.conduct",
+      "title": "A code of conduct",
+      "booksName": "code of conduct",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a CODE_OF_CONDUCT.md at the root, in .github/ or in docs/. The Contributor Covenant is a common start; say in it who to contact about a problem.",
+      "card": "cards/04-add-a-code-of-conduct.md"
+    },
+    {
+      "id": "docs.security",
+      "title": "A security policy",
+      "booksName": "vulnerability disclosure policy",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a SECURITY.md at the root, in .github/ or in docs/: which versions get fixes, and how to report a vulnerability privately (GitHub's private vulnerability reporting, or an address).",
+      "card": "cards/05-add-a-security-policy.md"
+    },
+    {
+      "id": "docs.changelog",
+      "title": "A changelog",
+      "booksName": "changelog",
+      "verdict": "clean"
+    },
+    {
+      "id": "github.templates",
+      "title": "Issue and pull request templates",
+      "booksName": "issue templates",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": ".github/ISSUE_TEMPLATE/",
+          "rule": "no-issue-template"
+        },
+        {
+          "path": ".github/pull_request_template.md",
+          "rule": "no-pull-request-template"
+        }
+      ],
+      "fix": "Add .github/ISSUE_TEMPLATE/ with a bug report and a feature request, and a .github/pull_request_template.md that asks what changed, why, and how it was tested.",
+      "card": "cards/06-add-issue-and-pull-request-templates.md"
+    },
+    {
+      "id": "ci.present",
+      "title": "Continuous integration",
+      "booksName": "continuous integration",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": ".github/workflows/triage.yml",
+          "rule": "no-push-or-pull-request"
+        }
+      ],
+      "fix": "Add a workflow in .github/workflows/ that runs on push and pull_request, checks out the code, installs, and runs the build.",
+      "card": "cards/07-add-a-ci-workflow-that-runs-on-push-and-pull-request.md"
+    },
+    {
+      "id": "ci.tests",
+      "title": "Tests in CI",
+      "booksName": "automated testing",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [
+        {
+          "path": ".github/workflows/triage.yml",
+          "rule": "no-test-step"
+        }
+      ],
+      "fix": "Add a step to the CI workflow that runs the project's tests (npm test, pytest, or whatever runs them here), so a pull request that breaks them shows red."
+    },
+    {
+      "id": "workflows.permissions",
+      "title": "Workflow token permissions",
+      "booksName": "least privilege",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [
+        {
+          "path": ".github/workflows/triage.yml",
+          "rule": "no-top-level-permissions"
+        }
+      ],
+      "fix": "Add `permissions: contents: read` at the top of each workflow listed, and grant more only in the job that needs it."
+    },
+    {
+      "id": "workflows.prtarget",
+      "title": "pull_request_target with the pull request's code",
+      "booksName": "pwn request",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": ".github/workflows/triage.yml",
+          "line": 7,
+          "excerpt": "ref: ${{ github.event.pull_request.head.sha }}"
+        }
+      ],
+      "fix": "Use pull_request instead, which runs a fork's code without this repository's secrets. If the workflow must use pull_request_target, never check out or run the pull request's head in it.",
+      "card": "cards/08-stop-pull-request-target-workflows-running-pull-request-code.md"
+    },
+    {
+      "id": "workflows.injection",
+      "title": "Untrusted input in a workflow's shell",
+      "booksName": "script injection",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": ".github/workflows/triage.yml",
+          "line": 10,
+          "excerpt": "echo \"Triaging ${{ github.event.pull_request.title }}\""
+        }
+      ],
+      "fix": "Move each expression into an env: entry on the step and use the variable in the shell, quoted (\"$TITLE\"), so the text is data and never code.",
+      "card": "cards/09-pass-untrusted-workflow-inputs-through-environment-variables.md"
+    },
+    {
+      "id": "deps.lockfile",
+      "title": "A lockfile",
+      "booksName": "dependency pinning",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [
+        {
+          "path": "package.json",
+          "rule": "no-lockfile"
+        }
+      ],
+      "fix": "Run npm install (or your package manager's install) beside each package.json listed and commit the lockfile it writes."
+    },
+    {
+      "id": "deps.advisories",
+      "title": "Known advisories in dependencies",
+      "booksName": "known vulnerable component",
+      "verdict": "not-investigated",
+      "reason": "This makes a call off the machine, and --offline is set."
+    },
+    {
+      "id": "deps.updates",
+      "title": "Automated dependency updates",
+      "booksName": "dependency management",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [],
+      "fix": "Add a .github/dependabot.yml for each ecosystem in the repository (or a Renovate configuration), so updates arrive as pull requests."
+    },
+    {
+      "id": "deps.outdated",
+      "title": "Dependencies a major version behind",
+      "booksName": "outdated dependency",
+      "verdict": "not-investigated",
+      "reason": "This needs npm on the PATH."
+    },
+    {
+      "id": "quality.markers",
+      "title": "Markers left in the code",
+      "booksName": "technical debt markers",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [
+        {
+          "path": "scripts/build.sh",
+          "line": 2,
+          "excerpt": "# TODO: stop copying to one person's backup folder.",
+          "rule": "TODO"
+        }
+      ],
+      "fix": "For each marker, do the work, delete the note, or file it as an issue and leave the issue's link in its place."
+    }
+  ]
+}

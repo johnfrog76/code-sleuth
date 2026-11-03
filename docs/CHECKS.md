@@ -1,0 +1,292 @@
+# The checks
+
+Every check Code Sleuth runs, what it reads, what it finds, and how to fix it. A check is defined once; a
+goal picks the checks it needs and says how much each one weighs. `code-sleuth checks` prints the same
+table from the code, and a test holds this page to it.
+
+A **smoking gun** stands between the repository and the goal, and makes a Bug card. A **loose end** should
+be dealt with before the goal is met, and makes a Task card. A **hunch** is worth a look, and makes a card
+only with `--all`. A check that cannot run reads **not investigated**, with the reason; it never reads
+clean.
+
+The security and quality goals are listed, and a case can be taken for them in the next release.
+
+## Weights
+
+<!-- The rows below are held to the code by test/docs/checks.test.ts. -->
+
+| Check | Going public | Security | Quality |
+| --- | --- | --- | --- |
+| `secrets.tree` | smoking gun | smoking gun | -- |
+| `secrets.history` | smoking gun | smoking gun | -- |
+| `files.sensitive` | smoking gun | smoking gun | -- |
+| `license.file` | smoking gun | -- | -- |
+| `license.deps` | loose end | -- | -- |
+| `paths.machine` | loose end | -- | -- |
+| `names.deny` | smoking gun | -- | -- |
+| `files.large` | loose end | -- | -- |
+| `docs.readme` | loose end | -- | -- |
+| `docs.contributing` | loose end | -- | -- |
+| `docs.conduct` | loose end | -- | -- |
+| `docs.security` | loose end | -- | -- |
+| `docs.changelog` | hunch | -- | hunch |
+| `github.templates` | loose end | -- | -- |
+| `ci.present` | loose end | -- | -- |
+| `ci.tests` | hunch | -- | -- |
+| `workflows.permissions` | hunch | -- | -- |
+| `workflows.prtarget` | loose end | -- | -- |
+| `workflows.injection` | loose end | -- | -- |
+| `deps.lockfile` | hunch | -- | -- |
+| `deps.advisories` | smoking gun | smoking gun | -- |
+| `deps.updates` | hunch | -- | -- |
+| `deps.outdated` | loose end | -- | hunch |
+| `quality.markers` | hunch | -- | -- |
+
+## What each check does
+
+### `secrets.tree`: Secrets in the working tree
+
+- **Reads:** tracked text files (every file under the folder when it is not a repository)
+- **Finds:** a match of the secret rules (below) in a line
+- **Needs:** nothing
+- **What the books call it:** hard-coded credential
+- **The fix:** Revoke each secret where it was issued first: once it is committed, treat it as public. Then remove it from the file and read it from the environment instead.
+
+### `secrets.history`: Secrets in the history
+
+- **Reads:** every line added in `git log -p --all`
+- **Finds:** the same rules over history: a secret removed from the tree but still in history is still a secret
+- **Needs:** `git`
+- **What the books call it:** credential in version control history
+- **The fix:** Revoke each secret where it was issued: anyone with a clone has the history. Then either rewrite the history to remove it (git filter-repo does this) and force-push, or accept that the old value is public.
+
+### `files.sensitive`: Key files and .env files
+
+- **Reads:** tracked file names, and `.npmrc` contents
+- **Finds:** `.env` and `.env.*` (not `.env.example`), `*.pem`, `*.p12`, `*.key`, `*.keystore`, `id_rsa*` (not `*.pub`), an `.npmrc` with an `_authToken` that is not `${...}`
+- **Needs:** nothing
+- **What the books call it:** sensitive file exposure
+- **The fix:** Revoke what each file holds. Remove it from git with git rm --cached, add its pattern to .gitignore, and keep an .env.example with the names and no values.
+
+### `license.file`: A license
+
+- **Reads:** `LICENSE*`, `LICENCE*`, `COPYING*` at the root, and `package.json` `license`
+- **Finds:** no license file; or a manifest license that the file, identified by its text, contradicts
+- **Needs:** nothing
+- **What the books call it:** software license
+- **The fix:** Add a LICENSE file at the root with the full text of the license you choose (MIT and Apache-2.0 are common for open source), and set the same SPDX id in package.json's license field.
+
+### `license.deps`: Dependency licenses
+
+- **Reads:** `package-lock.json` (lockfile v2 or v3)
+- **Finds:** a dependency under a strong copyleft license (GPL, AGPL, SSPL) in a project that is not, or with no license stated; development-only packages are not read
+- **Needs:** nothing
+- **What the books call it:** license compliance
+- **The fix:** For each dependency listed, check its license in its own repository. Replace a strong copyleft dependency, or relicense the project to match it; ask the author of one with no license to add one, or replace it.
+
+### `paths.machine`: Paths from somebody's machine
+
+- **Reads:** tracked text files
+- **Finds:** a home folder with a name in it: `/Users/<name>/`, `/home/<name>/`, `C:\Users\<name>\`
+- **Needs:** nothing
+- **What the books call it:** hard-coded path
+- **The fix:** Replace each path with one relative to the repository, an environment variable, or a setting the person provides. Then check the commit history for the same path if the name in it should not be public.
+
+### `names.deny`: Names on the deny list
+
+- **Reads:** tracked text files and every commit message, against `--deny <file>`
+- **Finds:** any line of the deny list, whole-word, ignoring case; the finding names the list line, never the word
+- **Needs:** `denyList`
+- **What the books call it:** information disclosure
+- **The fix:** Replace each name in the files listed, and reword the commit messages listed (git rebase -i, then reword) before the history is published. A name in a commit message that is already public stays public.
+
+### `files.large`: Large files
+
+- **Reads:** tracked files
+- **Finds:** a file over 5 MB, or a binary over 1 MB that is not an image or a font
+- **Needs:** nothing
+- **What the books call it:** repository bloat
+- **The fix:** Remove each file from the repository and keep it where large files belong: Git LFS, a release asset, or a package. If it is in the history too, rewrite the history before the repository goes public, or every clone keeps it.
+
+### `docs.readme`: A README that says how to start
+
+- **Reads:** `README*` at the root
+- **Finds:** absent, under 10 lines, or no heading that reads as install, usage, quick start, getting started, set up or run
+- **Needs:** nothing
+- **What the books call it:** README
+- **The fix:** Say what the project is in its first lines, then add an Install or Quick start section with the commands a stranger runs first, and a Usage section with one example.
+
+### `docs.contributing`: A contributing guide
+
+- **Reads:** `CONTRIBUTING*` at the root, in `.github/` or `docs/`
+- **Finds:** absent
+- **Needs:** nothing
+- **What the books call it:** contribution guidelines
+- **The fix:** Add a CONTRIBUTING.md at the root, in .github/ or in docs/: how to set up, how to run the tests, and what a good issue and pull request look like.
+
+### `docs.conduct`: A code of conduct
+
+- **Reads:** `CODE_OF_CONDUCT*`, the same places
+- **Finds:** absent
+- **Needs:** nothing
+- **What the books call it:** code of conduct
+- **The fix:** Add a CODE_OF_CONDUCT.md at the root, in .github/ or in docs/. The Contributor Covenant is a common start; say in it who to contact about a problem.
+
+### `docs.security`: A security policy
+
+- **Reads:** `SECURITY*`, the same places
+- **Finds:** absent
+- **Needs:** nothing
+- **What the books call it:** vulnerability disclosure policy
+- **The fix:** Add a SECURITY.md at the root, in .github/ or in docs/: which versions get fixes, and how to report a vulnerability privately (GitHub's private vulnerability reporting, or an address).
+
+### `docs.changelog`: A changelog
+
+- **Reads:** `CHANGELOG*` at the root
+- **Finds:** absent
+- **Needs:** nothing
+- **What the books call it:** changelog
+- **The fix:** Add a CHANGELOG.md at the root, with one line per change a user would notice, newest first.
+
+### `github.templates`: Issue and pull request templates
+
+- **Reads:** `.github/ISSUE_TEMPLATE/` (or `ISSUE_TEMPLATE.md`), a pull request template at the root, in `.github/` or `docs/`
+- **Finds:** either absent
+- **Needs:** nothing
+- **What the books call it:** issue templates
+- **The fix:** Add .github/ISSUE_TEMPLATE/ with a bug report and a feature request, and a .github/pull_request_template.md that asks what changed, why, and how it was tested.
+
+### `ci.present`: Continuous integration
+
+- **Reads:** `.github/workflows/*.yml`
+- **Finds:** no workflow that runs on `push` or `pull_request`
+- **Needs:** nothing
+- **What the books call it:** continuous integration
+- **The fix:** Add a workflow in .github/workflows/ that runs on push and pull_request, checks out the code, installs, and runs the build.
+
+### `ci.tests`: Tests in CI
+
+- **Reads:** the workflows' `run:` steps and `package.json` `scripts.test`
+- **Finds:** no step that runs the tests (`npm test`, `pytest`, `go test`, the test script itself, ...)
+- **Needs:** nothing
+- **What the books call it:** automated testing
+- **The fix:** Add a step to the CI workflow that runs the project's tests (npm test, pytest, or whatever runs them here), so a pull request that breaks them shows red.
+
+### `workflows.permissions`: Workflow token permissions
+
+- **Reads:** each workflow
+- **Finds:** no top-level `permissions:` block
+- **Needs:** nothing
+- **What the books call it:** least privilege
+- **The fix:** Add `permissions: contents: read` at the top of each workflow listed, and grant more only in the job that needs it.
+
+### `workflows.prtarget`: pull_request_target with the pull request's code
+
+- **Reads:** each workflow
+- **Finds:** `pull_request_target` together with a checkout of the pull request's head
+- **Needs:** nothing
+- **What the books call it:** pwn request
+- **The fix:** Use pull_request instead, which runs a fork's code without this repository's secrets. If the workflow must use pull_request_target, never check out or run the pull request's head in it.
+
+### `workflows.injection`: Untrusted input in a workflow's shell
+
+- **Reads:** each workflow's `run:` lines
+- **Finds:** a `${{ github.event.* }}` field a stranger writes (titles, bodies, branch names, commit messages) placed straight in a shell line
+- **Needs:** nothing
+- **What the books call it:** script injection
+- **The fix:** Move each expression into an env: entry on the step and use the variable in the shell, quoted ("$TITLE"), so the text is data and never code.
+
+### `deps.lockfile`: A lockfile
+
+- **Reads:** every `package.json` with dependencies
+- **Finds:** no lockfile beside it, or above it in a workspace
+- **Needs:** nothing
+- **What the books call it:** dependency pinning
+- **The fix:** Run npm install (or your package manager's install) beside each package.json listed and commit the lockfile it writes.
+
+### `deps.advisories`: Known advisories in dependencies
+
+- **Reads:** every package and version in `package-lock.json` (or `npm-shrinkwrap.json`), through
+  `npm audit --json` when npm is found, else through GitHub's advisory database with `gh api /advisories`
+- **Finds:** a locked package with a known advisory against its version. The evidence lists each package once,
+  at its heaviest advisory, with the line it sits on in the lockfile. A package that is only vulnerable
+  through another is not listed again
+- **Weighs:** by severity. Critical or high keeps the goal's weight; moderate is one step down, low or info two.
+  The heaviest piece of evidence decides, and each lighter one says why on its card
+- **Needs:** `network`, and npm or `gh`. With both, npm is asked. Whether `gh` is signed in is not asked ahead,
+  since that would call GitHub: a `gh` that is not reads not investigated with the reason
+- **Sends:** the lockfile's package names and versions: to npm's configured registry through `npm audit`,
+  which is what it always does, or to GitHub, in batches of fifty, through `gh`. Nothing from the
+  repository's files, and never its path. `--offline` turns it off, and the run's header names it before it
+  runs
+- **Reads clean** with no `package.json`, or none with dependencies, and makes no call. **Not investigated**
+  with no npm lockfile, with another package manager's lockfile, with `--offline`, or with neither tool
+- **What the books call it:** known vulnerable component
+- **The fix:** Update each package listed to a version with the fix (`npm audit fix` does what it safely can), or replace it. A package deep in the tree is fixed by updating the dependency that pulls it in.
+
+### `deps.updates`: Automated dependency updates
+
+- **Reads:** `.github/dependabot.yml`, Renovate configs, `package.json` `renovate`
+- **Finds:** none of them
+- **Needs:** nothing
+- **What the books call it:** dependency management
+- **The fix:** Add a .github/dependabot.yml for each ecosystem in the repository (or a Renovate configuration), so updates arrive as pull requests.
+
+### `deps.outdated`: Dependencies a major version behind
+
+- **Reads:** `package.json`'s direct dependencies and devDependencies, their installed versions in
+  `package-lock.json`, and their latest versions from `npm outdated --json --long`
+- **Finds:** a direct dependency a major version or more behind its latest (for a `0.x` version, a minor
+  counts, as npm's caret does). The evidence lists each one; the check counts once
+- **Needs:** `npm`, `network`
+- **Sends:** package names, to npm's configured registry, the one `npm outdated` asks. Nothing from the
+  repository's files, and never its path. It leaves npm's own configuration (`.npmrc`, a private registry)
+  alone. `--offline` turns it off, and the run's header names it before it runs
+- **Reads clean** with no `package.json`, or none of its dependencies, and makes no call; **not investigated**
+  with no lockfile, a lockfile from another package manager, no npm, or `--offline`
+- **What the books call it:** outdated dependency
+- **The fix:** For each dependency listed, read its changelog for the breaking changes between your version and the latest, update it, and run the tests. npm outdated lists them all.
+
+### `quality.markers`: Markers left in the code
+
+- **Reads:** tracked source files (not prose, not lockfiles)
+- **Finds:** `TODO`, `FIXME`, `HACK` or `XXX` in a comment
+- **Needs:** nothing
+- **What the books call it:** technical debt markers
+- **The fix:** For each marker, do the work, delete the note, or file it as an issue and leave the issue's link in its place.
+
+## A guess from a name
+
+The `assigned-secret` rule (a long, random-looking value assigned to a name with `secret`, `token`, `password`
+or `key` in it) is a guess, so it weighs one step down: a smoking gun becomes a loose end. The case says which
+evidence was weighed down, and why.
+
+## Example locations
+
+A repository that tests a scanner keeps deliberate bait in its fixtures: a fake token, a home-folder path, a
+`TODO`. A match in an example location is **shown and never counted**: it makes no card, even with `--all`,
+and never changes the verdict. A real match elsewhere still counts.
+
+The example locations are, for every check:
+
+- a path under a `test/fixtures/` or `__fixtures__/` folder, at any depth;
+- a line carrying `code-sleuth:example`;
+- a path matching any `--examples <glob>` given on the run ([CLI.md](CLI.md#flags)).
+
+A check whose only matches were examples reads **Clean**, with its own line saying so:
+`[x] paths.machine  Clean, apart from 3 matches in example locations, not counted.` A check with real matches
+too stays found, on its real evidence, and says how many more were examples. The case ends with one line:
+`N matches in example locations were not counted; check that they are fake.` A real key committed into a
+fixture is still a real leak: the case stops counting it, but never hides it. `case.json` keeps every example
+match, with its path and line, and records the example locations in force ([CASE-FILE.md](CASE-FILE.md)).
+
+## The secret rules
+
+Private key headers, AWS access key ids, GitHub tokens (`ghp_`, `gho_`, `ghs_`, `ghu_`, `ghr_`,
+`github_pat_`), npm tokens, Slack tokens and incoming webhooks, Teams incoming webhooks, Anthropic API keys
+(`sk-ant-`), OpenAI project keys (`sk-proj-`), Stripe live keys (`sk_live_`, `rk_live_`), Google API
+keys, and the name guess above. A bare `sk-` has no rule: it matches hashes and base64.
+
+**A clean secret check means none of these rules matched, not that there is no secret.** The rules are a
+short list of well-known shapes. A value is never stored or printed: it is shown as its first four and last
+two characters (`ghp_****9f`), and the case keeps a keyed hash of it so two runs can tell it is the same.

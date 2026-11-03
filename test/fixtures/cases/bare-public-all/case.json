@@ -1,0 +1,238 @@
+{
+  "caseFile": 1,
+  "tool": {
+    "name": "code-sleuth",
+    "version": "0.1.0"
+  },
+  "case": "2026-10-31-public-1",
+  "goal": "public",
+  "repo": {
+    "name": "bare",
+    "head": "cf617d72d82b4912b8ba24f2f1aa52e178866f71",
+    "branch": "main",
+    "dirty": false,
+    "remote": null
+  },
+  "openedAt": "2026-10-31T14:02:11Z",
+  "closedAt": "2026-10-31T14:02:11Z",
+  "verdict": "not-ready",
+  "counts": {
+    "smoking-gun": 1,
+    "loose-end": 6,
+    "hunch": 3,
+    "clean": 11,
+    "not-investigated": 3
+  },
+  "exampleLocations": {
+    "globs": [
+      "**/test/fixtures/**",
+      "**/__fixtures__/**"
+    ],
+    "added": [],
+    "marker": "code-sleuth:example"
+  },
+  "checks": [
+    {
+      "id": "secrets.tree",
+      "title": "Secrets in the working tree",
+      "booksName": "hard-coded credential",
+      "verdict": "clean"
+    },
+    {
+      "id": "secrets.history",
+      "title": "Secrets in the history",
+      "booksName": "credential in version control history",
+      "verdict": "clean"
+    },
+    {
+      "id": "files.sensitive",
+      "title": "Key files and .env files",
+      "booksName": "sensitive file exposure",
+      "verdict": "clean"
+    },
+    {
+      "id": "license.file",
+      "title": "A license",
+      "booksName": "software license",
+      "verdict": "found",
+      "weight": "smoking-gun",
+      "evidence": [],
+      "fix": "Add a LICENSE file at the root with the full text of the license you choose (MIT and Apache-2.0 are common for open source), and set the same SPDX id in package.json's license field.",
+      "card": "cards/01-add-a-license-and-make-the-manifest-agree-with-it.md"
+    },
+    {
+      "id": "license.deps",
+      "title": "Dependency licenses",
+      "booksName": "license compliance",
+      "verdict": "clean"
+    },
+    {
+      "id": "paths.machine",
+      "title": "Paths from somebody's machine",
+      "booksName": "hard-coded path",
+      "verdict": "clean"
+    },
+    {
+      "id": "names.deny",
+      "title": "Names on the deny list",
+      "booksName": "information disclosure",
+      "verdict": "not-investigated",
+      "reason": "This needs a deny list: give one with --deny <file>."
+    },
+    {
+      "id": "files.large",
+      "title": "Large files",
+      "booksName": "repository bloat",
+      "verdict": "clean"
+    },
+    {
+      "id": "docs.readme",
+      "title": "A README that says how to start",
+      "booksName": "README",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": "README.md",
+          "excerpt": "3 lines",
+          "rule": "under-10-lines"
+        }
+      ],
+      "fix": "Say what the project is in its first lines, then add an Install or Quick start section with the commands a stranger runs first, and a Usage section with one example.",
+      "card": "cards/02-write-a-readme-that-says-how-to-install-and-use-the-project.md"
+    },
+    {
+      "id": "docs.contributing",
+      "title": "A contributing guide",
+      "booksName": "contribution guidelines",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a CONTRIBUTING.md at the root, in .github/ or in docs/: how to set up, how to run the tests, and what a good issue and pull request look like.",
+      "card": "cards/03-add-a-contributing-guide.md"
+    },
+    {
+      "id": "docs.conduct",
+      "title": "A code of conduct",
+      "booksName": "code of conduct",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a CODE_OF_CONDUCT.md at the root, in .github/ or in docs/. The Contributor Covenant is a common start; say in it who to contact about a problem.",
+      "card": "cards/04-add-a-code-of-conduct.md"
+    },
+    {
+      "id": "docs.security",
+      "title": "A security policy",
+      "booksName": "vulnerability disclosure policy",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a SECURITY.md at the root, in .github/ or in docs/: which versions get fixes, and how to report a vulnerability privately (GitHub's private vulnerability reporting, or an address).",
+      "card": "cards/05-add-a-security-policy.md"
+    },
+    {
+      "id": "docs.changelog",
+      "title": "A changelog",
+      "booksName": "changelog",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [],
+      "fix": "Add a CHANGELOG.md at the root, with one line per change a user would notice, newest first.",
+      "card": "cards/08-add-a-changelog.md"
+    },
+    {
+      "id": "github.templates",
+      "title": "Issue and pull request templates",
+      "booksName": "issue templates",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [
+        {
+          "path": ".github/ISSUE_TEMPLATE/",
+          "rule": "no-issue-template"
+        },
+        {
+          "path": ".github/pull_request_template.md",
+          "rule": "no-pull-request-template"
+        }
+      ],
+      "fix": "Add .github/ISSUE_TEMPLATE/ with a bug report and a feature request, and a .github/pull_request_template.md that asks what changed, why, and how it was tested.",
+      "card": "cards/06-add-issue-and-pull-request-templates.md"
+    },
+    {
+      "id": "ci.present",
+      "title": "Continuous integration",
+      "booksName": "continuous integration",
+      "verdict": "found",
+      "weight": "loose-end",
+      "evidence": [],
+      "fix": "Add a workflow in .github/workflows/ that runs on push and pull_request, checks out the code, installs, and runs the build.",
+      "card": "cards/07-add-a-ci-workflow-that-runs-on-push-and-pull-request.md"
+    },
+    {
+      "id": "ci.tests",
+      "title": "Tests in CI",
+      "booksName": "automated testing",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [],
+      "fix": "Add a step to the CI workflow that runs the project's tests (npm test, pytest, or whatever runs them here), so a pull request that breaks them shows red.",
+      "card": "cards/09-run-the-tests-in-ci.md"
+    },
+    {
+      "id": "workflows.permissions",
+      "title": "Workflow token permissions",
+      "booksName": "least privilege",
+      "verdict": "clean"
+    },
+    {
+      "id": "workflows.prtarget",
+      "title": "pull_request_target with the pull request's code",
+      "booksName": "pwn request",
+      "verdict": "clean"
+    },
+    {
+      "id": "workflows.injection",
+      "title": "Untrusted input in a workflow's shell",
+      "booksName": "script injection",
+      "verdict": "clean"
+    },
+    {
+      "id": "deps.lockfile",
+      "title": "A lockfile",
+      "booksName": "dependency pinning",
+      "verdict": "clean"
+    },
+    {
+      "id": "deps.advisories",
+      "title": "Known advisories in dependencies",
+      "booksName": "known vulnerable component",
+      "verdict": "not-investigated",
+      "reason": "This makes a call off the machine, and --offline is set."
+    },
+    {
+      "id": "deps.updates",
+      "title": "Automated dependency updates",
+      "booksName": "dependency management",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [],
+      "fix": "Add a .github/dependabot.yml for each ecosystem in the repository (or a Renovate configuration), so updates arrive as pull requests.",
+      "card": "cards/10-turn-on-automated-dependency-updates.md"
+    },
+    {
+      "id": "deps.outdated",
+      "title": "Dependencies a major version behind",
+      "booksName": "outdated dependency",
+      "verdict": "not-investigated",
+      "reason": "This needs npm on the PATH."
+    },
+    {
+      "id": "quality.markers",
+      "title": "Markers left in the code",
+      "booksName": "technical debt markers",
+      "verdict": "clean"
+    }
+  ]
+}

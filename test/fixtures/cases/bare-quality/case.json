@@ -1,0 +1,52 @@
+{
+  "caseFile": 1,
+  "tool": {
+    "name": "code-sleuth",
+    "version": "0.1.0"
+  },
+  "case": "2026-10-31-quality-1",
+  "goal": "quality",
+  "repo": {
+    "name": "bare",
+    "head": "cf617d72d82b4912b8ba24f2f1aa52e178866f71",
+    "branch": "main",
+    "dirty": false,
+    "remote": null
+  },
+  "openedAt": "2026-10-31T14:02:11Z",
+  "closedAt": "2026-10-31T14:02:11Z",
+  "verdict": "ready",
+  "counts": {
+    "smoking-gun": 0,
+    "loose-end": 0,
+    "hunch": 1,
+    "clean": 0,
+    "not-investigated": 1
+  },
+  "exampleLocations": {
+    "globs": [
+      "**/test/fixtures/**",
+      "**/__fixtures__/**"
+    ],
+    "added": [],
+    "marker": "code-sleuth:example"
+  },
+  "checks": [
+    {
+      "id": "docs.changelog",
+      "title": "A changelog",
+      "booksName": "changelog",
+      "verdict": "found",
+      "weight": "hunch",
+      "evidence": [],
+      "fix": "Add a CHANGELOG.md at the root, with one line per change a user would notice, newest first."
+    },
+    {
+      "id": "deps.outdated",
+      "title": "Dependencies a major version behind",
+      "booksName": "outdated dependency",
+      "verdict": "not-investigated",
+      "reason": "This needs npm on the PATH."
+    }
+  ]
+}

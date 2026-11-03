@@ -1,0 +1,43 @@
+{
+  "name": "code-sleuth",
+  "version": "0.1.0",
+  "description": "Point it at a repo, pick a goal, run. A checklist and card-ready issues come back.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "code-sleuth": "dist/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "toolkit",
+    "src/polish/prompt.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "lint": "tsc --noEmit && tsc --noEmit -p src/atoms && eslint . && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.10",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "yaml": "2.9.1"
+  }
+}

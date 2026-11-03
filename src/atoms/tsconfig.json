@@ -1,0 +1,11 @@
+{
+  // The figures are kept as drawn, under the settings they were drawn with: array destructuring is read as
+  // defined, as it was there. Everything else is as strict as the rest of the package.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "rootDir": "../.."
+  },
+  "include": [".", "../../test/atoms"],
+  "exclude": []
+}

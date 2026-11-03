@@ -1,0 +1,3 @@
+# Fixture trees and golden case files are compared byte for byte, and a golden case holds the head of a
+# commit made from a fixture. Git must never convert their line endings, on any host.
+test/fixtures/** -text
