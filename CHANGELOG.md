@@ -13,6 +13,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Fixed
 
+- A clean `npm ci` no longer reports moderate vulnerabilities: the development tools' `minimatch` is overridden to 11.0.4, past the advisory. Nothing Code Sleuth runs used it.
 - `--toolkit` files in the repository's own ToolKit Space, the one whose address is its `origin`, rather than whichever Space is active. With no matching Space it falls back to the active one, and the footer says so.
 
 ## [0.1.0] - 2026-11-03

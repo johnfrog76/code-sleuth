@@ -10,7 +10,9 @@ never paste a real secret, even a revoked one. Keep other people's code and secr
 
 ## Set up
 
-You need Node 24 (`.nvmrc`) and git. [QUICKSTART.md](QUICKSTART.md) installs it from a clone;
+You need Node 24 (`.nvmrc`) and git. `package.json` overrides `minimatch` to 11.0.4 for ESLint's own tree,
+which still asks for 10.x, the line with a known advisory (GHSA-g3hv-75wg-m249); the override goes once
+ESLint and typescript-eslint ask for 11. Nothing in the published package uses `minimatch`. [QUICKSTART.md](QUICKSTART.md) installs it from a clone;
 [TESTING.md](TESTING.md) runs the tests and says what each suite guards; [ARCHITECTURE.md](ARCHITECTURE.md)
 says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy to break, and
 [spec/code-sleuth.spec.md](../spec/code-sleuth.spec.md) is the contract the code is held to.

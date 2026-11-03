@@ -25,10 +25,6 @@ npm link
 `npm ci` installs and builds: the build is the package's `prepare` script, which `npm ci` runs, and `npm link`
 runs again before it puts `code-sleuth` on your PATH. `code-sleuth --version` checks it.
 
-`npm ci` ends by reporting moderate vulnerabilities (12 today). They are all in the development tools, under
-ESLint, not in anything Code Sleuth runs: `npm audit --omit=dev` finds none. The one advisory behind them is
-tracked in the issues.
-
 ## The first run
 
 In the repository you want to know about:
