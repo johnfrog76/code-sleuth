@@ -27,6 +27,13 @@ for review.
 > Whether `gh` is signed in is not asked ahead, since asking calls GitHub: a `gh` that is not reads not
 > investigated with the reason.
 
+> **Amended 2026-11-03:** section 8.2's Space. Without `--toolkit-space`, the cards go to the Space whose
+> address is the repository's `origin` (a GitHub Space's `org` is the repository's URL; an Azure DevOps
+> Space's `org` is the organisation, and its `projects[].repo` lists the repository). The probe reports each
+> declared Space's `slug`, `org` and `repos` as `addresses`. With no single match, the active Space is used and
+> the footer says so; the case records `spaceFrom` (`flag`, `origin` or `active`). The chosen Space reaches
+> ToolKit as `P20_ACTIVE_SPACE` in the child shell only, as `--toolkit-space` does.
+
 > **Amended 2026-11-03:** section 5.3's example rule. A match in an example location (a path under
 > `test/fixtures/` or `__fixtures__/` at any depth, a line carrying `code-sleuth:example`, or a path matching
 > an `--examples <glob>`) is no longer reported as a hunch. It applies to every check, is shown and never
@@ -439,7 +446,8 @@ request; none reads ToolKit's files.
   `-AsJson` on `NewPrompt`, so this dependency on a global is temporary.
 - **The prefix** is `--toolkit-prefix <p>`, else `tk` (ToolKit's shipped `commandPrefix`); from 0.3.0, the
   agent's `cliPrefix` when the agent answers.
-- **The Space** is the active one, or the one `--toolkit-space <slug>` names. That flag sets
+- **The Space** is the one `--toolkit-space <slug>` names; else the Space whose address is the repository's
+  `origin`; else the active one (amended 2026-11-03). That flag sets
   `P20_ACTIVE_SPACE` in the child shell's environment only -- ToolKit's per-process stand-in for
   `activeSpace` (`consts.json` `env.activeSpace`, read by `Scripts/Resolve-HubConfig.ps1` and by the agent's
   `load_config`) -- so the person's own config is never changed. An undeclared slug does not fail in ToolKit:

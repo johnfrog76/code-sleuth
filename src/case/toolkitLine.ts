@@ -7,7 +7,7 @@ import type { ToolkitRecord } from "./record.js";
  */
 export function toolkitLine(toolkit: ToolkitRecord, goal: string, space?: string): string {
   if (toolkit.state === "not-installed") return copy.toolkit.upsell;
-  const found = copy.toolkit.found(toolkit.prefix, toolkit.space);
+  const found = copy.toolkit.found(toolkit.prefix, toolkit.space, toolkit.spaceFrom);
   const filing = toolkit.filing;
   if (filing === undefined) return copy.toolkit.fileThem(found, copy.toolkit.command(goal, space));
   const parts: string[] = [];

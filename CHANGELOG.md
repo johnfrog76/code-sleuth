@@ -6,6 +6,10 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ## [Unreleased]
 
+### Fixed
+
+- `--toolkit` files in the repository's own ToolKit Space, the one whose address is its `origin`, rather than whichever Space is active. With no matching Space it falls back to the active one, and the footer says so.
+
 ### Added
 
 - A project contact, `codesleuth.project (at) outlook.com`, for conduct reports (`CODE_OF_CONDUCT.md`) and security reports (`SECURITY.md`, beside GitHub's private vulnerability reporting). It is written out, not linked, to slow down address scrapers.

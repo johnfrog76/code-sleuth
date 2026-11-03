@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -20,6 +21,8 @@ async function onBare(
     scenario?: Scenario;
     ask?: (q: string) => Promise<string>;
     runs?: string[][];
+    /** The copy's `origin` remote. */
+    origin?: string;
   } = {},
 ) {
   return withScratch(async (scratch) => {
@@ -39,7 +42,16 @@ async function onBare(
           );
         }
       },
-      { git: true },
+      {
+        git: true,
+        ...(setup.origin === undefined
+          ? {}
+          : {
+              prepare: (root: string) => {
+                spawnSync("git", ["remote", "add", "origin", setup.origin!], { cwd: root });
+              },
+            }),
+      },
     );
     const repoFolder = readdirSync(out).find((name) => name.startsWith("bare-"))!;
     const ledgerFile = join(out, repoFolder, "filed.json");
@@ -63,7 +75,7 @@ async function onBare(
   });
 }
 
-const filings = (calls: { argv: string[] }[]) => calls.filter((c) => !c.argv.includes("-Probe"));
+const filings = <T extends { argv: string[] }>(calls: T[]) => calls.filter((c) => !c.argv.includes("-Probe"));
 const titleOf = (argv: string[]) => argv[argv.indexOf("-Title") + 1];
 const LICENSE = cardCopy["license.file"].title;
 const README = cardCopy["docs.readme"].title;
@@ -176,7 +188,7 @@ describe("--toolkit", () => {
     });
     expect((caseJson.enhancements.toolkit.filing as { filed: unknown[] }).filed).toHaveLength(titles.length);
     expect(caseMd.trimEnd().split("\n").at(-1)).toMatch(
-      /^ToolKit: found \(tk, Space 'widget'\); filed \d+ cards in the Space 'widget' \(Bug K7M1, /,
+      /^ToolKit: found \(tk, Space 'widget', the active one: no Space matches this repository\); filed \d+ cards in the Space 'widget' \(Bug K7M1, /,
     );
   });
 
@@ -305,10 +317,10 @@ describe("without --toolkit", () => {
     const { last, calls, caseMd } = await onBare([]);
     expect(filings(calls)).toEqual([]);
     expect(last.stdout.trimEnd().split("\n").at(-1)).toBe(
-      "ToolKit    found (tk, Space 'widget'). To file these cards: `code-sleuth --goal public --toolkit`",
+      "ToolKit    found (tk, Space 'widget', the active one: no Space matches this repository). To file these cards: `code-sleuth --goal public --toolkit`",
     );
     expect(caseMd.trimEnd().split("\n").at(-1)).toBe(
-      "ToolKit: found (tk, Space 'widget'). To file these cards: `code-sleuth --goal public --toolkit`",
+      "ToolKit: found (tk, Space 'widget', the active one: no Space matches this repository). To file these cards: `code-sleuth --goal public --toolkit`",
     );
   });
 
@@ -331,14 +343,14 @@ describe("the footer's one ToolKit line", () => {
     const { last, calls } = await onBare(["--toolkit"]);
     expect(filings(calls)).toEqual([]);
     expect(toolkitLines(last.stdout)).toEqual([
-      "ToolKit    found (tk, Space 'widget'); nothing filed: there's no terminal to ask in, so add --yes to file without asking.",
+      "ToolKit    found (tk, Space 'widget', the active one: no Space matches this repository); nothing filed: there's no terminal to ask in, so add --yes to file without asking.",
     ]);
   });
 
   it("on the interactive path, answered no: one line", async () => {
     const { last } = await onBare(["--toolkit"], { ask: async () => "n" });
     expect(toolkitLines(last.stdout)).toEqual([
-      "ToolKit    found (tk, Space 'widget'); nothing filed: you said no.",
+      "ToolKit    found (tk, Space 'widget', the active one: no Space matches this repository); nothing filed: you said no.",
     ]);
   });
 
@@ -347,7 +359,7 @@ describe("the footer's one ToolKit line", () => {
     const lines = toolkitLines(last.stdout);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(
-      /^ToolKit {4}found \(tk, Space 'widget'\); filed \d+ cards in the Space 'widget' \(Bug K7M1(, Task K7M\d+)+\)\.$/,
+      /^ToolKit {4}found \(tk, Space 'widget', the active one: no Space matches this repository\); filed \d+ cards in the Space 'widget' \(Bug K7M1(, Task K7M\d+)+\)\.$/,
     );
   });
 
@@ -356,7 +368,74 @@ describe("the footer's one ToolKit line", () => {
     const lines = toolkitLines(last.stdout);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(
-      /^ToolKit {4}found \(tk, Space 'widget'\); \d+ were already filed; nothing filed: every card is already filed\.$/,
+      /^ToolKit {4}found \(tk, Space 'widget', the active one: no Space matches this repository\); \d+ were already filed; nothing filed: every card is already filed\.$/,
+    );
+  });
+});
+
+describe("the Space --toolkit files in", () => {
+  const A = "the active one: no Space matches this repository";
+  // ToolKit's active Space is widget; this repository's own may be another.
+  const scenario: Scenario = {
+    probe: {
+      prefix: "tk",
+      space: "widget",
+      spaces: ["widget", "other"],
+      addresses: [
+        { slug: "widget", org: "https://github.com/owner/widget", repos: [] },
+        { slug: "other", org: "https://github.com/owner/other", repos: [] },
+      ],
+    },
+  };
+  const spacesFiledIn = (calls: { argv: string[]; space: string | null }[]) => [
+    ...new Set(filings(calls).map((c) => c.space)),
+  ];
+
+  it("is the repository's own when a Space's address is its origin, though another Space is active", async () => {
+    const { last, calls, caseJson } = await onBare(["--toolkit", "--yes"], {
+      scenario,
+      origin: "git@github.com:Owner/Other.git",
+    });
+    expect(spacesFiledIn(calls)).toEqual(["other"]);
+    expect(caseJson.enhancements.toolkit).toMatchObject({ space: "other", spaceFrom: "origin" });
+    expect(toolkitLines(last.stdout)[0]).toMatch(
+      /^ToolKit {4}found \(tk, Space 'other', this repository's own\); filed \d+ cards in the Space 'other' /,
+    );
+  });
+
+  it("is the repository's own when that is also the active Space", async () => {
+    const { calls, caseJson } = await onBare(["--toolkit", "--yes"], {
+      scenario,
+      origin: "https://github.com/owner/widget",
+    });
+    expect(spacesFiledIn(calls)).toEqual(["widget"]);
+    expect(caseJson.enhancements.toolkit).toMatchObject({ space: "widget", spaceFrom: "origin" });
+  });
+
+  it("falls back to the active Space when no Space's address is the origin, and says so", async () => {
+    const { last, calls, caseJson } = await onBare(["--toolkit", "--yes"], {
+      scenario,
+      origin: "https://github.com/owner/nothing-like-it.git",
+    });
+    expect(spacesFiledIn(calls)).toEqual([null]);
+    expect(caseJson.enhancements.toolkit).toMatchObject({ space: "widget", spaceFrom: "active" });
+    expect(toolkitLines(last.stdout)[0]).toContain(`found (tk, Space 'widget', ${A}); filed `);
+  });
+
+  it("is --toolkit-space when given, whatever the origin says", async () => {
+    const { last, calls, caseJson } = await onBare(["--toolkit", "--yes", "--toolkit-space", "widget"], {
+      scenario,
+      origin: "https://github.com/owner/other",
+    });
+    expect(spacesFiledIn(calls)).toEqual(["widget"]);
+    expect(caseJson.enhancements.toolkit).toMatchObject({ space: "widget", spaceFrom: "flag" });
+    expect(toolkitLines(last.stdout)[0]).toMatch(/^ToolKit {4}found \(tk, Space 'widget'\); filed /);
+  });
+
+  it("names the repository's own Space in the command a case ends with", async () => {
+    const { last } = await onBare([], { scenario, origin: "https://github.com/owner/other" });
+    expect(last.stdout.trimEnd().split("\n").at(-1)).toBe(
+      "ToolKit    found (tk, Space 'other', this repository's own). To file these cards: `code-sleuth --goal public --toolkit`",
     );
   });
 });

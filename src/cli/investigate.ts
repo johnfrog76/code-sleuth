@@ -4,6 +4,7 @@ import { defaultCasesFolder, isInside } from "../case/folder.js";
 import type { CaseRecord } from "../case/record.js";
 import { examplesLine } from "../case/examplesLine.js";
 import { polishLine } from "../case/polishLine.js";
+import { readRemote } from "../case/repoInfo.js";
 import { toolkitLine } from "../case/toolkitLine.js";
 import { openCase } from "../case/write.js";
 import { detectCapabilities, outgoingCalls } from "../engine/engine.js";
@@ -43,13 +44,13 @@ export async function investigate(
   const terminal = io.terminal ?? { stdin: false, stdout: false, stderr: false };
   const { goal, asked } = await pickGoal(flags.goal, io, terminal.stdin && terminal.stdout);
   const denyList = flags.deny === undefined ? undefined : readDenyList(flags.deny, root);
-  const { detection, options: toolkitOptions } = prepareToolkit(flags, io);
+  const repo = openRepo(root);
+  const { detection, options: toolkitOptions, spaceFrom } = prepareToolkit(flags, io, readRemote(repo));
 
   // With --json, stdout carries the record alone and the person reads the rest on stderr.
   const human = flags.json ? io.stderr : io.stdout;
   const env = io.env ?? {};
   const colour = (flags.json ? terminal.stderr : terminal.stdout) && !env.NO_COLOR;
-  const repo = openRepo(root);
   const casesFolder = flags.out === undefined ? (io.casesFolder ?? defaultCasesFolder()) : resolve(flags.out);
 
   const polish = preparePolish(flags.polish ?? false, io);
@@ -103,7 +104,7 @@ export async function investigate(
     record = draft.close(
       {
         polish: polish.state,
-        toolkit: toolkitRecord(detection, filing),
+        toolkit: toolkitRecord(detection, filing, spaceFrom),
         ...(flags.toolkitSpace === undefined ? {} : { toolkitSpace: flags.toolkitSpace }),
       },
       polished,

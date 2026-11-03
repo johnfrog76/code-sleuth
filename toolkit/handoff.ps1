@@ -8,7 +8,10 @@
   Windows PowerShell 5.1-clean: no ternary, no ?? or ?., no -AsHashtable, no && or || chains.
 
   -Probe        Resolve <prefix>NewPrompt (which loads ToolKit) and print one line:
-                CODE-SLEUTH-PROBE {"prefix":...,"space":...,"spaces":[...],"root":...}
+                CODE-SLEUTH-PROBE {"prefix":...,"space":...,"spaces":[...],"addresses":[...],"root":...}
+                Each address is a Space's slug, its org (a repository's URL on GitHub, the organisation's on
+                Azure DevOps) and its projects' repository names, so Code Sleuth can find the Space whose
+                address is the investigated repository's origin.
   -ModuleRoot   Only for Code Sleuth's own tests: the one folder ToolKit is loaded from, set inside this
                 shell, the way ToolKit's own suites isolate a checkout.
   Exit codes    0 done; 2 ToolKit stated a refusal (it printed Error: and Hint:); 3 ToolKit is not here;
@@ -41,22 +44,38 @@ if ($Probe) {
     $resolvedPrefix = $null
     $space = $null
     $spaces = $null
+    $addresses = $null
     $root = $null
     if ($null -ne $config) {
         $resolvedPrefix = $config.CommandPrefix
         $space = $config.ActiveSpace
         $root = $config.PromptsRoot
         $spaces = @()
+        $addresses = @()
         foreach ($entry in @($config.Spaces)) {
-            if ($null -ne $entry -and $null -ne $entry.slug) { $spaces += [string]$entry.slug }
+            if ($null -ne $entry -and $null -ne $entry.slug) {
+                $spaces += [string]$entry.slug
+                $repos = @()
+                foreach ($project in @($entry.projects)) {
+                    if ($null -ne $project -and $null -ne $project.repo) { $repos += [string]$project.repo }
+                }
+                $org = $null
+                if ($null -ne $entry.org) { $org = [string]$entry.org }
+                $address = New-Object PSObject
+                $address | Add-Member -NotePropertyName slug -NotePropertyValue ([string]$entry.slug)
+                $address | Add-Member -NotePropertyName org -NotePropertyValue $org
+                $address | Add-Member -NotePropertyName repos -NotePropertyValue $repos
+                $addresses += $address
+            }
         }
     }
     $answer = New-Object PSObject
     $answer | Add-Member -NotePropertyName prefix -NotePropertyValue $resolvedPrefix
     $answer | Add-Member -NotePropertyName space -NotePropertyValue $space
     $answer | Add-Member -NotePropertyName spaces -NotePropertyValue $spaces
+    $answer | Add-Member -NotePropertyName addresses -NotePropertyValue $addresses
     $answer | Add-Member -NotePropertyName root -NotePropertyValue $root
-    Write-Output ('CODE-SLEUTH-PROBE ' + (ConvertTo-Json -InputObject $answer -Compress -Depth 3))
+    Write-Output ('CODE-SLEUTH-PROBE ' + (ConvertTo-Json -InputObject $answer -Compress -Depth 4))
     exit 0
 }
 

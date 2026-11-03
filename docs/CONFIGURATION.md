@@ -16,8 +16,9 @@ never writes a setting anywhere.
 
 Two more, set or cleared by Code Sleuth itself for the processes it starts, never read from you:
 
-- `P20_ACTIVE_SPACE` is set in ToolKit's child shell only, when `--toolkit-space` names a Space. Your own
-  ToolKit setting is never changed.
+- `P20_ACTIVE_SPACE` is set in ToolKit's child shell only, to the Space `--toolkit-space` names, or else to
+  the Space whose address is the repository's origin ([TOOLKIT.md](TOOLKIT.md#which-space)). Your own ToolKit
+  setting is never changed.
 - `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and `GIT_CEILING_DIRECTORIES` are removed for every `git` it runs,
   and `GIT_OPTIONAL_LOCKS=0` is set, so an inherited variable cannot point git at another repository and a
   read never refreshes the index.

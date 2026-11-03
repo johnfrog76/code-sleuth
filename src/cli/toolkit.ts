@@ -4,6 +4,7 @@ import type { Filing, ToolkitRecord } from "../case/record.js";
 import { localDate, type CaseDraft } from "../case/write.js";
 import { confirmsSpace, type DetectOptions, type Detection, detectToolkit } from "../toolkit/detect.js";
 import { fileCard } from "../toolkit/file.js";
+import { type SpaceSource, spaceForOrigin } from "../toolkit/space.js";
 import { ledgerPath, readLedger, recordFiled } from "../toolkit/ledger.js";
 import { copy } from "./copy.js";
 import { type Io, Refusal } from "./refusal.js";
@@ -19,11 +20,15 @@ export interface ToolkitFlags {
 /**
  * Looks for ToolKit, and refuses before any case is taken what the flags ask and ToolKit cannot do: --yes or
  * --refile without --toolkit, --toolkit with no ToolKit, a --toolkit-space ToolKit does not declare.
+ *
+ * The Space is --toolkit-space when given; else the one Space whose address is the repository's origin; else
+ * ToolKit's active Space, and the case says that no Space matched.
  */
 export function prepareToolkit(
   flags: ToolkitFlags,
   io: Io,
-): { detection: Detection; options: DetectOptions } {
+  remote: string | null = null,
+): { detection: Detection; options: DetectOptions; spaceFrom: SpaceSource } {
   if (!flags.toolkit && (flags.yes || flags.refile)) {
     throw new Refusal(
       copy.toolkit.onlyWithToolkit(flags.yes ? "--yes" : "--refile"),
@@ -51,11 +56,23 @@ export function prepareToolkit(
       copy.toolkit.undeclaredSpaceHint(declared),
     );
   }
-  return { detection, options };
+  if (flags.toolkitSpace !== undefined) return { detection, options, spaceFrom: "flag" };
+  if (detection.state !== "detected") return { detection, options, spaceFrom: "active" };
+
+  // The repository's own Space, when ToolKit declares one whose address is its origin. It reaches ToolKit as
+  // P20_ACTIVE_SPACE in the child shell only, as --toolkit-space does; ToolKit's setting is never changed.
+  const own = spaceForOrigin(remote, detection.addresses ?? []);
+  if (own === undefined || !(detection.spaces ?? []).includes(own))
+    return { detection, options, spaceFrom: "active" };
+  return {
+    detection: { ...detection, space: own },
+    options: { ...options, space: own },
+    spaceFrom: "origin",
+  };
 }
 
 /** What the case records about ToolKit, before anything is filed. */
-export function toolkitRecord(detection: Detection, filing?: Filing): ToolkitRecord {
+export function toolkitRecord(detection: Detection, filing?: Filing, spaceFrom?: SpaceSource): ToolkitRecord {
   if (detection.state === "not-installed") return { state: "not-installed" };
   return {
     state: "detected",
@@ -63,6 +80,7 @@ export function toolkitRecord(detection: Detection, filing?: Filing): ToolkitRec
     shell: detection.shell.name,
     prefix: detection.prefix,
     space: detection.space,
+    ...(spaceFrom === undefined ? {} : { spaceFrom }),
     ...(filing === undefined ? {} : { filing }),
   };
 }

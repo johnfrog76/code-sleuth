@@ -98,8 +98,14 @@ export const copy = {
   toolkit: {
     upsell:
       "Want these as real cards, in your own files, on your own board? That's what ToolKit is for: https://johnfrog76.github.io/toolkit/",
-    found: (prefix: string, space: string | null) =>
-      `found (${prefix}${space === null ? "" : `, Space '${space}'`})`,
+    found: (prefix: string, space: string | null, from?: "flag" | "origin" | "active") =>
+      `found (${prefix}${space === null ? "" : `, Space '${space}'`}${
+        from === "origin"
+          ? ", this repository's own"
+          : from === "active" && space !== null
+            ? ", the active one: no Space matches this repository"
+            : ""
+      })`,
     command: (goal: string, space: string | undefined) =>
       `code-sleuth --goal ${goal} --toolkit${space === undefined ? "" : ` --toolkit-space ${space}`}`,
     fileThem: (found: string, command: string) => `ToolKit: ${found}. To file these cards: \`${command}\``,

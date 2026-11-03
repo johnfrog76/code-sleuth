@@ -9,8 +9,22 @@ file, and the case ends with one line saying what ToolKit would add.
 By asking, never by guessing. Code Sleuth looks for `pwsh` on the PATH, else `powershell.exe` (Windows
 PowerShell 5.1 is ToolKit's floor), and runs its one PowerShell file, `toolkit/handoff.ps1 -Probe`, in a fresh
 shell with no profile. The probe resolves ToolKit's `NewPrompt` command, which loads ToolKit, and reports
-the command prefix, the Space it will file in, and the Spaces ToolKit declares. Code Sleuth never reads
-ToolKit's files.
+the command prefix, the active Space, and each Space ToolKit declares with its address. Code Sleuth never
+reads ToolKit's files.
+
+## Which Space
+
+The cards go to the repository's own Space:
+
+1. `--toolkit-space <slug>`, when you give it.
+2. Else the one Space whose address is this repository's `origin`: on GitHub, a Space whose address is the
+   repository's URL (`https://github.com/<owner>/<repo>`); on Azure DevOps, a Space for the repository's
+   organisation that lists the repository among its projects. Names match without regard to case.
+3. Else ToolKit's active Space, and the footer says so:
+   `ToolKit    found (tk, Space 'widget', the active one: no Space matches this repository)`.
+
+The Space chosen reaches ToolKit as `P20_ACTIVE_SPACE` in its child shell only, so ToolKit's own setting is
+never changed. The case records how it was chosen (`spaceFrom`: `flag`, `origin` or `active`).
 
 Without `--toolkit`, a run that finds ToolKit ends with the command that would file the cards.
 
@@ -49,7 +63,7 @@ condition, and its acceptance is the check reading Clean, so new evidence belong
 
 `--toolkit`, `--yes`, `--refile`, `--toolkit-prefix` and `--toolkit-space` are in [CLI.md](CLI.md#flags).
 `--toolkit-space` reaches ToolKit as `P20_ACTIVE_SPACE` in its child shell only, so ToolKit's own setting is
-never changed.
+never changed. Without it, the repository's own Space does the same ([Which Space](#which-space)).
 
 A Space ToolKit does not confirm is refused before anything is filed: ToolKit falls back to another Space for
 a name it does not declare, so Code Sleuth checks that the Space it was told is the one ToolKit reports.

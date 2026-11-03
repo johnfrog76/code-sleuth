@@ -1,3 +1,4 @@
+import type { SpaceSource } from "../toolkit/space.js";
 import type { Evidence, Verdict } from "../engine/check.js";
 import type { ExampleLocations } from "../engine/examples.js";
 import type { CheckOutcome } from "../engine/engine.js";
@@ -40,6 +41,11 @@ export type ToolkitRecord =
       prefix: string;
       /** The Space cards would land in, or null when ToolKit did not say. */
       space: string | null;
+      /**
+       * How that Space was chosen: `flag` (--toolkit-space), `origin` (the Space whose address is this
+       * repository's origin) or `active` (ToolKit's active Space, because no Space's address matched).
+       */
+      spaceFrom?: SpaceSource;
       filing?: Filing;
     };
 

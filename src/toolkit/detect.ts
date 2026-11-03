@@ -1,4 +1,5 @@
 import { findShell, plain, runHandoff, type Shell } from "./shell.js";
+import type { SpaceAddress } from "./space.js";
 
 /** ToolKit's shipped command prefix. */
 export const DEFAULT_PREFIX = "tk";
@@ -15,6 +16,8 @@ export type Detection =
       space: string | null;
       /** The Spaces ToolKit declares, or null when it did not say. */
       spaces: string[] | null;
+      /** Each declared Space's address, or null when ToolKit did not say: how the repository's own Space is found. */
+      addresses: SpaceAddress[] | null;
       /** The hub ToolKit resolved, for the tests' guard; never written to a case. */
       root: string | null;
     };
@@ -49,7 +52,7 @@ export function detectToolkit(options: DetectOptions): Detection {
   if (line === undefined)
     return { state: "not-installed", reason: `${prefix}NewPrompt does not resolve in ${shell.name}` };
 
-  let answer: { prefix?: unknown; space?: unknown; spaces?: unknown; root?: unknown };
+  let answer: { prefix?: unknown; space?: unknown; spaces?: unknown; addresses?: unknown; root?: unknown };
   try {
     answer = JSON.parse(line) as typeof answer;
   } catch {
@@ -65,6 +68,7 @@ export function detectToolkit(options: DetectOptions): Detection {
     prefix: typeof answer.prefix === "string" && answer.prefix !== "" ? answer.prefix : prefix,
     space: typeof answer.space === "string" && answer.space !== "" ? answer.space : null,
     spaces,
+    addresses: readAddresses(answer.addresses),
     root: typeof answer.root === "string" ? answer.root : null,
   };
 }
@@ -77,4 +81,19 @@ export function confirmsSpace(detection: Detection, slug: string): boolean {
   return (
     detection.state === "detected" && detection.space === slug && (detection.spaces ?? []).includes(slug)
   );
+}
+
+/** The probe's addresses, as far as they read: a Space with no slug is dropped, a missing org is null. */
+function readAddresses(value: unknown): SpaceAddress[] | null {
+  if (!Array.isArray(value)) return null;
+  const strings = (v: unknown): string[] =>
+    (Array.isArray(v) ? v : v === undefined || v === null ? [] : [v]).filter(
+      (s): s is string => typeof s === "string" && s !== "",
+    );
+  return value.flatMap((entry: unknown) => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const { slug, org, repos } = entry as { slug?: unknown; org?: unknown; repos?: unknown };
+    if (typeof slug !== "string" || slug === "") return [];
+    return [{ slug, org: typeof org === "string" && org !== "" ? org : null, repos: strings(repos) }];
+  });
 }
