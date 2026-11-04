@@ -149,11 +149,28 @@ export function masked(result: Result): Result {
   if (result.verdict !== "found") return result;
   return {
     verdict: "found",
-    evidence: result.evidence.map((piece) =>
-      piece.excerpt === undefined ? piece : { ...piece, excerpt: maskSecrets(piece.excerpt, piece.path) },
-    ),
+    evidence: result.evidence.map((piece) => {
+      const out: Evidence = { ...piece, path: maskSecrets(piece.path, piece.path) };
+      if (piece.excerpt !== undefined) out.excerpt = maskSecrets(piece.excerpt, piece.path);
+      return out;
+    }),
   };
 }
+
+/**
+ * What each evidence field holds. Only `path` and `excerpt` carry text from the repository, and `masked` masks
+ * both; every other field is a number, a hash or a fixed word. A new field will not compile until it is put here.
+ */
+export const EVIDENCE_FIELDS = {
+  path: "repository text, masked",
+  excerpt: "repository text, masked",
+  line: "a number",
+  rule: "a fixed word: a rule id, a marker or a license id",
+  commit: "a commit hash",
+  valueHash: "a keyed hash",
+  weighed: "a fixed word",
+  marked: "a flag",
+} as const satisfies Record<keyof Evidence, string>;
 
 /**
  * The weight of a found check: the goal's weight, lowered one step for evidence that is a guess from a name or

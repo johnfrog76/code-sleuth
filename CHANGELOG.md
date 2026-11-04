@@ -18,7 +18,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Fixed
 
-- A secret on a line another check reports is masked too. A token in a `TODO` comment, a home-folder path or a workflow line was kept whole in `case.json`, the cards and the polish request; every excerpt now goes through the secret rules in one place, whichever check found it.
+- A secret on a line another check reports is masked too. A token in a `TODO` comment, a home-folder path or a workflow line was kept whole in `case.json`, the cards and the polish request; every excerpt, and every path, now goes through the secret rules in one place, whichever check found it.
 - A repository's own git configuration can no longer have Code Sleuth run a command. A file-system monitor or a filter driver named in the investigated repository's `.git/config` ran when Code Sleuth read its status or file list; every git call now turns those off, along with the signature program, hooks, the pager and an external diff. A filter marked required, as git-lfs marks its own, no longer makes reading the status fail.
 - An API key set in the environment no longer reaches the processes Code Sleuth starts. git, npm, gh and ToolKit's shell inherited it before; a key from Code Sleuth's `.env` never did. Every child now starts through one helper that takes the key out, in any letter case since Windows matches names without regard to case, and a test keeps any new child from skipping it.
 - The build makes `dist/cli/main.js` executable itself, so `code-sleuth` runs after any rebuild, a re-clone under an old `npm link` among them, instead of answering "permission denied".

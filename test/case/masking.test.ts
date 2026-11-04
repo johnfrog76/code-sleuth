@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { openCase, takeCase } from "../../src/case/write.js";
 import type { CardText } from "../../src/polish/guard.js";
 import { polishCards } from "../../src/polish/pass.js";
+import { EVIDENCE_FIELDS, masked } from "../../src/engine/engine.js";
 import { findGoal } from "../../src/engine/goals.js";
 import { investigate } from "../helpers/investigate.js";
 import { withScratch } from "../helpers/scratch.js";
@@ -170,5 +171,19 @@ describe("the masking test", () => {
     expect(readFileSync(join(src, "engine/engine.ts"), "utf8")).toMatch(
       /return masked\(check\.run\(repo, context\)\)/,
     );
+  });
+
+  it("masks every evidence field that holds repository text, and pins the rest", () => {
+    const value = SECRETS["github-token"]!.value;
+    const result = masked({
+      verdict: "found",
+      evidence: [{ path: `notes/${value}.txt`, line: 1, excerpt: `see ${value}`, rule: "TODO" }],
+    });
+    expect(JSON.stringify(result)).not.toContain(value);
+    // Every field is either repository text, which masked() masks, or a number, a hash or a fixed word.
+    const repositoryText = Object.entries(EVIDENCE_FIELDS)
+      .filter(([, holds]) => holds.startsWith("repository text"))
+      .map(([field]) => field);
+    expect(repositoryText.sort()).toEqual(["excerpt", "path"]);
   });
 });
