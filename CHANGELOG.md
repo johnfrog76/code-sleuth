@@ -18,6 +18,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Fixed
 
+- An API key set in the environment no longer reaches the processes Code Sleuth starts. git, npm, gh and ToolKit's shell inherited it before; a key from Code Sleuth's `.env` never did. Every child now starts through one helper that takes the key out, in any letter case since Windows matches names without regard to case, and a test keeps any new child from skipping it.
 - The build makes `dist/cli/main.js` executable itself, so `code-sleuth` runs after any rebuild, a re-clone under an old `npm link` among them, instead of answering "permission denied".
 - A clean `npm ci` no longer reports moderate vulnerabilities: the development tools' `minimatch` is overridden to 11.0.4, past the advisory. Nothing Code Sleuth runs used it.
 - `--toolkit` files in the repository's own ToolKit Space, the one whose address is its `origin`, rather than whichever Space is active. With no matching Space it falls back to the active one, and the footer says so.

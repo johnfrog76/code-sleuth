@@ -38,6 +38,9 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
   changes named in its header; `atoms.tsx` frames each as a standalone SVG with a title and no words in the
   art. `scripts/render-atoms.mjs` renders them to images with headless Chrome, a dev tool only, and wrote
   `assets/`.
+- **Child processes** (`src/spawn.ts`). Every child -- git, npm, gh and ToolKit's shell -- starts through
+  `spawnChild`: an argument array, never a command string, and an environment with the model key taken out. A
+  test holds every other file in `src/` away from `node:child_process`.
 - **The ToolKit hand-off** (`src/toolkit/`, `toolkit/handoff.ps1`). Finds a shell, probes ToolKit, files cards
   through ToolKit's own command, and keeps the ledger. [TOOLKIT.md](TOOLKIT.md).
 

@@ -10,7 +10,7 @@ export const MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 export const API_VERSION = "2026-10-21";
 /** The current Haiku: a card is a short rewrite, and small and fast is the point. */
 export const DEFAULT_MODEL = "claude-haiku-5-5";
-export const KEY_VARIABLE = "ANTHROPIC_API_KEY";
+export { KEY_VARIABLE } from "../spawn.js";
 export const MODEL_VARIABLE = "CODE_SLEUTH_MODEL";
 export const TIMEOUT_MS = 60_000;
 /**

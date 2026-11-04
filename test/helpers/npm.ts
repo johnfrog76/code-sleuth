@@ -20,7 +20,7 @@ export interface NpmScenario {
 const STUB = String.raw`
 const fs = require("fs");
 const scenario = JSON.parse(fs.readFileSync(process.env.STUB_NPM_SCENARIO, "utf8"));
-fs.appendFileSync(process.env.STUB_NPM_LOG, JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd(), key: process.env.ANTHROPIC_API_KEY ?? null }) + "\n");
+fs.appendFileSync(process.env.STUB_NPM_LOG, JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd(), key: process.env.ANTHROPIC_API_KEY ?? null, lowerKey: process.env.anthropic_api_key ?? null }) + "\n");
 if (process.argv[2] === "audit") {
   const audit = scenario.audit ?? { vulnerabilities: {} };
   process.stdout.write(audit.raw !== undefined ? audit.raw : JSON.stringify({ auditReportVersion: 2, ...audit }));
@@ -41,7 +41,7 @@ export function stubNpm(folder: string, scenario: NpmScenario = {}) {
   writeFileSync(scenarioFile, JSON.stringify(scenario));
   return {
     env: { PATH: bin, STUB_NPM_LOG: log, STUB_NPM_SCENARIO: scenarioFile },
-    calls: (): { argv: string[]; cwd: string; key: string | null }[] =>
+    calls: (): { argv: string[]; cwd: string; key: string | null; lowerKey: string | null }[] =>
       existsSync(log)
         ? readFileSync(log, "utf8")
             .trim()
@@ -68,7 +68,7 @@ const GH_STUB = String.raw`
 const fs = require("fs");
 const scenario = JSON.parse(fs.readFileSync(process.env.STUB_GH_SCENARIO, "utf8"));
 const argv = process.argv.slice(2);
-fs.appendFileSync(process.env.STUB_GH_LOG, JSON.stringify({ argv, cwd: process.cwd() }) + "\n");
+fs.appendFileSync(process.env.STUB_GH_LOG, JSON.stringify({ argv, cwd: process.cwd(), key: process.env.ANTHROPIC_API_KEY ?? null }) + "\n");
 if (scenario.status !== undefined && scenario.status !== 0) {
   process.stderr.write("gh: To get started with GitHub CLI, please run: gh auth login\n");
   process.exit(scenario.status);
@@ -92,7 +92,7 @@ export function stubGh(folder: string, scenario: GhScenario = {}) {
   writeFileSync(scenarioFile, JSON.stringify(scenario));
   return {
     env: { PATH: bin, STUB_GH_LOG: log, STUB_GH_SCENARIO: scenarioFile },
-    calls: (): { argv: string[]; cwd: string }[] =>
+    calls: (): { argv: string[]; cwd: string; key: string | null }[] =>
       existsSync(log)
         ? readFileSync(log, "utf8")
             .trim()

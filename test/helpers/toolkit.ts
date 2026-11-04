@@ -26,6 +26,8 @@ export interface Call {
   shell: string;
   argv: string[];
   space: string | null;
+  /** The model key, if one reached the shell. It never should. */
+  key: string | null;
 }
 
 // The stub shell: node, standing in for pwsh or powershell.exe. It reads the arguments handoff.ps1 would get,
@@ -36,7 +38,7 @@ const path = require("path");
 const argv = process.argv.slice(2);
 const log = process.env.STUB_LOG;
 const scenario = JSON.parse(fs.readFileSync(process.env.STUB_SCENARIO, "utf8"));
-fs.appendFileSync(log, JSON.stringify({ shell: path.basename(process.argv[1]), argv, space: process.env.P20_ACTIVE_SPACE ?? null }) + "\n");
+fs.appendFileSync(log, JSON.stringify({ shell: path.basename(process.argv[1]), argv, space: process.env.P20_ACTIVE_SPACE ?? null, key: process.env.ANTHROPIC_API_KEY ?? null }) + "\n");
 const arg = (name) => { const i = argv.indexOf(name); return i < 0 ? undefined : argv[i + 1]; };
 const probe = scenario.probe ?? { prefix: "tk", space: "widget", spaces: ["widget", "other"] };
 if (probe === "absent") { process.stderr.write("ToolKit's tkNewPrompt is not available in this shell.\n"); process.exit(3); }

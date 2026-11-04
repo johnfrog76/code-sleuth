@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawnChild } from "../spawn.js";
 import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 
@@ -159,7 +159,7 @@ export function git(root: string, args: readonly string[]) {
   const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: "0" };
   for (const name of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CEILING_DIRECTORIES"])
     delete env[name];
-  return spawnSync("git", args, { cwd: root, env, encoding: "buffer", maxBuffer: 1024 * 1024 * 1024 });
+  return spawnChild("git", args, { cwd: root, env, encoding: "buffer", maxBuffer: 1024 * 1024 * 1024 });
 }
 
 function gitTrackedFiles(root: string): string[] | undefined {

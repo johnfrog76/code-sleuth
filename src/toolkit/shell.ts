@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawnChild } from "../spawn.js";
 import { accessSync, constants, statSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,7 +54,7 @@ export interface HandoffResult {
  * quotes, `;`, `&`, `$()` or a newline arrives as it was.
  */
 export function runHandoff(shell: Shell, args: readonly string[], env: NodeJS.ProcessEnv): HandoffResult {
-  const result = spawnSync(shell.path, ["-NoProfile", "-NonInteractive", "-File", HANDOFF, ...args], {
+  const result = spawnChild(shell.path, ["-NoProfile", "-NonInteractive", "-File", HANDOFF, ...args], {
     env,
     encoding: "utf8",
     windowsHide: true,

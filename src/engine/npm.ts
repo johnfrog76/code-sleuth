@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawnChild } from "../spawn.js";
 import { accessSync, constants, existsSync, statSync } from "node:fs";
 import { delimiter, dirname, join } from "node:path";
 
@@ -73,7 +73,7 @@ const NPM_QUIET = { npm_config_update_notifier: "false", npm_config_fund: "false
 function runner(command: string, prefix: readonly string[], quiet: NodeJS.ProcessEnv): ToolRunner {
   return {
     run(args, cwd) {
-      const result = spawnSync(command, [...prefix, ...args], {
+      const result = spawnChild(command, [...prefix, ...args], {
         cwd,
         env: quiet,
         encoding: "utf8",
