@@ -36,14 +36,17 @@ export const copy = {
     quality: { ready: "in good shape", nearly: "nearly in good shape", "not-ready": "not in good shape yet" },
   } as Record<string, Record<CaseVerdict, string>>,
 
-  /** `The verdict: not ready to go public. Two smoking guns, three loose ends.` */
+  /** `By my checklist: not ready to go public. Two smoking guns, three loose ends.` */
   verdictLine(goal: string, verdict: CaseVerdict, counts: Counts): string {
     const found = [
       count(counts["smoking-gun"], "smoking gun", "smoking guns"),
       count(counts["loose-end"], "loose end", "loose ends"),
     ];
-    return `The verdict: ${copy.verdict[goal]![verdict]}. ${capitalise(found.join(", "))}.`;
+    return `By my checklist: ${copy.verdict[goal]![verdict]}. ${capitalise(found.join(", "))}.`;
   },
+
+  /** Under a READY verdict: the checklist found nothing in the way, which is not permission. */
+  yourCall: "Nothing on my checklist stands in the way. Every case is different: the call is yours.",
 
   countsLine: (counts: Counts) =>
     [

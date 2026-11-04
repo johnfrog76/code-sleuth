@@ -31,7 +31,7 @@ two are listed by `checks` and refused for a case until their checks are built
 | `--offline` | | makes no network call: `deps.outdated` and `deps.advisories` read not investigated, "--offline" ([CONFIGURATION.md](CONFIGURATION.md#what-leaves-the-machine)) |
 | `--examples` | a glob | another example location, beside `test/fixtures/` and `__fixtures__/`; repeatable. A match there is shown and not counted ([CHECKS.md](CHECKS.md#example-locations)) |
 | `--polish` | | rewords each card with a model, every path and number kept; needs an API key ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
-| `--toolkit` | | files the cards in ToolKit, after asking ([TOOLKIT.md](TOOLKIT.md)) |
+| `--toolkit` | | files the cards in ToolKit, in the repository's own Space, after asking ([TOOLKIT.md](TOOLKIT.md#which-space)) |
 | `--yes` | | with `--toolkit`, files without asking |
 | `--refile` | | with `--toolkit`, files a check again though it is already filed |
 | `--toolkit-prefix` | a prefix | ToolKit's command prefix, if it is not `tk` |
@@ -73,6 +73,7 @@ before anything is read or written.
 ## What it prints
 
 The opening line, the repository and the goal, what leaves the machine, the stakeout (a dot per check), the
-stamped verdict, the checklist grouped as the case file groups it, where the case went, one polish line and
+stamped verdict (`By my checklist: ...`, and with READY one line saying the call is yours), the checklist
+grouped as the case file groups it, where the case went, one polish line and
 one ToolKit line. Colour only on a terminal, and never with `NO_COLOR`; every line also carries its word, so
 colour is never the only signal.

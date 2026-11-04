@@ -50,7 +50,7 @@ describe("investigating", () => {
     expect(stdout).toMatch(/^ {2}Repo {2}bare \(main @ [0-9a-f]{7}, clean\)$/m);
     expect(stdout).toContain("  Goal  going public\n");
     expect(stdout).toContain(`Taking my time. 24 leads to run down ${".".repeat(24)} done.\n`);
-    expect(stdout).toContain("NOT READY  The verdict: not ready to go public. One smoking gun,");
+    expect(stdout).toContain("NOT READY  By my checklist: not ready to go public. One smoking gun,");
     expect(stdout).toMatch(/^Smoking guns\n {2}\[ \] license\.file {3,}No license/m);
     expect(stdout).toMatch(/^Clean\n {2}\[x\] \S+ +.+ {2}\.\.\. and \d+ more$/m);
     expect(stdout).toMatch(/^Case file {2}.*case\.md$/m);
@@ -82,7 +82,10 @@ describe("investigating", () => {
       ),
     ).toBe(true);
     expect(stdout.match(/So, you want to know/g)).toHaveLength(1);
-    expect(stdout).toContain("READY  The verdict: ready to go public.");
+    expect(stdout).toContain("READY  By my checklist: ready to go public.");
+    expect(stdout).toContain(
+      "Nothing on my checklist stands in the way. Every case is different: the call is yours.",
+    );
   });
 
   it("refuses an answer that is not a choice", async () => {

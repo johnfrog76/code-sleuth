@@ -15,6 +15,7 @@ export function renderCaseMd(record: CaseRecord, outcomes: readonly CheckOutcome
     `# Case ${record.case}`,
     "",
     `**${copy.stamp[record.verdict]}** -- ${copy.verdictLine(record.goal, record.verdict, record.counts)}`,
+    ...(record.verdict === "ready" ? ["", copy.yourCall] : []),
     "",
     `- Repo: ${copy.repoLine(record.repo.name, record.repo.branch, record.repo.head, record.repo.dirty)}`,
     `- Goal: ${copy.goal[record.goal] ?? record.goal}`,

@@ -29,11 +29,12 @@ What is stubbed, specified but not built, or known to read wrong, and what you s
 ## Not proven yet
 
 - **npm on Windows.** There, `npm` is a `.cmd` shim that Node will not start without a shell, so Code Sleuth
-  runs npm's own `npm-cli.js` under Node where it is found beside it, and reads `deps.outdated` as *not
-  investigated* where it is not. This has not run on Windows yet; it is proved with the Windows CI.
-- **Windows.** The suite has not run on Windows. `handoff.ps1` is held free of syntax Windows PowerShell 5.1
-  cannot parse, but has not run under it, and a `Restricted` execution policy can stop it. Tracked for the
-  next release, which proves Windows in CI.
+  runs npm's own `npm-cli.js` under Node where it is found beside it. Where it is not, `deps.outdated` reads
+  *not investigated*, and `deps.advisories` asks `gh` instead, or reads *not investigated* too. None of this
+  has run on Windows yet: CI runs on Linux only, and Windows joins it in the next release.
+- **Windows.** The suite has not run on Windows, and neither has the ToolKit hand-off. `handoff.ps1` is held
+  free of syntax Windows PowerShell 5.1 cannot parse, but has not run under it, and a `Restricted` execution
+  policy can stop it. Tracked for the next release, which proves Windows in CI.
 
 ## Slow on purpose
 

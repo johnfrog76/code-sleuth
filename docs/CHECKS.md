@@ -11,6 +11,25 @@ clean.
 
 The security and quality goals are listed, and a case can be taken for them in the next release.
 
+## What the verdict means and doesn't
+
+The verdict is a finding, not permission. READY means nothing on this checklist stands in the way of the goal;
+NEARLY means only loose ends do; NOT READY means a smoking gun does. None of them means the repository is safe
+to publish.
+
+**Where the bar comes from.** The community files follow GitHub's community profile: a README, a license, a
+code of conduct, a contributing guide, a security policy, and issue and pull request templates. The workflow,
+dependency and CI checks follow OpenSSF Scorecard where Scorecard has a matching check. The secret, path and
+deny-list checks are what a stranger could read the moment the repository opens.
+
+**Your context moves it.** Who owns the code, what it is and who will read it can raise the bar or lower it.
+A solo project may not need templates; an employer's repository may need a review this list knows nothing
+about. Where a check can reasonably not apply, its entry below says so.
+
+**What Code Sleuth doesn't judge:** legal and provenance questions (who may publish this code, and where it
+came from), an employer's or a client's rules, trademarks and names beyond your deny list, and the code
+itself, which is a review's job. A person decides those.
+
 ## Weights
 
 <!-- The rows below are held to the code by test/docs/checks.test.ts. -->
@@ -122,6 +141,7 @@ The security and quality goals are listed, and a case can be taken for them in t
 - **Finds:** absent
 - **Needs:** nothing
 - **What the books call it:** contribution guidelines
+- **May not apply:** to a solo project that takes no contributions; its README can say so instead.
 - **The fix:** Add a CONTRIBUTING.md at the root, in .github/ or in docs/: how to set up, how to run the tests, and what a good issue and pull request look like.
 
 ### `docs.conduct`: A code of conduct
@@ -130,6 +150,7 @@ The security and quality goals are listed, and a case can be taken for them in t
 - **Finds:** absent
 - **Needs:** nothing
 - **What the books call it:** code of conduct
+- **May not apply:** to a project that takes no contributions and has no community space.
 - **The fix:** Add a CODE_OF_CONDUCT.md at the root, in .github/ or in docs/. The Contributor Covenant is a common start; say in it who to contact about a problem.
 
 ### `docs.security`: A security policy
@@ -146,6 +167,7 @@ The security and quality goals are listed, and a case can be taken for them in t
 - **Finds:** absent
 - **Needs:** nothing
 - **What the books call it:** changelog
+- **May not apply:** to a project with no releases, or one that keeps its record in release notes.
 - **The fix:** Add a CHANGELOG.md at the root, with one line per change a user would notice, newest first.
 
 ### `github.templates`: Issue and pull request templates
@@ -154,6 +176,7 @@ The security and quality goals are listed, and a case can be taken for them in t
 - **Finds:** either absent
 - **Needs:** nothing
 - **What the books call it:** issue templates
+- **May not apply:** to a solo project, or one that takes no issues.
 - **The fix:** Add .github/ISSUE_TEMPLATE/ with a bug report and a feature request, and a .github/pull_request_template.md that asks what changed, why, and how it was tested.
 
 ### `ci.present`: Continuous integration
@@ -162,6 +185,7 @@ The security and quality goals are listed, and a case can be taken for them in t
 - **Finds:** no workflow that runs on `push` or `pull_request`
 - **Needs:** nothing
 - **What the books call it:** continuous integration
+- **May not apply:** to a repository with nothing to build or test, such as notes or a sample.
 - **The fix:** Add a workflow in .github/workflows/ that runs on push and pull_request, checks out the code, installs, and runs the build.
 
 ### `ci.tests`: Tests in CI
@@ -230,6 +254,7 @@ The security and quality goals are listed, and a case can be taken for them in t
 - **Finds:** none of them
 - **Needs:** nothing
 - **What the books call it:** dependency management
+- **May not apply:** to an archived or one-off repository that will not be maintained.
 - **The fix:** Add a .github/dependabot.yml for each ecosystem in the repository (or a Renovate configuration), so updates arrive as pull requests.
 
 ### `deps.outdated`: Dependencies a major version behind

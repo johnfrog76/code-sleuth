@@ -6,6 +6,10 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ## [Unreleased]
 
+### Changed
+
+- The verdict says it is the checklist's: `By my checklist: nearly ready to go public.` A READY verdict adds one line saying the call is yours. `docs/CHECKS.md` says where the bar comes from, how a project's own context moves it, and what Code Sleuth doesn't judge.
+
 ### Added
 
 - A placeholder project page, `site/`, for GitHub Pages: the logo, light and dark, and a link to the repository.

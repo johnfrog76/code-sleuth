@@ -50,6 +50,12 @@ for review.
 > match under the check's `examples`, and records the locations in force as `exampleLocations`. `caseFile`
 > stays 1: nothing had been released.
 
+> **Amended 2026-11-04:** sections 6.3 and 9.2's verdict sentence. The verdict is a finding, not permission:
+> its sentence reads `By my checklist: not ready to go public. ...`, and a READY verdict adds one line,
+> `Nothing on my checklist stands in the way. Every case is different: the call is yours.` The stamps stay
+> READY, NEARLY and NOT READY. Where the bar comes from, and what Code Sleuth does not judge, is in
+> `docs/CHECKS.md`.
+
 > The buildable contract of the design note `design/code-sleuth.md` (titled "Repo Detective"; the
 > product is now named Code Sleuth). The note keeps the idea in its first words; this spec holds the
 > contract. It pairs with the note by the note's id, which it carries, per ToolKit's `docs/hub/design.md`.
@@ -560,7 +566,7 @@ So, you want to know what's going on with your repo?
 
 Taking my time. 23 leads to run down ............................. done.
 
-The verdict: not ready to go public. Two smoking guns, three loose ends.
+By my checklist: not ready to go public. Two smoking guns, three loose ends.
 
 Smoking guns
   [ ] secrets.tree       A token in plain sight: config/dev.ts:12 (ghp_****9f)

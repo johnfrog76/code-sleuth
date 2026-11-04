@@ -36,8 +36,10 @@ code-sleuth --goal public
 Or point it at one: `code-sleuth path/to/repo --goal public`. With no `--goal` in a terminal, it asks. For
 now there is one goal to pick: **going public**. Security and quality come in the next release.
 
-You get the verdict (READY, NEARLY or NOT READY), the checklist grouped by how much each finding weighs,
-and where the case file went:
+You get the verdict by Code Sleuth's checklist (READY, NEARLY or NOT READY), the checklist grouped by how
+much each finding weighs, and where the case file went. READY means nothing on the checklist stands in the
+way, not that the repository is safe to publish: see
+[what the verdict means and doesn't](CHECKS.md#what-the-verdict-means-and-doesnt).
 
 ```text
 Case file  ~/Library/Application Support/code-sleuth/cases/widget-1a2b3c4d/2026-10-31-public-1/case.md

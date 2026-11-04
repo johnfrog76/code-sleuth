@@ -33,7 +33,7 @@ The record, for scripts and for a later run. `--json` prints the same object.
 | `case`, `goal` | the case's id (`2026-10-31-public-1`) and its goal |
 | `repo` | `name`, `head`, `branch`, `dirty`, and the `origin` remote with no scheme or credentials; null past the name outside git |
 | `openedAt`, `closedAt` | UTC, to the second |
-| `verdict` | `ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` |
+| `verdict` | by the checklist: `ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` |
 | `counts` | `smoking-gun`, `loose-end`, `hunch`, `clean`, `not-investigated` |
 | `enhancements` | `polish` (on with its model, or off and why, with `keyFrom`: where the API key came from, `the environment` or the `.env`'s path, never the key; or with no key, `keyFile`: the `.env` it would be read from, and `keyCopy`: the line that copies `.env.example` there, both paths in their `~` form, so the case holds no home folder) and `toolkit` (detected or not, the Space and how it was chosen -- `spaceFrom`: `flag`, `origin` or `active` -- and what was filed) |
 | `exampleLocations` | the example locations in force: `globs` (the built-in `**/test/fixtures/**` and `**/__fixtures__/**`, then every `--examples` glob), `added` (the `--examples` globs alone) and `marker` (`code-sleuth:example`) |
@@ -51,7 +51,7 @@ The same repository at the same commit, under the same goal, gives the same `cas
 
 ## `case.md`
 
-The verdict, the counts, then the checklist: Smoking guns, Loose ends, Hunches, Clean, Not investigated, one
+The verdict, with one line saying the call is yours when it is READY, the counts, then the checklist: Smoking guns, Loose ends, Hunches, Clean, Not investigated, one
 checkbox line per check with a link to its card. Then one polish line and one ToolKit line. Without ToolKit,
 that last line is the one place Code Sleuth mentions it.
 

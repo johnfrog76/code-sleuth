@@ -1,6 +1,8 @@
 # Case 2026-10-31-public-1
 
-**READY** -- The verdict: ready to go public. No smoking guns, no loose ends.
+**READY** -- By my checklist: ready to go public. No smoking guns, no loose ends.
+
+Nothing on my checklist stands in the way. Every case is different: the call is yours.
 
 - Repo: kept (not a git repository)
 - Goal: going public

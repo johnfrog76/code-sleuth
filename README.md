@@ -32,11 +32,12 @@
 
 The project's page: [johnfrog76.github.io/code-sleuth](https://johnfrog76.github.io/code-sleuth/).
 
-Code Sleuth is a sloth private eye for your repository. Ask it one question -- is this ready to go public,
-is it secure, is it in good shape -- and it investigates, then hands back a checklist and an issue for each
-loose end, written so you can file it.
+Code Sleuth is a sloth private eye for your repository. Ask whether it's ready to go public, and it takes
+the case: it investigates, then hands back a checklist of what could hurt you and what a stranger would trip
+over. Every case is different, so the checklist is the lead, and the verdict is yours.
 
-It runs on your machine and sends nothing anywhere. Two things make it better, and neither is required:
+It runs on your machine. Without `--polish`, the only calls it makes are the dependency lookups, which it
+names before it runs and `--offline` turns off. Two things make it better, and neither is required:
 
 | You have | You get |
 | --- | --- |
@@ -55,7 +56,9 @@ code-sleuth path/to/your/repo --goal public
 ```
 
 You get the verdict and the checklist, and a case file in your own cases folder, never in the repository.
-[docs/QUICKSTART.md](docs/QUICKSTART.md) walks through it.
+[docs/QUICKSTART.md](docs/QUICKSTART.md) walks through it, and
+[what the verdict means and doesn't](docs/CHECKS.md#what-the-verdict-means-and-doesnt) is worth a read
+before you act on one.
 
 ## Documentation
 
@@ -63,7 +66,7 @@ You get the verdict and the checklist, and a case file in your own cases folder,
 | --- | --- |
 | [docs/QUICKSTART.md](docs/QUICKSTART.md) | install from a clone, the first case, `--polish`, the ToolKit hand-off |
 | [docs/CLI.md](docs/CLI.md) | every command, flag and refusal, and the exit codes |
-| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | the environment variables it reads, and the cases folder |
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | the environment variables it reads, Code Sleuth's own `.env`, what leaves the machine, and the cases folder |
 | [docs/CHECKS.md](docs/CHECKS.md) | every check: what it reads, what it finds, its weight per goal, the fix |
 | [docs/CASE-FILE.md](docs/CASE-FILE.md) | the case folder, `case.json`, `case.md` and the cards |
 | [docs/POLISH.md](docs/POLISH.md) | the polish pass: what is sent, the guard, the key |
@@ -82,7 +85,8 @@ You get the verdict and the checklist, and a case file in your own cases folder,
 
 ## Status
 
-Before its first release. The first milestone, **The case**, is the whole loop on one goal: going public.
+Version 0.1.0, the first release: the whole loop on one goal, going public. It is not on npm yet. The
+security and quality goals come in the next release.
 
 ## License
 

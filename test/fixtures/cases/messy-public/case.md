@@ -1,6 +1,6 @@
 # Case 2026-10-31-public-1
 
-**NOT READY** -- The verdict: not ready to go public. One smoking gun, eight loose ends.
+**NOT READY** -- By my checklist: not ready to go public. One smoking gun, eight loose ends.
 
 - Repo: messy (main @ 4999d78, clean)
 - Goal: going public
