@@ -1,7 +1,7 @@
 import type { Check, Evidence } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf } from "../files.js";
-import { lineInRun, readWorkflows } from "../workflows.js";
+import { lineInRun, readWorkflows, cleanOrUnreadable } from "../workflows.js";
 
 /** The `github` fields a stranger writes: titles, bodies, comments, branch names, commit messages and authors. */
 const STRANGER = new RegExp(
@@ -38,6 +38,6 @@ export const workflowsInjection: Check = {
         });
       }
     }
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnreadable(repo) : { verdict: "found", evidence };
   },
 };

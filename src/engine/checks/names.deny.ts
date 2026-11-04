@@ -1,5 +1,5 @@
 import { COMMIT_MESSAGE, type Check, type Evidence } from "../check.js";
-import { cards, voices } from "../copy.js";
+import { cards, denyReasons, voices } from "../copy.js";
 import { readableLines } from "../files.js";
 import { isMarked } from "../examples.js";
 
@@ -42,11 +42,16 @@ export const namesDeny: Check = {
         }
       });
     }
-    for (const { commit, text } of repo.commitMessages() ?? []) {
+    const messages = repo.commitMessages();
+    for (const { commit, text } of messages ?? []) {
       text.split("\n").forEach((line, i) => {
         for (const rule of hits(line)) evidence.push({ path: COMMIT_MESSAGE, line: i + 1, commit, rule });
       });
     }
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    if (evidence.length > 0) return { verdict: "found", evidence };
+    // Clean would claim the commit messages too, and without git they were never read.
+    return messages === undefined
+      ? { verdict: "not-investigated", reason: denyReasons.messagesUnread }
+      : { verdict: "clean" };
   },
 };

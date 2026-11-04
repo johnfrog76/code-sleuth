@@ -1,5 +1,6 @@
 import type { Check, Evidence, Need } from "../check.js";
 import { advisoriesReasons, cards, voices } from "../copy.js";
+import { cleanOrUnread } from "../ecosystems.js";
 import { lineContaining, readPackageJson } from "../manifest.js";
 import type { RepoReader } from "../repo.js";
 
@@ -248,7 +249,7 @@ export const depsAdvisories: Check = {
   run(repo, context) {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can carry an advisory, and no call is made.
-    if (state === "nothing") return { verdict: "clean" };
+    if (state === "nothing") return cleanOrUnread(repo, false);
     if (state === "no-lockfile") return { verdict: "not-investigated", reason: advisoriesReasons.noLockfile };
     if (state === "other-lockfile")
       return { verdict: "not-investigated", reason: advisoriesReasons.otherLockfile };
@@ -308,6 +309,6 @@ export const depsAdvisories: Check = {
     }
 
     const evidence = evidenceFor(found, lockfile, lockText);
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnread(repo, true) : { verdict: "found", evidence };
   },
 };

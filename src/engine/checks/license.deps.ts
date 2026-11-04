@@ -1,20 +1,8 @@
 import type { Check, Evidence } from "../check.js";
+import { cleanOrUnread } from "../ecosystems.js";
 import { cards, licenseDepsReasons, voices } from "../copy.js";
 import { isStrongCopyleft } from "../licenses.js";
 import { lineContaining, readPackageJson } from "../manifest.js";
-
-/** Manifests of ecosystems whose dependency licenses are not read yet. */
-const OTHER_MANIFESTS = [
-  "requirements.txt",
-  "pyproject.toml",
-  "Pipfile",
-  "go.mod",
-  "Cargo.toml",
-  "Gemfile",
-  "pom.xml",
-  "build.gradle",
-  "composer.json",
-];
 
 interface LockedPackage {
   license?: unknown;
@@ -32,12 +20,9 @@ export const licenseDeps: Check = {
   run(repo) {
     const lockfiles = repo.textFiles.filter((path) => path.split("/").at(-1) === "package-lock.json");
     if (lockfiles.length === 0) {
-      const others = repo.textFiles.filter((path) => OTHER_MANIFESTS.includes(path.split("/").at(-1)!));
       const npmWithoutLock = repo.textFiles.some((path) => path.split("/").at(-1) === "package.json");
       if (npmWithoutLock) return { verdict: "not-investigated", reason: licenseDepsReasons.noLockfile };
-      if (others.length > 0)
-        return { verdict: "not-investigated", reason: licenseDepsReasons.otherEcosystem(others[0]!) };
-      return { verdict: "clean" };
+      return cleanOrUnread(repo, false);
     }
 
     const evidence: Evidence[] = [];
@@ -69,6 +54,6 @@ export const licenseDeps: Check = {
           evidence.push({ ...where, excerpt: `${name}: ${license}`, rule: "strong-copyleft" });
       }
     }
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnread(repo, true) : { verdict: "found", evidence };
   },
 };

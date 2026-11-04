@@ -1,4 +1,5 @@
 import type { Check, Evidence } from "../check.js";
+import { cleanOrUnread } from "../ecosystems.js";
 import { cards, outdatedReasons, voices } from "../copy.js";
 import { lineContaining, readPackageJson } from "../manifest.js";
 
@@ -58,7 +59,7 @@ export const depsOutdated: Check = {
   run(repo, context) {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can be behind, and no call is made.
-    if (state === "nothing") return { verdict: "clean" };
+    if (state === "nothing") return cleanOrUnread(repo, false);
     if (state === "no-lockfile") return { verdict: "not-investigated", reason: outdatedReasons.noLockfile };
     if (state === "other-lockfile")
       return { verdict: "not-investigated", reason: outdatedReasons.otherLockfile };
@@ -100,6 +101,6 @@ export const depsOutdated: Check = {
         rule: "major-behind",
       });
     }
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnread(repo, true) : { verdict: "found", evidence };
   },
 };

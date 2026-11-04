@@ -1,7 +1,7 @@
 import type { Check, Evidence } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf } from "../files.js";
-import { readWorkflows } from "../workflows.js";
+import { readWorkflows, cleanOrUnreadable } from "../workflows.js";
 
 /** An expression or ref that names the pull request's own code, which a stranger wrote. */
 const HEAD = /github\.event\.pull_request\.head\.(?:sha|ref|repo\.full_name)|github\.head_ref|refs\/pull\//;
@@ -39,6 +39,6 @@ export const workflowsPrtarget: Check = {
         }
       }
     }
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnreadable(repo) : { verdict: "found", evidence };
   },
 };

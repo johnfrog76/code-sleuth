@@ -206,10 +206,27 @@ export const cards = {
 } satisfies Record<string, CardCopy>;
 
 /** Why license.deps could not read the dependencies' licenses, and what would let it. */
+/** Why names.deny reads not investigated when the files are clean. */
+export const denyReasons = {
+  messagesUnread:
+    "Nothing from the deny list in the files, but the commit messages were not read: that needs git and a git repository.",
+};
+
+/** Why a workflow check reads not investigated when a workflow would not parse. */
+export const workflowReasons = {
+  unreadable: (path: string) => `${path} doesn't parse as YAML, so I couldn't read it.`,
+};
+
+/** Why a deps check that found another ecosystem's manifest reads not investigated, not clean. */
+export const ecosystemReasons = {
+  otherOnly: (path: string, ecosystem: string) =>
+    `Code Sleuth reads npm projects so far; this is a ${ecosystem} project (${path}).`,
+  npmCleanOtherUnread: (path: string, ecosystem: string) =>
+    `The npm side is clean, but Code Sleuth reads npm projects so far, and ${path} (${ecosystem}) was not read.`,
+};
+
 export const licenseDepsReasons = {
   noLockfile: "There's a package.json and no package-lock.json: run npm install to make one, and commit it.",
-  otherEcosystem: (manifest: string) =>
-    `Dependency licenses are read from npm's package-lock.json only so far, and this project has ${manifest}.`,
   unreadable: (lockfile: string) => `${lockfile} is not JSON I can read.`,
   oldLockfile: (lockfile: string) =>
     `${lockfile} is an old lockfile without license fields: regenerate it with npm 7 or later.`,

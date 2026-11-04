@@ -7,12 +7,13 @@ What is stubbed, specified but not built, or known to read wrong, and what you s
 - **The security and quality goals.** `code-sleuth checks` lists them; a case for them is refused with
   `The security goal isn't ready to investigate yet: it comes in the next release.` They hold too few checks
   today for a verdict to mean anything.
-- **Advisory lookups beyond npm.** `deps.advisories` reads npm's `package-lock.json` only; another package
-  manager's lockfile, or a Python project, reads *not investigated* with the reason.
+- **Advisory lookups beyond npm.** `deps.advisories` reads npm's lockfiles only. Another package manager's
+  lockfile, or another ecosystem's manifest (`requirements.txt`, `go.mod` and others), reads *not investigated*,
+  naming the file ([CHECKS.md](CHECKS.md#other-ecosystems)).
 - **The ToolKit hand-off through ToolKit's agent.** Only the command-line path is built; the agent path comes
   with the office.
-- **Dependency licenses beyond npm.** `license.deps` reads `package-lock.json` (v2 or v3) only; another
-  ecosystem, or an old v1 lockfile, reads *not investigated* with the reason.
+- **Dependency licenses beyond npm.** `license.deps` reads `package-lock.json` (v2 or v3) only. Another
+  ecosystem's manifest, or an old v1 lockfile, reads *not investigated*, naming the file.
 
 ## Known to read wrong
 

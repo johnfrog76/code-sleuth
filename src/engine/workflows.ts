@@ -1,4 +1,6 @@
 import { parse } from "yaml";
+import type { Result } from "./check.js";
+import { workflowReasons } from "./copy.js";
 import type { RepoReader } from "./repo.js";
 
 /** One step of a job: what it uses, with what, or what it runs, and the line of the file it starts on. */
@@ -27,6 +29,17 @@ export interface Workflow {
 }
 
 const WORKFLOW = /^\.github\/workflows\/[^/]+\.ya?ml$/i;
+
+/**
+ * A workflow check's clean, held to what it read: with a workflow the parser could not read, clean would claim a
+ * file nobody looked into, so the check reads not investigated and names it.
+ */
+export function cleanOrUnreadable(repo: RepoReader): Result {
+  const unreadable = readWorkflows(repo).find(({ readable }) => !readable);
+  return unreadable === undefined
+    ? { verdict: "clean" }
+    : { verdict: "not-investigated", reason: workflowReasons.unreadable(unreadable.path) };
+}
 
 /** Every workflow in `.github/workflows/`, in path order. */
 export function readWorkflows(repo: RepoReader): Workflow[] {

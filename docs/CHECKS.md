@@ -100,6 +100,7 @@ itself, which is a review's job. A person decides those.
 - **Reads:** `package-lock.json` (lockfile v2 or v3)
 - **Finds:** a dependency under a strong copyleft license (GPL, AGPL, SSPL) in a project that is not, or with no license stated; development-only packages are not read
 - **Needs:** nothing
+- **Not investigated** with a `package.json` and no lockfile, an old v1 lockfile, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** license compliance
 - **The fix:** For each dependency listed, check its license in its own repository. Replace a strong copyleft dependency, or relicense the project to match it; ask the author of one with no license to add one, or replace it.
 
@@ -115,7 +116,8 @@ itself, which is a review's job. A person decides those.
 
 - **Reads:** tracked text files and every commit message, against `--deny <file>`
 - **Finds:** any line of the deny list, whole-word, ignoring case; the finding names the list line, never the word
-- **Needs:** `denyList`
+- **Needs:** `denyList`. Outside git, with nothing in the files, it reads **not investigated**: the commit messages
+  were not read
 - **What the books call it:** information disclosure
 - **The fix:** Replace each name in the files listed, and reword the commit messages listed (git rebase -i, then reword) before the history is published. A name in a commit message that is already public stays public.
 
@@ -201,6 +203,7 @@ itself, which is a review's job. A person decides those.
 - **Reads:** each workflow
 - **Finds:** no top-level `permissions:` block
 - **Needs:** nothing
+- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
 - **What the books call it:** least privilege
 - **The fix:** Add `permissions: contents: read` at the top of each workflow listed, and grant more only in the job that needs it.
 
@@ -209,6 +212,7 @@ itself, which is a review's job. A person decides those.
 - **Reads:** each workflow
 - **Finds:** `pull_request_target` together with a checkout of the pull request's head
 - **Needs:** nothing
+- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
 - **What the books call it:** pwn request
 - **The fix:** Use pull_request instead, which runs a fork's code without this repository's secrets. If the workflow must use pull_request_target, never check out or run the pull request's head in it.
 
@@ -217,6 +221,7 @@ itself, which is a review's job. A person decides those.
 - **Reads:** each workflow's `run:` lines
 - **Finds:** a `${{ github.event.* }}` field a stranger writes (titles, bodies, branch names, commit messages) placed straight in a shell line
 - **Needs:** nothing
+- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
 - **What the books call it:** script injection
 - **The fix:** Move each expression into an env: entry on the step and use the variable in the shell, quoted ("$TITLE"), so the text is data and never code.
 
@@ -243,8 +248,9 @@ itself, which is a review's job. A person decides those.
   which is what it always does, or to GitHub, in batches of fifty, through `gh`. Nothing from the
   repository's files, and never its path. `--offline` turns it off, and the run's header names it before it
   runs
-- **Reads clean** with no `package.json`, or none with dependencies, and makes no call. **Not investigated**
-  with no npm lockfile, with another package manager's lockfile, with `--offline`, or with neither tool
+- **Reads clean** with no `package.json`, or none with dependencies, and no other ecosystem's manifest, and makes
+  no call. **Not investigated** with no npm lockfile, with another package manager's lockfile, with `--offline`,
+  with neither tool, or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** known vulnerable component
 - **The fix:** Update each package listed to a version with the fix (`npm audit fix` does what it safely can), or replace it. A package deep in the tree is fixed by updating the dependency that pulls it in.
 
@@ -267,8 +273,9 @@ itself, which is a review's job. A person decides those.
 - **Sends:** package names, to npm's configured registry, the one `npm outdated` asks. Nothing from the
   repository's files, and never its path. It leaves npm's own configuration (`.npmrc`, a private registry)
   alone. `--offline` turns it off, and the run's header names it before it runs
-- **Reads clean** with no `package.json`, or none of its dependencies, and makes no call; **not investigated**
-  with no lockfile, a lockfile from another package manager, no npm, or `--offline`
+- **Reads clean** with no `package.json`, or none of its dependencies, and no other ecosystem's manifest, and
+  makes no call; **not investigated** with no lockfile, a lockfile from another package manager, no npm,
+  `--offline`, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** outdated dependency
 - **The fix:** For each dependency listed, read its changelog for the breaking changes between your version and the latest, update it, and run the tests. npm outdated lists them all.
 
@@ -279,6 +286,15 @@ itself, which is a review's job. A person decides those.
 - **Needs:** nothing
 - **What the books call it:** technical debt markers
 - **The fix:** For each marker, do the work, delete the note, or file it as an issue and leave the issue's link in its place.
+
+## Other ecosystems
+
+The dependency checks (`deps.advisories`, `deps.outdated` and `license.deps`) read npm projects so far. A
+manifest of another ecosystem -- `requirements.txt`, `pyproject.toml` or `Pipfile` (Python), `go.mod` (Go),
+`Cargo.toml` (Rust), `Gemfile` (Ruby), `pom.xml` or `build.gradle` (Java), `composer.json` (PHP) -- makes a
+check that would read clean read **not investigated** instead, naming the file. Beside an npm project, the npm
+side is still checked: what it finds stands, and a clean npm side says the other side was not read. With no
+manifest of any of these, there is nothing to check, and the checks read clean.
 
 ## A guess from a name
 

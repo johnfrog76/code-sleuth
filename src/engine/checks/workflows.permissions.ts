@@ -1,6 +1,6 @@
 import type { Check } from "../check.js";
 import { cards, voices } from "../copy.js";
-import { readWorkflows } from "../workflows.js";
+import { cleanOrUnreadable, readWorkflows } from "../workflows.js";
 
 export const workflowsPermissions: Check = {
   id: "workflows.permissions",
@@ -13,6 +13,6 @@ export const workflowsPermissions: Check = {
     const evidence = readWorkflows(repo)
       .filter(({ readable, keys }) => readable && !keys.includes("permissions"))
       .map(({ path }) => ({ path, rule: "no-top-level-permissions" }));
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnreadable(repo) : { verdict: "found", evidence };
   },
 };
