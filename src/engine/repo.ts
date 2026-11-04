@@ -22,6 +22,8 @@ export interface RepoReader {
    * never fetches them, so the history cannot be read whole.
    */
   readonly isPartialClone: boolean;
+  /** True for a shallow clone: the history stops at a cut, and what came before it is not here. */
+  readonly isShallow: boolean;
   /** Every file: tracked files in a repository, else every file under the root. Sorted, relative, `/`. */
   readonly files: readonly string[];
   /** `files` without anything under a skipped folder. What the text checks read. */
@@ -66,6 +68,7 @@ export function openRepo(root: string): RepoReader {
     top: tracked === undefined ? absolute : outermostWorkTree(absolute),
     isGitRepository: tracked !== undefined,
     isPartialClone: tracked !== undefined && partialClone(absolute),
+    isShallow: tracked !== undefined && shallow(absolute),
     files,
     textFiles: files.filter((path) => !path.split("/").some((part) => SKIPPED_FOLDERS.includes(part))),
     has: (path) => known.has(path),
@@ -105,10 +108,7 @@ export function openRepo(root: string): RepoReader {
 function readMessages(root: string): { commit: string; text: string }[] | undefined {
   const log = git(root, ["log", "--all", "--reverse", "--no-color", "--format=%H%x00%B%x00"]);
   if (log.error) return undefined;
-  if (log.status !== 0) {
-    const head = git(root, ["rev-parse", "--verify", "-q", "HEAD"]);
-    return head.status !== 0 && !head.error ? [] : undefined;
-  }
+  if (log.status !== 0) return noHistory(root) ? [] : undefined;
   const parts = log.stdout.toString("utf8").split("\0");
   const found: { commit: string; text: string }[] = [];
   for (let i = 0; i + 1 < parts.length; i += 2) {
@@ -122,6 +122,9 @@ function readHistory(root: string): AddedLine[] | undefined {
   const log = git(root, [
     "-c",
     "core.quotepath=off",
+    // Over this size git calls a file binary and shows no lines; a repository can set it to 1.
+    "-c",
+    "core.bigFileThreshold=1g",
     "log",
     "-p",
     "--all",
@@ -130,15 +133,15 @@ function readHistory(root: string): AddedLine[] | undefined {
     "--no-ext-diff",
     "--no-textconv",
     "--no-renames",
+    // Every file as text: a `-diff` or `binary` attribute, the repository's to set, would hide a file's lines.
+    "--text",
+    // A merge's own lines too: what was added in resolving one, against its first parent.
+    "--diff-merges=first-parent",
     "-U0",
     "--format=commit %H",
   ]);
   if (log.error) return undefined;
-  if (log.status !== 0) {
-    // A repository with no commits has no history to read, and nothing in it.
-    const head = git(root, ["rev-parse", "--verify", "-q", "HEAD"]);
-    return head.status !== 0 && !head.error ? [] : undefined;
-  }
+  if (log.status !== 0) return noHistory(root) ? [] : undefined;
   const lines: AddedLine[] = [];
   let commit = "";
   let path: string | null = null;
@@ -161,7 +164,8 @@ function readHistory(root: string): AddedLine[] | undefined {
       inHeader = false;
       const match = /\+(\d+)/.exec(raw);
       next = match ? Number(match[1]) : 0;
-    } else if (!inHeader && raw.startsWith("+") && path !== null) {
+    } else if (!inHeader && raw.startsWith("+") && path !== null && !raw.includes("\0")) {
+      // A line holding a NUL is a binary file's, shown as text by --text: nothing a rule reads.
       lines.push({ commit, path, line: next++, text: raw.slice(1) });
     }
   }
@@ -347,6 +351,23 @@ export function git(root: string, args: readonly string[]) {
   // status is the one read that would descend into a submodule; told not to, it never reads one's config.
   const read = args[0] === "status" ? ["status", "--ignore-submodules=all", ...args.slice(1)] : args;
   return spawnGit(root, [...gitSafeConfig(), ...filtersOff(root)], read);
+}
+
+/**
+ * True when git log failing means there is no history: no ref at all, and HEAD names nothing. A repository with
+ * refs whose log failed (a missing object, a broken ref) has history that could not be read.
+ */
+function noHistory(root: string): boolean {
+  const head = git(root, ["rev-parse", "--verify", "-q", "HEAD"]);
+  if (head.error || head.status === 0) return false;
+  const refs = git(root, ["for-each-ref", "--count=1", "--format=%(refname)"]);
+  return !refs.error && refs.status === 0 && refs.stdout.toString("utf8").trim() === "";
+}
+
+/** A shallow clone: git keeps a list of the commits it was cut at. */
+function shallow(root: string): boolean {
+  const asked = git(root, ["rev-parse", "--is-shallow-repository"]);
+  return asked.status === 0 && asked.stdout.toString("utf8").trim() === "true";
 }
 
 /** A partial clone names a promisor remote, or the older extension. Reading the config runs nothing. */

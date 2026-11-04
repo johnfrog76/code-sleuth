@@ -88,10 +88,13 @@ A check that reads a `package.json` reads **not investigated** when that file is
 
 ### `secrets.history`: Secrets in the history
 
-- **Reads:** every line added in `git log -p --all`
+- **Reads:** every line added in `git log -p --all`, every file as text (a `-diff` or `binary` attribute, or the
+  repository's own `core.bigFileThreshold`, hides nothing), and the lines added in resolving a merge, against
+  its first parent
 - **Finds:** the same rules over history: a secret removed from the tree but still in history is still a secret
 - **Needs:** `git`. On a partial clone it reads **not investigated**: some of the history is not there, and
-  Code Sleuth never fetches it
+  Code Sleuth never fetches it. On a shallow clone too: the history before its cut is not there. And when git
+  cannot read the history of a repository that has refs, it says so, rather than reading it as no history
 - **What the books call it:** credential in version control history
 - **The fix:** Revoke each secret where it was issued: anyone with a clone has the history. Then either rewrite the history to remove it (git filter-repo does this) and force-push, or accept that the old value is public.
 
@@ -134,7 +137,8 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Reads:** tracked text files and every commit message, against `--deny <file>`
 - **Finds:** any name on the deny list (each line that is not blank or a `#` comment), whole-word, ignoring case; the finding names the list line, never the word
 - **Needs:** `denyList`. Outside git, with nothing in the files, it reads **not investigated**: the commit messages
-  were not read
+  were not read. On a shallow clone, with nothing found, it reads not investigated too: the messages before its
+  cut were not read
 - **What the books call it:** information disclosure
 - **The fix:** Replace each name in the files listed, and reword the commit messages listed (git rebase -i, then reword) before the history is published. A name in a commit message that is already public stays public.
 

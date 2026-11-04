@@ -50,8 +50,9 @@ export const namesDeny: Check = {
     }
     if (evidence.length > 0) return { verdict: "found", evidence };
     // Clean would claim the commit messages too, and without git they were never read.
-    return messages === undefined
-      ? { verdict: "not-investigated", reason: denyReasons.messagesUnread }
+    if (messages === undefined) return { verdict: "not-investigated", reason: denyReasons.messagesUnread };
+    return repo.isShallow
+      ? { verdict: "not-investigated", reason: denyReasons.messagesShallow }
       : { verdict: "clean" };
   },
 };

@@ -1,5 +1,5 @@
 import type { Check, Evidence, Result } from "../check.js";
-import { cards, historyPartial, historyUnreadable, voices } from "../copy.js";
+import { cards, historyPartial, historyShallow, historyUnreadable, voices } from "../copy.js";
 import { SKIPPED_FOLDERS } from "../repo.js";
 import { blockFrom, scanLine } from "../secrets/scan.js";
 
@@ -13,6 +13,8 @@ export const secretsHistory: Check = {
   run(repo, context): Result {
     // A partial clone holds only part of the history, and the rest is never fetched: say so, rather than read part.
     if (repo.isPartialClone) return { verdict: "not-investigated", reason: historyPartial };
+    // A shallow clone holds the history from its cut on: what was added and removed before it is not here.
+    if (repo.isShallow) return { verdict: "not-investigated", reason: historyShallow };
     const added = repo.addedLines();
     if (added === undefined) return { verdict: "not-investigated", reason: historyUnreadable };
     const kept = added.filter(({ path }) => !path.split("/").some((part) => SKIPPED_FOLDERS.includes(part)));

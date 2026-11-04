@@ -216,6 +216,8 @@ export const unreadableReasons = {
 export const denyReasons = {
   messagesUnread:
     "Nothing from the deny list in the files, but the commit messages were not read: that needs git and a git repository.",
+  messagesShallow:
+    "Nothing from the deny list in the files or the commit messages here, but this is a shallow clone: the messages before its cut were not read.",
 };
 
 /** Why a workflow check reads not investigated when a workflow would not parse. */
@@ -302,6 +304,9 @@ export const gitTooOldHint = "Install git 2.31 or newer, then run me again.";
 /** Why the history could not be read, though git is there. */
 export const historyPartial =
   "This is a partial clone: some of the history isn't here, and I don't fetch it. Run me on a full clone to read it.";
+
+export const historyShallow =
+  "This is a shallow clone: the history stops where it was cut, and what came before isn't here. Run me on a full clone (git fetch --unshallow) to read it.";
 
 export const historyUnreadable =
   "git could not read the history: check that git log works in this repository.";
