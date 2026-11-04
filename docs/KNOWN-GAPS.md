@@ -49,6 +49,9 @@ to read wrong, and what has not been proven, with what you see when you hit each
   clone's missing objects stay missing, and `secrets.history` says the history was not read
   ([CHECKS.md](CHECKS.md#secretshistory-secrets-in-the-history)).
 
+- **Programs found by their full path on Windows.** git, npm, gh and PowerShell are found in the PATH's absolute
+  folders and started by their full path, so Windows never looks for one in the repository first. That
+  defence is built, and its one test is skipped until Windows joins CI.
 - **npm on Windows.** There, `npm` is a `.cmd` shim that Node will not start without a shell, so Code Sleuth
   runs npm's own `npm-cli.js` under Node where it is found beside it. Where it is not, `deps.outdated` reads
   *not investigated*, and `deps.advisories` asks `gh` instead, or reads *not investigated* too. None of this

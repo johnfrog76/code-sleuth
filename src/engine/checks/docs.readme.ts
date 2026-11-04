@@ -8,13 +8,37 @@ const START_HEADING =
 
 export const MIN_README_LINES = 10;
 
+/** No heading is longer than this; a longer line is read as text, never as a heading. */
+export const MAX_HEADING_LINE = 4096;
+
+/**
+ * A `#` heading's text, by hand rather than by one pattern: up to three spaces, one to six `#`, a space, the
+ * text, and an optional closing run of `#`. A pattern for it backtracks over every space on a long
+ * line, and a README is the repository's to write.
+ */
+function atxHeading(line: string): string | undefined {
+  let at = 0;
+  while (at < 3 && /\s/.test(line[at] ?? "")) at++;
+  let hashes = 0;
+  while (line[at + hashes] === "#") hashes++;
+  if (hashes < 1 || hashes > 6) return undefined;
+  const rest = line.slice(at + hashes);
+  if (!/^\s/.test(rest)) return undefined;
+  let text = rest.trim();
+  let end = text.length;
+  while (end > 0 && text[end - 1] === "#") end--;
+  text = text.slice(0, end).trimEnd();
+  return text;
+}
+
 /** The headings of a markdown, reStructuredText or plain README: `#` lines, underlined lines, `<h1>` to `<h6>`. */
 export function headings(text: string): string[] {
   const lines = text.split(/\r?\n/);
   const found: string[] = [];
   lines.forEach((line, i) => {
-    const atx = /^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$/.exec(line);
-    if (atx) found.push(atx[1]!);
+    if (line.length > MAX_HEADING_LINE) return;
+    const atx = atxHeading(line);
+    if (atx !== undefined) found.push(atx);
     else if (
       line.trim() !== "" &&
       /^\s*(?:=+|-+|~+|\^+)\s*$/.test(lines[i + 1] ?? "") &&
@@ -22,7 +46,7 @@ export function headings(text: string): string[] {
     ) {
       found.push(line.trim());
     }
-    for (const html of line.matchAll(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi)) found.push(html[1]!);
+    for (const html of line.matchAll(/<h[1-6][^<>]{0,200}>([^<]{0,500})<\/h[1-6]>/gi)) found.push(html[1]!);
   });
   return found;
 }
@@ -38,7 +62,8 @@ export const docsReadme: Check = {
     const path = findDoc(repo, "README", [""]);
     if (path === undefined) return { verdict: "found", evidence: [] };
     const text = repo.readText(path) ?? "";
-    const lines = text.replace(/\s+$/, "").split(/\r?\n/).length;
+    // trimEnd, not a /\s+$/ pattern: that one retries from every space of a long run, so it takes the square.
+    const lines = text.trimEnd().split(/\r?\n/).length;
     if (text.trim() === "" || lines < MIN_README_LINES) {
       return {
         verdict: "found",

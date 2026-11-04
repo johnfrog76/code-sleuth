@@ -50,7 +50,9 @@ export const SECRET_RULES: readonly SecretRule[] = [
     id: "assigned-secret",
     name: "a long random value assigned to a secret-sounding name",
     pattern:
-      "([A-Za-z0-9_.-]*(?:secret|token|password|passwd|api_?key|access_?key|private_?key|auth_?key)[A-Za-z0-9_.-]*)[\"']?\\s*[:=]\\s*[\"']?([A-Za-z0-9+/=_.-]{16,})",
+      // The name's two sides are bounded: unbounded, a long run of name characters holding many of the words
+      // is retried from every place in it, which takes the cube of its length.
+      "([A-Za-z0-9_.-]{0,64}(?:secret|token|password|passwd|api_?key|access_?key|private_?key|auth_?key)[A-Za-z0-9_.-]{0,64})[\"']?\\s*[:=]\\s*[\"']?([A-Za-z0-9+/=_.-]{16,})",
     ignoreCase: true,
     group: 2,
     nameGuess: true,
