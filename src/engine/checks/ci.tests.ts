@@ -1,6 +1,6 @@
 import type { Check, Result } from "../check.js";
-import { cards, voices } from "../copy.js";
-import { readPackageJson } from "../manifest.js";
+import { cards, unreadableReasons, voices } from "../copy.js";
+import { manifestOf, readManifest } from "../manifest.js";
 import { readWorkflows } from "../workflows.js";
 
 /** The commands that run a project's tests, whatever the script inside them is. */
@@ -18,7 +18,8 @@ export const ciTests: Check = {
   voice: voices["ci.tests"],
   card: cards["ci.tests"],
   run(repo): Result {
-    const scripts = readPackageJson(repo)?.scripts;
+    const read = readManifest(repo);
+    const scripts = manifestOf(read)?.scripts;
     const test =
       typeof scripts === "object" && scripts !== null ? (scripts as Record<string, unknown>).test : undefined;
     const script =
@@ -29,6 +30,9 @@ export const ciTests: Check = {
       runs.some(({ text }) => TEST_COMMAND.test(text) || (script !== undefined && text.includes(script))),
     );
     if (runsTests) return { verdict: "clean" };
+    // No step runs a known test command, and the test script that one might run is in a package.json nobody read.
+    if (read.state === "unreadable")
+      return { verdict: "not-investigated", reason: unreadableReasons.manifest(read.path) };
     return { verdict: "found", evidence: workflows.map(({ path }) => ({ path, rule: "no-test-step" })) };
   },
 };

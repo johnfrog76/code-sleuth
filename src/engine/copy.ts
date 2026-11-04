@@ -206,6 +206,13 @@ export const cards = {
 } satisfies Record<string, CardCopy>;
 
 /** Why license.deps could not read the dependencies' licenses, and what would let it. */
+/** Why a check reads not investigated when a file it needs would not parse. */
+export const unreadableReasons = {
+  manifest: (path: string) => `${path} isn't JSON I can read, so I couldn't check what it says.`,
+  license: (file: string, stated: string) =>
+    `I couldn't tell which license ${file} is from its text, so I couldn't check it agrees with package.json's ${stated}.`,
+};
+
 /** Why names.deny reads not investigated when the files are clean. */
 export const denyReasons = {
   messagesUnread:

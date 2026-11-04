@@ -47,9 +47,9 @@ describe("license.file", () => {
       "clean",
     ],
     [
-      "a file it cannot identify",
+      "a file it cannot identify, which it cannot compare",
       { LICENSE: "All rights reserved.", "package.json": pkg({ license: "MIT" }) },
-      "clean",
+      "not-investigated",
     ],
     [
       "SEE LICENSE IN",
@@ -58,7 +58,7 @@ describe("license.file", () => {
     ],
   ])("%s", (_, files, expected) => {
     const result = check("license.file", files);
-    if (expected === "clean") expect(result.verdict).toBe("clean");
+    if (expected === "clean" || expected === "not-investigated") expect(result.verdict).toBe(expected);
     else expect(result).toEqual({ verdict: "found", evidence: [] });
   });
 

@@ -1,8 +1,8 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
-import { cards, licenseDepsReasons, voices } from "../copy.js";
+import { cards, licenseDepsReasons, unreadableReasons, voices } from "../copy.js";
 import { isStrongCopyleft } from "../licenses.js";
-import { lineContaining, readPackageJson } from "../manifest.js";
+import { lineContaining, manifestOf, readManifest } from "../manifest.js";
 
 interface LockedPackage {
   license?: unknown;
@@ -38,7 +38,11 @@ export const licenseDeps: Check = {
         return { verdict: "not-investigated", reason: licenseDepsReasons.oldLockfile(lockfile) };
 
       const folder = lockfile.includes("/") ? lockfile.slice(0, lockfile.lastIndexOf("/") + 1) : "";
-      const own = readPackageJson(repo, `${folder}package.json`)?.license;
+      const ownRead = readManifest(repo, `${folder}package.json`);
+      // Whether the project is itself copyleft decides what a copyleft dependency means: unread, it cannot be said.
+      if (ownRead.state === "unreadable")
+        return { verdict: "not-investigated", reason: unreadableReasons.manifest(ownRead.path) };
+      const own = manifestOf(ownRead)?.license;
       // A project that is itself under a strong copyleft license may take copyleft dependencies.
       if (typeof own === "string" && isStrongCopyleft(own)) continue;
 

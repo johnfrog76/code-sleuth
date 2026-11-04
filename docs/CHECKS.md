@@ -63,6 +63,10 @@ itself, which is a review's job. A person decides those.
 
 ## What each check does
 
+A check that reads a `package.json` reads **not investigated** when that file isn't JSON it can read, naming it:
+`deps.advisories`, `deps.outdated`, `deps.lockfile`, `license.deps`, `license.file`, `ci.tests` and
+`deps.updates`, wherever their answer would depend on it.
+
 ### `secrets.tree`: Secrets in the working tree
 
 - **Reads:** tracked text files (every file under the folder when it is not a repository)
@@ -93,6 +97,7 @@ itself, which is a review's job. A person decides those.
 - **Reads:** `LICENSE*`, `LICENCE*`, `COPYING*` at the root, and `package.json` `license`
 - **Finds:** no license file; or a manifest license that the file, identified by its text, contradicts
 - **Needs:** nothing
+- **Not investigated** when `package.json` states a license and the file's text is not one it can tell, so the two cannot be compared
 - **What the books call it:** software license
 - **The fix:** Add a LICENSE file at the root with the full text of the license you choose (MIT and Apache-2.0 are common for open source), and set the same SPDX id in package.json's license field.
 

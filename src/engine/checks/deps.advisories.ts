@@ -1,7 +1,7 @@
 import type { Check, Evidence, Need, Result } from "../check.js";
-import { advisoriesReasons, cards, voices } from "../copy.js";
+import { advisoriesReasons, cards, unreadableReasons, voices } from "../copy.js";
 import { cleanOrUnread } from "../ecosystems.js";
-import { lineContaining, readPackageJson } from "../manifest.js";
+import { lineContaining, manifestOf, readManifest } from "../manifest.js";
 import type { RepoReader } from "../repo.js";
 
 /** The lockfiles npm writes, which hold every installed package's name and version. */
@@ -25,8 +25,10 @@ interface Advisory {
 }
 
 /** Whether there is anything to look up: a package.json with dependencies, beside an npm lockfile. */
-function lookup(repo: RepoReader): "nothing" | "no-lockfile" | "other-lockfile" | "ready" {
-  const manifest = readPackageJson(repo);
+function lookup(repo: RepoReader): "nothing" | "unreadable" | "no-lockfile" | "other-lockfile" | "ready" {
+  const read = readManifest(repo);
+  if (read.state === "unreadable") return "unreadable";
+  const manifest = manifestOf(read);
   if (manifest === undefined || !hasDependencies(manifest)) return "nothing";
   if (NPM_LOCKFILES.some((file) => repo.has(file))) return "ready";
   return OTHER_LOCKFILES.some((file) => repo.has(file)) ? "other-lockfile" : "no-lockfile";
@@ -250,6 +252,8 @@ export const depsAdvisories: Check = {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can carry an advisory, and no call is made.
     if (state === "nothing") return cleanOrUnread(repo, false);
+    if (state === "unreadable")
+      return { verdict: "not-investigated", reason: unreadableReasons.manifest("package.json") };
     if (state === "no-lockfile") return { verdict: "not-investigated", reason: advisoriesReasons.noLockfile };
     if (state === "other-lockfile")
       return { verdict: "not-investigated", reason: advisoriesReasons.otherLockfile };

@@ -1,6 +1,6 @@
 import type { Check, Evidence, Result } from "../check.js";
-import { cards, voices } from "../copy.js";
-import { readPackageJson } from "../manifest.js";
+import { cards, unreadableReasons, voices } from "../copy.js";
+import { manifestOf, readManifest } from "../manifest.js";
 
 export const LOCKFILES = [
   "package-lock.json",
@@ -23,8 +23,14 @@ export const depsLockfile: Check = {
   card: cards["deps.lockfile"],
   run(repo): Result {
     const evidence: Evidence[] = [];
+    const unreadable: string[] = [];
     for (const path of repo.textFiles.filter((p) => p.split("/").at(-1) === "package.json")) {
-      const manifest = readPackageJson(repo, path);
+      const read = readManifest(repo, path);
+      if (read.state === "unreadable") {
+        unreadable.push(path);
+        continue;
+      }
+      const manifest = manifestOf(read);
       if (!hasEntries(manifest?.dependencies) && !hasEntries(manifest?.devDependencies)) continue;
       // A workspace member's lockfile is its workspace root's, in a folder above it.
       const folders = path.split("/").slice(0, -1);
@@ -34,6 +40,10 @@ export const depsLockfile: Check = {
         .some((folder) => LOCKFILES.some((lock) => repo.has(folder === "" ? lock : `${folder}/${lock}`)));
       if (!locked) evidence.push({ path, rule: "no-lockfile" });
     }
-    return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+    if (evidence.length > 0) return { verdict: "found", evidence };
+    // Clean would claim the manifests nobody could read.
+    return unreadable.length === 0
+      ? { verdict: "clean" }
+      : { verdict: "not-investigated", reason: unreadableReasons.manifest(unreadable[0]!) };
   },
 };

@@ -1,7 +1,7 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
-import { cards, outdatedReasons, voices } from "../copy.js";
-import { lineContaining, readPackageJson } from "../manifest.js";
+import { cards, outdatedReasons, unreadableReasons, voices } from "../copy.js";
+import { lineContaining, manifestOf, readManifest } from "../manifest.js";
 
 /** The lockfiles npm writes, which hold each direct dependency's installed version. */
 const NPM_LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json"];
@@ -40,8 +40,12 @@ function directDependencies(manifest: Record<string, unknown>): { name: string; 
 }
 
 /** Whether there is anything for npm to look up: a package.json with dependencies, beside an npm lockfile. */
-function lookup(repo: Parameters<Check["run"]>[0]): "nothing" | "no-lockfile" | "other-lockfile" | "ready" {
-  const manifest = readPackageJson(repo);
+function lookup(
+  repo: Parameters<Check["run"]>[0],
+): "nothing" | "unreadable" | "no-lockfile" | "other-lockfile" | "ready" {
+  const read = readManifest(repo);
+  if (read.state === "unreadable") return "unreadable";
+  const manifest = manifestOf(read);
   if (manifest === undefined || directDependencies(manifest).length === 0) return "nothing";
   if (NPM_LOCKFILES.some((file) => repo.has(file))) return "ready";
   return OTHER_LOCKFILES.some((file) => repo.has(file)) ? "other-lockfile" : "no-lockfile";
@@ -60,6 +64,8 @@ export const depsOutdated: Check = {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can be behind, and no call is made.
     if (state === "nothing") return cleanOrUnread(repo, false);
+    if (state === "unreadable")
+      return { verdict: "not-investigated", reason: unreadableReasons.manifest("package.json") };
     if (state === "no-lockfile") return { verdict: "not-investigated", reason: outdatedReasons.noLockfile };
     if (state === "other-lockfile")
       return { verdict: "not-investigated", reason: outdatedReasons.otherLockfile };
@@ -89,7 +95,7 @@ export const depsOutdated: Check = {
 
     const manifestText = repo.readText("package.json") ?? "";
     const evidence: Evidence[] = [];
-    for (const { name, dev } of directDependencies(readPackageJson(repo)!)) {
+    for (const { name, dev } of directDependencies(manifestOf(readManifest(repo))!)) {
       const current = locked[`node_modules/${name}`]?.version;
       const latest = outdated[name]?.latest;
       if (current === undefined || latest === undefined || !majorBehind(current, latest)) continue;

@@ -1,7 +1,7 @@
 import type { Check, Evidence, Result } from "../check.js";
-import { cards, voices } from "../copy.js";
+import { cards, unreadableReasons, voices } from "../copy.js";
 import { baseLicense, identifyLicense, licenseIds } from "../licenses.js";
-import { lineContaining, readPackageJson } from "../manifest.js";
+import { lineContaining, manifestOf, readManifest } from "../manifest.js";
 
 const LICENSE_FILE = /^(?:licen[cs]e|copying)(?:[-._].*)?$/i;
 
@@ -16,7 +16,11 @@ export const licenseFile: Check = {
     const files = repo.files.filter((path) => !path.includes("/") && LICENSE_FILE.test(path));
     if (files.length === 0) return { verdict: "found", evidence: [] };
 
-    const manifest = readPackageJson(repo);
+    const read = readManifest(repo);
+    // The file is there; whether the manifest agrees with it cannot be said when the manifest cannot be read.
+    if (read.state === "unreadable")
+      return { verdict: "not-investigated", reason: unreadableReasons.manifest(read.path) };
+    const manifest = manifestOf(read);
     const stated = typeof manifest?.license === "string" ? manifest.license : undefined;
     // `SEE LICENSE IN <file>` and `UNLICENSED` point at the file rather than naming a license to compare.
     if (stated === undefined || /^SEE LICEN[CS]E IN /i.test(stated) || stated === "UNLICENSED")
@@ -26,8 +30,9 @@ export const licenseFile: Check = {
       const license = identifyLicense(repo.readText(path) ?? "");
       return license === undefined ? [] : [{ path, ...license }];
     });
-    // A file we cannot identify cannot disagree with anything.
-    if (identified.length === 0) return { verdict: "clean" };
+    // A file whose license cannot be told from its text cannot be compared: clean would claim they agree.
+    if (identified.length === 0)
+      return { verdict: "not-investigated", reason: unreadableReasons.license(files[0]!, stated) };
     const named = new Set(licenseIds(stated).map(baseLicense));
     if (identified.some(({ id }) => named.has(baseLicense(id)))) return { verdict: "clean" };
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Need, Result } from "../../src/engine/check.js";
 import { CHECKS } from "../../src/engine/checks/index.js";
-import { denyReasons, ecosystemReasons, workflowReasons } from "../../src/engine/copy.js";
+import { denyReasons, ecosystemReasons, unreadableReasons, workflowReasons } from "../../src/engine/copy.js";
 import { otherManifests } from "../../src/engine/ecosystems.js";
 import { runCheck, secretHasher } from "../../src/engine/engine.js";
 import { findNpm } from "../../src/engine/npm.js";
@@ -117,5 +117,62 @@ describe("a workflow that does not parse is never read as clean", () => {
         "on: push\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo\n",
     };
     expect(check("workflows.permissions", files).verdict).toBe("found");
+  });
+});
+
+describe("an unreadable package.json is never read as clean", () => {
+  const lockfile = JSON.stringify({
+    name: "w",
+    lockfileVersion: 3,
+    packages: { "": { name: "w" }, "node_modules/a": { version: "1.0.0", license: "MIT" } },
+  });
+  const workflow =
+    "on: push\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hi\n";
+  const mit = "MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\n";
+
+  // Each check, with a tree whose answer depends on what package.json says.
+  const PAIRS: [string, BuiltFixture["files"]][] = [
+    ["deps.advisories", { "package-lock.json": lockfile }],
+    ["deps.outdated", { "package-lock.json": lockfile }],
+    ["deps.lockfile", {}],
+    ["license.deps", { "package-lock.json": lockfile }],
+    ["license.file", { LICENSE: mit }],
+    ["ci.tests", { ".github/workflows/ci.yml": workflow }],
+    ["deps.updates", {}],
+  ];
+  const GARBAGE = ['{ "name": ', "not json at all", "[1, 2, 3]", "null"];
+
+  it.each(PAIRS)("%s reads not investigated, naming package.json", (id, files) => {
+    expect(check(id, { ...files, "package.json": "{ broken" })).toEqual({
+      verdict: "not-investigated",
+      reason: unreadableReasons.manifest("package.json"),
+    });
+  });
+
+  it.each(PAIRS.flatMap(([id, files]) => GARBAGE.map((garbage) => [id, garbage, files] as const)))(
+    "%s never reads clean on a package.json of %j",
+    (id, garbage, files) => {
+      expect(check(id, { ...files, "package.json": garbage }).verdict).not.toBe("clean");
+    },
+  );
+
+  it("names a workspace member's package.json that would not parse", () => {
+    expect(check("deps.lockfile", { "package.json": "{}", "packages/a/package.json": "{ broken" })).toEqual({
+      verdict: "not-investigated",
+      reason: unreadableReasons.manifest("packages/a/package.json"),
+    });
+  });
+
+  it("still reads an absent package.json as nothing to check", () => {
+    expect(check("deps.lockfile", { "README.md": "# w\n" })).toEqual({ verdict: "clean" });
+  });
+
+  it("license.file reads not investigated when it cannot tell which license the file is", () => {
+    expect(
+      check("license.file", {
+        LICENSE: "Our own terms: ask before you use this.\n",
+        "package.json": '{"license": "MIT"}',
+      }),
+    ).toEqual({ verdict: "not-investigated", reason: unreadableReasons.license("LICENSE", "MIT") });
   });
 });
