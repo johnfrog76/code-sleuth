@@ -154,12 +154,69 @@ function readHistory(root: string): AddedLine[] | undefined {
   return lines;
 }
 
-/** `git` in the root, with an argument array and none of the variables that would point it elsewhere. */
-export function git(root: string, args: readonly string[]) {
+/**
+ * Settings a repository's own config could use to have git run a command of its choosing during a read: the
+ * file-system monitor runs on `status` and `ls-files`, a signature check on `log`, a hook when the index is
+ * written, a pager or an external diff. Every git call turns them off. Textconv is turned off on the `log -p`
+ * call itself (`--no-ext-diff --no-textconv`).
+ */
+export const GIT_SAFE_CONFIG: readonly string[] = [
+  "core.fsmonitor=false",
+  "log.showSignature=false",
+  `core.hooksPath=${process.platform === "win32" ? "NUL" : "/dev/null"}`,
+  "core.pager=cat",
+  "diff.external=",
+];
+
+function gitEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: "0" };
   for (const name of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CEILING_DIRECTORIES"])
     delete env[name];
-  return spawnChild("git", args, { cwd: root, env, encoding: "buffer", maxBuffer: 1024 * 1024 * 1024 });
+  return env;
+}
+
+function spawnGit(root: string, config: readonly string[], args: readonly string[]) {
+  const flags = config.flatMap((setting) => ["-c", setting]);
+  return spawnChild("git", [...flags, ...args], {
+    cwd: root,
+    env: gitEnv(),
+    encoding: "buffer",
+    maxBuffer: 1024 * 1024 * 1024,
+  });
+}
+
+const filterOverrides = new Map<string, readonly string[]>();
+
+/**
+ * Every filter driver the config names, emptied: a driver's `clean` command runs when `status` compares a changed
+ * file, so a repository could name its own. Reading the names runs nothing; the settings are read, never used.
+ */
+function filtersOff(root: string): readonly string[] {
+  const known = filterOverrides.get(root);
+  if (known !== undefined) return known;
+  const listed = spawnGit(root, GIT_SAFE_CONFIG, ["config", "--name-only", "--get-regexp", "^filter\\."]);
+  const names = new Set<string>();
+  if (listed.status === 0) {
+    for (const key of listed.stdout.toString("utf8").split("\n")) {
+      const match = /^filter\.(.+)\.[^.]+$/.exec(key.trim());
+      if (match) names.add(match[1]!);
+    }
+  }
+  const off = [...names].flatMap((name) => [
+    `filter.${name}.clean=`,
+    `filter.${name}.smudge=`,
+    `filter.${name}.process=`,
+  ]);
+  filterOverrides.set(root, off);
+  return off;
+}
+
+/**
+ * `git` in the root, with an argument array, none of the variables that would point it elsewhere, and none of the
+ * settings that would have it run a command the repository chose.
+ */
+export function git(root: string, args: readonly string[]) {
+  return spawnGit(root, [...GIT_SAFE_CONFIG, ...filtersOff(root)], args);
 }
 
 function gitTrackedFiles(root: string): string[] | undefined {

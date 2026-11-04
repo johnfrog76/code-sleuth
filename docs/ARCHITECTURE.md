@@ -14,7 +14,8 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
 
 - **The repository reader** (`src/engine/repo.ts`). Lists tracked files through `git ls-files` when the folder
   is in a work tree, else every file under it; reads text, file sizes, the history (`git log -p --all`) and
-  commit messages. It reads, and never writes.
+  commit messages. It reads, and never writes. Every git call goes through its `git()`, which turns off the
+  commands a repository's own git configuration could name (`GIT_SAFE_CONFIG`, and each filter driver).
 - **The check contract** (`src/engine/check.ts`). A check has a goal-free id, a title, what the books call it,
   what it needs, its words, its card's words, and a pure `run(repo, context)` that returns `clean`, `found`
   with evidence, or `not-investigated` with a reason. The check table is `src/engine/checks/`, one file per
