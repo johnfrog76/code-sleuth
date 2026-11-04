@@ -27,6 +27,16 @@ const many = (n: number, excerpt = "x") =>
   Array.from({ length: n }, (_, i) => ({ path: `src/file-${i}.ts`, line: i + 1, excerpt }));
 
 describe("a card", () => {
+  it("cites each path and path:line its evidence lines show, for the polish guard", () => {
+    const shown = card([
+      { path: ".env", line: 3, excerpt: "TOKEN=****" },
+      { path: "Dockerfile" },
+      { path: "src/a.ts", line: 12 },
+    ]);
+    expect(shown.cites).toEqual([".env:3", "Dockerfile", "src/a.ts:12"]);
+    for (const cite of shown.cites!) expect(shown.body).toContain(`\`${cite}\``);
+  });
+
   it("is a Bug for a smoking gun and a Task otherwise", () => {
     expect(card([], "smoking-gun").type).toBe("Bug");
     expect(card([], "loose-end").type).toBe("Task");

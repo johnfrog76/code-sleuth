@@ -33,7 +33,8 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
   `investigate.ts` refuses what it cannot do, takes the case, reports it, polishes, files, and closes it;
   `output.ts` draws the terminal. Its words are `src/cli/copy.ts`.
 - **The polish client** (`src/polish/`). One `fetch` per card to a fixed address; `guard.ts` keeps a rewrite
-  only when every path, number, masked value and the fingerprint survive. [POLISH.md](POLISH.md).
+  only when every path the card's evidence cites, every number, masked value and the fingerprint survive.
+  [POLISH.md](POLISH.md).
 - **The atoms** (`src/atoms/`). The sloth private eye, the verdict stamp and the logo as SVG React components,
   for the office and the landing page; the command does not use them, and they are not in the published build.
   `figures.tsx` is the character as drawn for the deck, one source for the deck and the product, with its

@@ -60,8 +60,10 @@ point. `CODE_SLEUTH_MODEL` overrides it.
 What comes back is kept only when it keeps each of these from the card it was made from, and adds none:
 
 - the fingerprint line (the check, the case, the short commit),
-- every path and `path:line` in backticks,
-- every number,
+- every path and `path:line` the card's evidence cites, word for word, whatever it looks like (`.env:3`,
+  `Dockerfile`, `LICENSE`), and not inside a longer one (`.env:31` does not keep `.env:3`),
+- every other path in backticks that reads as one: with a folder, an extension, a leading dot or a `:line`,
+- every number, as many times as it appears,
 - every masked value (`ghp_****9f`, `****`),
 - the count of checkboxes,
 

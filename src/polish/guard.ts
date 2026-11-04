@@ -26,13 +26,18 @@ export interface CardFacts {
   /** Every path, with its line where it has one, as the card names them in code spans. */
   paths: Set<string>;
   maskedValues: Set<string>;
-  numbers: Set<string>;
+  /** Every number, as many times as it appears. */
+  numbers: string[];
   checkboxes: number;
 }
 
 const CODE_SPAN = /(`+)\s?([^`]+?)\s?\1/g;
-/** A path: a folder in it, or a file name with an extension, and maybe `:line`. */
-const PATH = /^(?:[\w.@-]+\/)+[\w.@-]*(?::\d+)?$|^\.?[\w@-]+(?:\.[\w-]+)+(?::\d+)?$/;
+/**
+ * A path written in prose, the second net behind the card's own evidence: a folder in it, a file name with an
+ * extension, a dotfile (`.env`), or any name with a line (`Dockerfile:4`), each maybe with `:line`.
+ */
+const PATH =
+  /^(?:[\w.@-]+\/)+[\w.@-]*(?::\d+)?$|^\.?[\w@-]+(?:\.[\w-]+)+(?::\d+)?$|^\.[\w@.-]+(?::\d+)?$|^[\w@.-]+:\d+$/;
 const MASKED = /\S{4}\*{4}\S{2}|\*{4}/g;
 const NUMBER = /\d+(?:\.\d+)?/g;
 const CHECKBOX = /^\s*- \[[ xX]\]/gm;
@@ -49,7 +54,7 @@ export function factsOf(card: CardText): CardFacts {
     fingerprint: lastLine(card.body),
     paths,
     maskedValues: new Set(text.match(MASKED) ?? []),
-    numbers: new Set(text.match(NUMBER) ?? []),
+    numbers: (text.match(NUMBER) ?? []).sort(),
     checkboxes: (card.body.match(CHECKBOX) ?? []).length,
   };
 }
@@ -58,7 +63,11 @@ export function factsOf(card: CardText): CardFacts {
  * Keeps a polished card only when it keeps every fact of the card it was made from and adds none, and
  * still has a card's shape. Pure: the same pair always gives the same answer.
  */
-export function guardPolish(original: CardText, polished: CardText): GuardResult {
+export function guardPolish(
+  original: CardText,
+  polished: CardText,
+  cites: readonly string[] = [],
+): GuardResult {
   if (polished.title.trim() === "" || polished.body.trim() === "") return { kept: false, reason: "empty" };
   if (
     polished.title.length > CARD_TITLE_LIMIT ||
@@ -73,6 +82,8 @@ export function guardPolish(original: CardText, polished: CardText): GuardResult
   const after = factsOf(polished);
   if (after.fingerprint !== before.fingerprint) return { kept: false, reason: "check-id-dropped" };
   const polishedText = `${polished.title}\n${polished.body}`;
+  // First, the card's own evidence: every path and path:line it cites, verbatim, whatever it looks like.
+  if (cites.some((cite) => !citedIn(polishedText, cite))) return { kept: false, reason: "path-dropped" };
   if ([...before.paths].some((path) => !polishedText.includes(path)))
     return { kept: false, reason: "path-dropped" };
   if ([...after.paths].some((path) => !before.paths.has(path) && !isPartOfKnownPath(path, before.paths))) {
@@ -80,9 +91,19 @@ export function guardPolish(original: CardText, polished: CardText): GuardResult
   }
   if (!sameSet(before.maskedValues, after.maskedValues))
     return { kept: false, reason: "masked-value-changed" };
-  if (!sameSet(before.numbers, after.numbers)) return { kept: false, reason: "number-changed" };
+  if (before.numbers.join("\n") !== after.numbers.join("\n"))
+    return { kept: false, reason: "number-changed" };
   if (before.checkboxes !== after.checkboxes) return { kept: false, reason: "checkbox-count-changed" };
   return { kept: true };
+}
+
+/**
+ * The cite stands on its own in the text: `.env:3` is not found inside `.envrc:3`, nor `a.ts:1` inside `a.ts:12`.
+ * A full stop after it, ending a sentence, is fine.
+ */
+function citedIn(text: string, cite: string): boolean {
+  const escaped = cite.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![\\w.@/-])${escaped}(?![\\w@/-]|\\.\\w|:\\d)`).test(text);
 }
 
 /** `config/dev.ts` on its own, where the card said `config/dev.ts:12`, names nothing new. */

@@ -14,6 +14,8 @@ export interface Card {
   title: string;
   /** Everything after the heading: what a tracker card's description takes. No `##` heading in it. */
   body: string;
+  /** Every path and `path:line` the card's evidence lines cite: a rewrite must keep each one, verbatim. */
+  cites?: readonly string[];
 }
 
 export interface CardInput {
@@ -45,7 +47,13 @@ export function renderCard({ outcome, order, goal, caseId, head }: CardInput): C
     type: weight === "smoking-gun" ? "Bug" : "Task",
     title,
     body,
+    cites: evidence.slice(0, shown).map(whereOf),
   };
+}
+
+/** Where a piece of evidence is: its path, with `:line` when it has one. */
+export function whereOf(evidence: Evidence): string {
+  return evidence.line === undefined ? evidence.path : `${evidence.path}:${evidence.line}`;
 }
 
 /** The whole markdown card: its own heading, then the body. */
@@ -78,8 +86,7 @@ function cardBody(
 }
 
 export function evidenceLine(evidence: Evidence): string {
-  const where = evidence.line === undefined ? evidence.path : `${evidence.path}:${evidence.line}`;
-  let line = `- ${codeSpan(where)}`;
+  let line = `- ${codeSpan(whereOf(evidence))}`;
   if (evidence.excerpt !== undefined) line += ` -- ${codeSpan(evidence.excerpt)}`;
   const notes = [
     evidence.rule === undefined ? undefined : copy.card.rule(evidence.rule),
