@@ -30,6 +30,8 @@
 
 **Point it at a repo, pick a goal, run. A checklist and card-ready issues come back.**
 
+The project's page: [johnfrog76.github.io/code-sleuth](https://johnfrog76.github.io/code-sleuth/).
+
 Code Sleuth is a sloth private eye for your repository. Ask it one question -- is this ready to go public,
 is it secure, is it in good shape -- and it investigates, then hands back a checklist and an issue for each
 loose end, written so you can file it.

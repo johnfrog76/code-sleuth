@@ -51,6 +51,7 @@ folder is ever rewritten.
 | `src/` | the package, by the parts above |
 | `toolkit/` | `handoff.ps1`, the one PowerShell file, shipped with the package |
 | `assets/` | the logo (light and dark), the favicon and the social preview, made by `scripts/render-atoms.mjs` |
+| `site/` | the project's page on GitHub Pages: plain HTML and CSS, with copies of the logo and favicon. `.github/workflows/pages.yml` publishes it on every push to main that changes it. Not shipped |
 | `scripts/` | development tools, not shipped |
 | `test/` | the tests ([TESTING.md](TESTING.md)) |
 | `docs/` | these documents ([README.md](README.md) is the map) |

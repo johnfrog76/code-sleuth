@@ -8,6 +8,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Added
 
+- A placeholder project page, `site/`, for GitHub Pages: the logo, light and dark, and a link to the repository.
 - The API key can live in a `.env` in Code Sleuth's own folder, beside the cases folder: copy `.env.example` there and fill it in. A key in your environment still wins. No other `.env` is read, the key never reaches a process Code Sleuth starts, the run says where the key came from and never what it is, and it warns when others can read the file. With no key, the run prints the one line that copies the `.env.example` beside the command into place, both paths in full; the case file keeps it with both paths in their `~` form.
 - A project contact, `codesleuth.project (at) outlook.com`, for conduct reports (`CODE_OF_CONDUCT.md`) and security reports (`SECURITY.md`, beside GitHub's private vulnerability reporting). It is written out, not linked, to slow down address scrapers.
 
