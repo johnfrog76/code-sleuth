@@ -65,6 +65,7 @@ before anything is read or written.
 | an unknown `--fail-on` weight | `--fail-on hunch` | yes |
 | a deny list it cannot read, or one inside the repository | the list would publish the names it guards | yes |
 | a cases folder inside the repository, or a repository that holds the cases folder | `--out` inside it; `code-sleuth ~` | yes |
+| a repository that holds Code Sleuth's own npm folder | `code-sleuth ~ --out elsewhere`, when npm would run; `--offline` runs no npm | yes |
 | `--yes` or `--refile` without `--toolkit` | | yes |
 | `--toolkit` with no ToolKit | no PowerShell, or ToolKit's `NewPrompt` does not resolve | yes |
 | a `--toolkit-space` ToolKit does not confirm | ToolKit falls back silently for a Space it does not declare | yes |

@@ -1,6 +1,6 @@
 import { spawnChild } from "../spawn.js";
 import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
-import { join, resolve, sep } from "node:path";
+import { delimiter, join, resolve, sep } from "node:path";
 
 /** Folders the text checks never read, at any depth. */
 export const SKIPPED_FOLDERS: readonly string[] = ["node_modules", "vendor", "dist", "build"];
@@ -160,6 +160,59 @@ function readHistory(root: string): AddedLine[] | undefined {
   return lines;
 }
 
+/** The transports git itself knows: its own, and the remote helpers it ships. */
+export const BUILT_IN_TRANSPORTS: readonly string[] = [
+  "file",
+  "git",
+  "ssh",
+  "http",
+  "https",
+  "ext",
+  "fd",
+  "ftp",
+  "ftps",
+];
+
+let helperTransports: readonly string[] | undefined;
+
+/**
+ * Every other transport this machine's git could use: a `git-remote-<name>` helper, in git's own exec-path or on
+ * the PATH, is a transport too. Found once, by listing folders: nothing is run but `git --exec-path`.
+ */
+export function helperTransportNames(env: NodeJS.ProcessEnv = process.env): readonly string[] {
+  if (helperTransports !== undefined) return helperTransports;
+  const execPath = spawnChild("git", ["--exec-path"], { env: gitEnv(), encoding: "utf8" });
+  const folders = [
+    ...(execPath.status === 0 ? [execPath.stdout.trim()] : []),
+    ...(env.PATH ?? env.Path ?? "").split(delimiter),
+  ].filter((folder) => folder !== "");
+  helperTransports = helperNamesIn(folders);
+  return helperTransports;
+}
+
+/** The transports named by the `git-remote-<name>` helpers in these folders, git's own left out. */
+export function helperNamesIn(folders: readonly string[]): string[] {
+  const names = new Set<string>();
+  for (const folder of folders) {
+    let entries: string[];
+    try {
+      entries = readdirSync(folder);
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const match = /^git-remote-([\w.+-]+?)(?:\.exe|\.cmd|\.bat)?$/i.exec(entry);
+      if (match && !BUILT_IN_TRANSPORTS.includes(match[1]!.toLowerCase())) names.add(match[1]!);
+    }
+  }
+  return [...names].sort();
+}
+
+/** The safe settings, with every helper transport on this machine turned off by name too. */
+export function gitSafeConfig(): readonly string[] {
+  return [...GIT_SAFE_CONFIG, ...helperTransportNames().map((name) => `protocol.${name}.allow=never`)];
+}
+
 /**
  * Settings a repository's own config could use to have git run a command of its choosing during a read: the
  * file-system monitor runs on `status` and `ls-files`, a signature check on `log`, a hook when the index is
@@ -172,7 +225,7 @@ export const GIT_SAFE_CONFIG: readonly string[] = [
   "protocol.allow=never",
   // protocol.allow is only the default: a repository's own protocol.<name>.allow would win over it, so each
   // transport git knows is turned off by name too, on the command line, which outranks the repository's config.
-  ...["file", "git", "ssh", "http", "https", "ext"].map((name) => `protocol.${name}.allow=never`),
+  ...BUILT_IN_TRANSPORTS.map((name) => `protocol.${name}.allow=never`),
   "core.fsmonitor=false",
   "log.showSignature=false",
   `core.hooksPath=${process.platform === "win32" ? "NUL" : "/dev/null"}`,
@@ -206,7 +259,7 @@ const filterOverrides = new Map<string, readonly string[]>();
 function filtersOff(root: string): readonly string[] {
   const known = filterOverrides.get(root);
   if (known !== undefined) return known;
-  const listed = spawnGit(root, GIT_SAFE_CONFIG, ["config", "--name-only", "--get-regexp", "^filter\\."]);
+  const listed = spawnGit(root, gitSafeConfig(), ["config", "--name-only", "--get-regexp", "^filter\\."]);
   const names = new Set<string>();
   if (listed.status === 0) {
     for (const key of listed.stdout.toString("utf8").split("\n")) {
@@ -230,7 +283,7 @@ function filtersOff(root: string): readonly string[] {
  * settings that would have it run a command the repository chose.
  */
 export function git(root: string, args: readonly string[]) {
-  return spawnGit(root, [...GIT_SAFE_CONFIG, ...filtersOff(root)], args);
+  return spawnGit(root, [...gitSafeConfig(), ...filtersOff(root)], args);
 }
 
 /** A partial clone names a promisor remote, or the older extension. Reading the config runs nothing. */

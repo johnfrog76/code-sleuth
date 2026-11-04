@@ -10,7 +10,7 @@ import type { RepoReader } from "../engine/repo.js";
 import { version } from "../version.js";
 import type { PolishRecord } from "../polish/pass.js";
 import { type Card, cardFile } from "./card.js";
-import { guardCasesFolder, machineKey, newCaseFolder, repoKey } from "./folder.js";
+import { guardWrites, machineKey, newCaseFolder, repoKey, type WriteFolder } from "./folder.js";
 import { renderCaseMd } from "./markdown.js";
 import { buildCase, type CaseRecord, type Enhancements, withEnhancements } from "./record.js";
 import { readRepoInfo, type RepoInfo } from "./repoInfo.js";
@@ -23,6 +23,8 @@ export interface TakeCaseOptions {
   casesFolder: string;
   /** True when the person chose the folder with `--out`; it changes the refusal's words. */
   chosen: boolean;
+  /** Every other folder the run writes to (npm's cache and logs), held to the same guard as the cases folder. */
+  alsoWrites?: readonly WriteFolder[];
   all?: boolean;
   /** npm, when the run found it and may call out: given to the checks that need it. */
   npm?: NpmRunner;
@@ -83,7 +85,7 @@ export function takeCase(options: TakeCaseOptions & { enhancements?: Enhancement
  */
 export function openCase(options: TakeCaseOptions): CaseDraft {
   const { repo, goal, capabilities, casesFolder, chosen, all = false, now = () => new Date() } = options;
-  guardCasesFolder(repo.root, casesFolder, chosen);
+  guardWrites(repo.root, [{ kind: "cases", path: casesFolder, chosen }, ...(options.alsoWrites ?? [])]);
 
   const opened = now();
   const info = readRepoInfo(repo);
@@ -153,10 +155,10 @@ function writeCase(
   outcomes: readonly CheckOutcome[],
   cards: readonly Card[],
 ): void {
-  writeFileSync(join(path, "case.json"), JSON.stringify(record, null, 2) + "\n", "utf8");
-  writeFileSync(join(path, "case.md"), renderCaseMd(record, outcomes), "utf8");
+  writeFileSync(join(path, "case.json"), lf(JSON.stringify(record, null, 2) + "\n"), "utf8");
+  writeFileSync(join(path, "case.md"), lf(renderCaseMd(record, outcomes)), "utf8");
   mkdirSync(join(path, "cards"));
-  for (const card of cards) writeFileSync(join(path, card.file), cardFile(card), "utf8");
+  for (const card of cards) writeFileSync(join(path, card.file), lf(cardFile(card)), "utf8");
 }
 
 /** `2026-10-31`, in the person's own time zone: the day they ran it. */
@@ -168,4 +170,13 @@ export function localDate(date: Date): string {
 /** `2026-10-31T14:02:11Z`. */
 export function isoSeconds(date: Date): string {
   return date.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
+/**
+ * Every line ending in a case file is LF: a polished card comes back as the model wrote it, and an excerpt can
+ * hold a lone carriage return from the file it quotes. CRLF and a lone CR both become LF here, where every case
+ * file is written.
+ */
+export function lf(text: string): string {
+  return text.replace(/\r\n?/g, "\n");
 }

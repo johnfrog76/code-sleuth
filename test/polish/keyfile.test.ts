@@ -216,7 +216,7 @@ describe("where an API key goes, when there is none", () => {
     });
   });
 
-  it("keeps the case file free of the home folder: the line is there in its ~ form", async () => {
+  it("keeps a record in the case, not a line to run: the example and the .env, in their ~ form", async () => {
     await withScratch(async (home) => {
       const file = join(home, "Library", "Application Support", "code-sleuth", ".env");
       const example = join(home, "tools", "code-sleuth", ".env.example");
@@ -226,9 +226,12 @@ describe("where an API key goes, when there is none", () => {
         const { result, records } = await polishRun({ file, example, home, argv });
         expect(result.stdout).toContain(copyCommand(example, file));
         expect(records).not.toContain(home);
-        const shown = copyCommand(shownPath(example, home), shownPath(file, home));
-        expect(records).toContain(shown);
-        expect(shown).toContain("'~");
+        expect(records).toContain(`"keyExample": "${shownPath(example, home)}"`);
+        expect(records).toContain(
+          `copy ${shownPath(example, home)} to ${shownPath(file, home)} and fill it in`,
+        );
+        // A record holds no quoted ~ that a shell would leave unexpanded.
+        expect(records).not.toContain("'~");
       }
     });
   });

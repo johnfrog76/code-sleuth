@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { Enhancements } from "../../src/case/record.js";
-import { takeCase } from "../../src/case/write.js";
+import { lf, openCase, takeCase } from "../../src/case/write.js";
 import { findGoal } from "../../src/engine/goals.js";
 import { investigate, type InvestigateOptions } from "../helpers/investigate.js";
 import { withScratch } from "../helpers/scratch.js";
@@ -184,4 +184,26 @@ describe("taking a case", () => {
     const { path } = run("bare", "public", { git: true });
     expect(path).not.toContain("whole/bare");
   });
+});
+
+describe("line endings", () => {
+  it("turns CRLF and a lone CR into LF", () => {
+    expect(lf("a\r\nb\rc\n")).toBe("a\nb\nc\n");
+  });
+
+  it("writes a polished card that came back with CRLF as LF", () =>
+    withScratch((out) => {
+      const draft = investigate({ name: "crlf", files: { "README.md": "x\n" } }, (repo, capabilities) =>
+        openCase({ repo, goal: findGoal("public")!, capabilities, casesFolder: out, chosen: true }),
+      );
+      const cards = draft.cards.map((card) => ({
+        ...card,
+        body: card.body.split("\n").join("\r\n") + "\rend",
+      }));
+      const records = new Map(cards.map((card) => [card.file, { state: "polished" as const }]));
+      draft.close(undefined, { cards, records });
+      expect(cards.length).toBeGreaterThan(0);
+      for (const card of cards)
+        expect(readFileSync(join(draft.path, card.file), "utf8").includes("\r")).toBe(false);
+    }));
 });

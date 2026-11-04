@@ -11,12 +11,21 @@ function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** How to add a key: the runnable line in the terminal, or the example's path in the case. */
+export interface AddKey {
+  line?: string;
+  example?: string;
+}
+
 /** The words of a case file. The rules never hold words; the check copy holds each check's own. */
 export const copy = {
   outInsideRepo: (out: string) => `The cases folder ${out} is inside the repository I'm investigating.`,
   outInsideRepoHint: "Give --out a folder outside the repository: I never write into the tree I'm judging.",
   repoHoldsCases: (repo: string) => `${repo} holds my cases folder, so I'd be reading my own case files.`,
   repoHoldsCasesHint: "Point me at the repository itself, not at a folder above it.",
+  npmFolderInRepo: (repo: string) =>
+    `${repo} holds my own folder, where npm keeps its cache and logs for me.`,
+  npmFolderInRepoHint: "Point me at the repository itself, not at a folder above it, or run with --offline.",
 
   stamp: { ready: "READY", nearly: "NEARLY", "not-ready": "NOT READY" } satisfies Record<CaseVerdict, string>,
 
@@ -96,19 +105,19 @@ export const copy = {
   },
 
   polish: {
-    offBoth: (keyFile?: string, keyCopy?: string) =>
+    offBoth: (keyFile?: string, how: AddKey = {}) =>
       keyFile === undefined
         ? "off. Add an API key (see .env.example) and --polish to have the cards reworded."
-        : `off. Add an API key and --polish to have the cards reworded. ${copy.polish.addKey(keyFile, keyCopy)}`,
+        : `off. Add an API key and --polish to have the cards reworded. ${copy.polish.addKey(keyFile, how)}`,
     keySet: (from?: string) =>
       `an API key is set${from === undefined ? "" : ` (from ${from})`}: add --polish to have the cards polished.`,
-    noKey: (keyFile?: string, keyCopy?: string) =>
-      `No API key. The cards are as the sleuth wrote them.${keyFile === undefined ? "" : ` ${copy.polish.addKey(keyFile, keyCopy)}`}`,
+    noKey: (keyFile?: string, how: AddKey = {}) =>
+      `No API key. The cards are as the sleuth wrote them.${keyFile === undefined ? "" : ` ${copy.polish.addKey(keyFile, how)}`}`,
     /** Where an API key goes, and the line that puts the example there when the example was found. */
-    addKey: (keyFile: string, keyCopy?: string) =>
-      keyCopy === undefined
-        ? `To add one, copy .env.example to ${keyFile} and fill it in.`
-        : `To add one, run \`${keyCopy}\` and fill it in.`,
+    addKey: (keyFile: string, how: AddKey) =>
+      how.line !== undefined
+        ? `To add one, run \`${how.line}\` and fill it in.`
+        : `To add one, copy ${how.example ?? ".env.example"} to ${keyFile} and fill it in.`,
     on: (polished: number, total: number, model: string, kept: string[], from?: string) =>
       `${polished} of ${total} card${total === 1 ? "" : "s"} polished by ${model}` +
       (from === undefined ? "" : `, with the API key from ${from}`) +

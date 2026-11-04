@@ -20,7 +20,8 @@ is ever overwritten: a second run is a second case.
 
 Code Sleuth refuses a cases folder inside the repository, and a repository that holds the cases folder (so
 `code-sleuth ~` is refused): either would have it reading or writing its own output. Every file is UTF-8 with
-no byte-order mark and LF line endings.
+no byte-order mark and LF line endings: a carriage return, from a polished card or a line it quotes, is written
+as LF.
 
 ## `case.json`
 
@@ -35,7 +36,7 @@ The record, for scripts and for a later run. `--json` prints the same object.
 | `openedAt`, `closedAt` | UTC, to the second |
 | `verdict` | by the checklist: `ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` |
 | `counts` | `smoking-gun`, `loose-end`, `hunch`, `clean`, `not-investigated` |
-| `enhancements` | `polish` (on with its model, or off and why, with `keyFrom`: where the API key came from, `the environment` or the `.env`'s path, never the key; or with no key, `keyFile`: the `.env` it would be read from, and `keyCopy`: the line that copies `.env.example` there, both paths in their `~` form, so the case holds no home folder) and `toolkit` (detected or not, the Space and how it was chosen -- `spaceFrom`: `flag`, `origin` or `active` -- and what was filed) |
+| `enhancements` | `polish` (on with its model, or off and why, with `keyFrom`: where the API key came from, `the environment` or the `.env`'s path, never the key; or with no key, `keyFile`: the `.env` it would be read from, and `keyExample`: the `.env.example` to copy there, when the one that came with it is found -- a record, not a line to run, both in their `~` form) and `toolkit` (detected or not, the Space and how it was chosen -- `spaceFrom`: `flag`, `origin` or `active` -- and what was filed) |
 | `exampleLocations` | the example locations in force: `globs` (the built-in `**/test/fixtures/**` and `**/__fixtures__/**`, then every `--examples` glob), `added` (the `--examples` globs alone) and `marker` (`code-sleuth:example`) |
 | `checks` | each check in the goal's order: `id`, `title`, `booksName`, `verdict`, and `weight`, `evidence`, `fix` and `card` when found, or `reason` when not investigated. Any check with matches in example locations also has `examples`, every one of them, never counted ([CHECKS.md](CHECKS.md#example-locations)) |
 

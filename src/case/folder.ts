@@ -37,16 +37,27 @@ export function defaultKeyFile(
   return join(userFolder(platform, env, home), ".env");
 }
 
+/** A folder Code Sleuth itself writes to during a run. Every one goes through guardWrites. */
+export type WriteFolder = { kind: "cases"; path: string; chosen: boolean } | { kind: "npm"; path: string };
+
 /**
- * Refuses a cases folder inside the repository, and a repository that holds the cases folder --
- * `code-sleuth ~` among them. Either way a run would write into the tree it judges, and read its own cases.
+ * The one guard for every folder Code Sleuth writes to: none may be the repository or inside it. A cases folder
+ * inside the repository, a repository that holds the cases folder (`code-sleuth ~`), and a repository that holds
+ * the folder npm keeps its cache and logs in are all refused, before anything is written.
  */
-export function guardCasesFolder(repoRoot: string, casesFolder: string, chosen: boolean): void {
+export function guardWrites(repoRoot: string, folders: readonly WriteFolder[]): void {
   const repo = canonical(repoRoot);
-  const cases = canonical(casesFolder);
-  if (!isWithin(cases, repo)) return;
-  if (chosen) throw new Refusal(copy.outInsideRepo(casesFolder), copy.outInsideRepoHint);
-  throw new Refusal(copy.repoHoldsCases(repoRoot), copy.repoHoldsCasesHint);
+  for (const folder of folders) {
+    if (!isWithin(canonical(folder.path), repo)) continue;
+    if (folder.kind === "npm") throw new Refusal(copy.npmFolderInRepo(repoRoot), copy.npmFolderInRepoHint);
+    if (folder.chosen) throw new Refusal(copy.outInsideRepo(folder.path), copy.outInsideRepoHint);
+    throw new Refusal(copy.repoHoldsCases(repoRoot), copy.repoHoldsCasesHint);
+  }
+}
+
+/** The cases folder's guard, through the one guard. */
+export function guardCasesFolder(repoRoot: string, casesFolder: string, chosen: boolean): void {
+  guardWrites(repoRoot, [{ kind: "cases", path: casesFolder, chosen }]);
 }
 
 /** `<folder name>-<first 8 of a hash of the absolute path>`: one folder per repository on this machine. */

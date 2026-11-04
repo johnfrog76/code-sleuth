@@ -73,7 +73,8 @@ Windows). That folder also holds the one `.env` Code Sleuth reads, for the API k
 
 It also holds `npm/`, npm's cache and logs for the lookups Code Sleuth runs. npm would otherwise write them
 where its configuration says, and a repository's own `.npmrc` can say inside the repository. A cache of its own
-makes the first lookup on a machine a little slower than one through your usual npm cache.
+makes the first lookup on a machine a little slower than one through your usual npm cache. A
+repository that holds this folder is refused when npm would run, as one that holds the cases folder is.
 
 The cases folder also holds `machine-key`, a random key made on first use and readable by its owner only, which
 hashes secrets so two runs can tell it is the same secret.

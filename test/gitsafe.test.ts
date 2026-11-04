@@ -7,7 +7,7 @@ import { readRepoInfo } from "../src/case/repoInfo.js";
 import { CHECKS } from "../src/engine/checks/index.js";
 import { historyPartial, historyUnreadable } from "../src/engine/copy.js";
 import { runCheck, secretHasher } from "../src/engine/engine.js";
-import { GIT_SAFE_CONFIG, git, openRepo } from "../src/engine/repo.js";
+import { GIT_SAFE_CONFIG, git, gitSafeConfig, helperNamesIn, openRepo } from "../src/engine/repo.js";
 import { withScratch } from "./helpers/scratch.js";
 
 const SRC = fileURLToPath(new URL("../src", import.meta.url));
@@ -254,6 +254,39 @@ describe("git never runs a command the investigated repository chose", () => {
         const { root } = repoWith(folder, () => {});
         expect(openRepo(root).isPartialClone).toBe(false);
       }),
+    );
+  });
+
+  describe("every transport, by name", () => {
+    it("turns off git's own transports and the helpers it ships, ftp, ftps and fd among them", () => {
+      for (const name of ["file", "git", "ssh", "http", "https", "ext", "fd", "ftp", "ftps"])
+        expect(GIT_SAFE_CONFIG).toContain(`protocol.${name}.allow=never`);
+    });
+
+    it.skipIf(process.platform === "win32")(
+      "refuses the ftp transport before any connection, though the repository's own config allows it",
+      () =>
+        withScratch((folder) => {
+          const { root } = repoWith(folder, (r) => config(r, "protocol.ftp.allow", "always"));
+          const flags = gitSafeConfig().flatMap((setting) => ["-c", setting]);
+          const env = { ...process.env, GIT_NO_LAZY_FETCH: "1" };
+          const listed = spawnSync("git", [...flags, "ls-remote", "ftp://127.0.0.1:9/none"], {
+            cwd: root,
+            env,
+          });
+          expect(listed.status).not.toBe(0);
+          expect(listed.stderr.toString()).toMatch(/transport 'ftp' not allowed/);
+        }),
+    );
+
+    it.skipIf(process.platform === "win32")(
+      "finds a git-remote-<name> helper on the PATH, and names it",
+      () =>
+        withScratch((folder) => {
+          writeFileSync(join(folder, "git-remote-sly"), "#!/bin/sh\n");
+          writeFileSync(join(folder, "git-remote-https"), "#!/bin/sh\n");
+          expect(helperNamesIn([folder, join(folder, "missing")])).toEqual(["sly"]);
+        }),
     );
   });
 });

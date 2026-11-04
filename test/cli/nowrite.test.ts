@@ -1,10 +1,13 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { sleuth } from "../helpers/cli.js";
+import { copy as caseCopy } from "../../src/case/copy.js";
+import { isRefusal, sleuth } from "../helpers/cli.js";
 import { investigateAsync } from "../helpers/investigate.js";
 import { withScratch } from "../helpers/scratch.js";
-import { stubGh } from "../helpers/npm.js";
+import { stubGh, stubNpm } from "../helpers/npm.js";
 import { stubToolkit } from "../helpers/toolkit.js";
 
 // AGENTS rule 1, held over a whole run: git, npm, gh and the ToolKit hand-off all run, and the tree is
@@ -80,4 +83,53 @@ describe("a whole run writes nothing into the repository", () => {
       );
     }),
   );
+
+  it.skipIf(process.platform === "win32")(
+    "refuses a repository that holds Code Sleuth's own npm folder, as `code-sleuth ~ --out elsewhere` would be",
+    () =>
+      withScratch(async (scratch) => {
+        const home = join(scratch, "home");
+        const npmFolder = join(home, "Library", "Application Support", "code-sleuth", "npm");
+        mkdirSync(home);
+        writeFileSync(join(home, "README.md"), "# home\n");
+        const npm = stubNpm(scratch);
+        const result = await sleuth([home, "--goal", "public", "--out", join(scratch, "cases")], {
+          casesFolder: join(scratch, "default"),
+          npmFolder,
+          env: npm.env,
+        });
+        expect(isRefusal(result)).toBe(true);
+        expect(result.stderr).toContain(caseCopy.npmFolderInRepo(home));
+        expect(existsSync(npmFolder)).toBe(false);
+        expect(npm.calls()).toEqual([]);
+      }),
+  );
+
+  it.skipIf(process.platform === "win32")("runs there with --offline, since npm then writes nothing", () =>
+    withScratch(async (scratch) => {
+      const home = join(scratch, "home");
+      mkdirSync(home);
+      writeFileSync(join(home, "README.md"), "# home\n");
+      const result = await sleuth([home, "--goal", "public", "--offline", "--out", join(scratch, "cases")], {
+        casesFolder: join(scratch, "default"),
+        npmFolder: join(home, "npm"),
+        env: stubNpm(scratch).env,
+      });
+      expect(result.code).toBe(0);
+    }),
+  );
+
+  it("writes through the one guard: only the case writer, the cases folder and the ledger write files", () => {
+    const src = fileURLToPath(new URL("../../src", import.meta.url));
+    const writers = (readdirSync(src, { recursive: true }) as string[])
+      .map((name) => name.split("\\").join("/"))
+      .filter((name) => name.endsWith(".ts"))
+      .filter((name) =>
+        /\b(writeFileSync|appendFileSync|mkdirSync|copyFileSync|renameSync)\(/.test(
+          readFileSync(join(src, name), "utf8"),
+        ),
+      )
+      .sort();
+    expect(writers).toEqual(["case/folder.ts", "case/write.ts", "toolkit/ledger.ts"]);
+  });
 });

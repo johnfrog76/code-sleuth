@@ -13,7 +13,8 @@ Copy `.env.example`, from the root of the clone or the package, to Code Sleuth's
 API key. With no API key, the run prints the one line that does the copy for your platform -- `mkdir -p`,
 `cp` and `chmod 600` on macOS and Linux, `New-Item` and `Copy-Item` in PowerShell on Windows -- with the
 example's full path, wherever the package is (a clone, a global install or npx's cache), and the `.env`'s.
-The case file keeps the same line with both paths in their `~` form, so a case you paste holds no home folder:
+The case file keeps a record instead, not a line to run: the example and the `.env` it goes to, both in their `~`
+form, so these paths hold no home folder:
 
 | Platform | File |
 | --- | --- |

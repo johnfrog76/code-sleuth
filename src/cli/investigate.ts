@@ -83,6 +83,10 @@ export async function investigate(
     ...(gh === undefined ? {} : { gh }),
     casesFolder,
     chosen: flags.out !== undefined,
+    // npm writes its cache and logs into Code Sleuth's own folder: held to the same guard as the cases.
+    ...(npm === undefined || io.npmFolder === undefined
+      ? {}
+      : { alsoWrites: [{ kind: "npm" as const, path: io.npmFolder }] }),
     all: flags.all ?? false,
     ...(denyList === undefined ? {} : { denyList }),
     ...(flags.examples === undefined ? {} : { examples: flags.examples }),

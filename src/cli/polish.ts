@@ -55,10 +55,8 @@ export function preparePolish(asked: boolean, io: Io): PreparedPolish {
       ? {}
       : {
           keyFile: shownPath(io.keyFile, io.home),
-          // The case keeps the line in its ~ form, a record to read and paste; the terminal shows it runnable.
-          ...(example === undefined
-            ? {}
-            : { keyCopy: copyCommand(shownPath(example, io.home), shownPath(io.keyFile, io.home)) }),
+          // The case keeps a record, the example's path in its ~ form; only the terminal prints a runnable line.
+          ...(example === undefined ? {} : { keyExample: shownPath(example, io.home) }),
         };
   const runnable =
     io.keyFile === undefined || example === undefined

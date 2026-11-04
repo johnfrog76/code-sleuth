@@ -18,6 +18,10 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Fixed
 
+- Every folder Code Sleuth writes to goes through one guard. A repository that holds Code Sleuth's own folder, as `code-sleuth ~ --out elsewhere` does, is refused when npm would run, since npm keeps its cache and logs there.
+- git's `fd`, `ftp` and `ftps` transports, and any `git-remote-<name>` helper on the machine, are turned off by name too.
+- The case file keeps the `.env.example` to copy as a record (`keyExample`), not a line with a quoted `~` that would not run; the terminal still prints the line to run.
+- Every case file is written with LF line endings, a polished card that came back with CRLF among them.
 - A repository's own git config can no longer re-allow a transport. Every git call turned off transports with `protocol.allow=never`, which a repository's `protocol.<name>.allow` overrides; each transport is now turned off by name, on the command line, which outranks the repository's config. `--toolkit` is refused when ToolKit does not say where the cards would land.
 - A file that would not parse no longer reads as no file. A `package.json` that isn't JSON made `deps.advisories`, `deps.outdated` and `deps.lockfile` read clean with nothing read, and could tip `license.deps`, `license.file`, `ci.tests` and `deps.updates` either way; each now reads not investigated, naming the file. `license.file` reads not investigated, rather than clean, when it cannot tell which license the file's text is.
 - Nothing Code Sleuth runs writes into the repository it investigates. A repository's `.npmrc` could point npm's cache and its debug log into the tree, and npm writes a log on every command; npm's cache and logs now go to Code Sleuth's own folder. `--toolkit` is refused when a folder ToolKit would write a card into is the repository or inside it; a hub that only holds the repository, as ToolKit's default hub does, files as before.

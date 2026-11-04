@@ -22,7 +22,8 @@ Code Sleuth reads repositories that may hold secrets, and it promises a few thin
 of them is a security problem:
 
 - It never writes into the repository it investigates. That holds for what it runs too: npm's cache and logs go
-  to Code Sleuth's own folder whatever the repository's `.npmrc` says, and `--toolkit` is refused when a
+  to Code Sleuth's own folder whatever the repository's `.npmrc` says, and a repository that holds that folder
+  is refused when npm would run, and `--toolkit` is refused when a
   folder ToolKit would write a card into is the repository or inside it, and when ToolKit does not say where
   that is.
 - A secret's value never appears in any output: the terminal, a case file, a card, or a polish request.
