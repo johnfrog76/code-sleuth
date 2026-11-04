@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { copy as cliCopy } from "../../src/cli/copy.js";
+import { prepareToolkit } from "../../src/cli/toolkit.js";
 import { cards as cardCopy } from "../../src/engine/copy.js";
 import { confirmsSpace, detectToolkit } from "../../src/toolkit/detect.js";
 import { fileCard, readCreated, UNKNOWN_CARD } from "../../src/toolkit/file.js";
@@ -438,4 +440,49 @@ describe("the Space --toolkit files in", () => {
       "ToolKit    found (tk, Space 'other', this repository's own). To file these cards: `code-sleuth --goal public --toolkit`",
     );
   });
+});
+
+describe("--toolkit with the hub inside the repository", () => {
+  const flags = { toolkit: true, yes: true, refile: false };
+
+  it.skipIf(process.platform === "win32").each([
+    ["is the repository", (repo: string) => repo],
+    ["is inside the repository", (repo: string) => join(repo, "hub")],
+  ])("refuses when the hub %s, so a card would land in it, before anything is filed", (_name, hubOf) =>
+    withScratch((scratch) => {
+      const repo = join(scratch, "repo");
+      mkdirSync(join(repo, "hub"), { recursive: true });
+      const stub = stubToolkit(scratch, ["pwsh"], { root: hubOf(repo) });
+      expect(() =>
+        prepareToolkit(flags, { env: stub.env, stdout: () => {}, stderr: () => {} }, null, repo),
+      ).toThrow(expect.objectContaining({ message: cliCopy.toolkit.hubInsideRepo }));
+      expect(stub.calls().filter((call) => call.argv.includes("-Title"))).toEqual([]);
+    }),
+  );
+
+  it.skipIf(process.platform === "win32")(
+    "files as usual when the hub holds the repository and cards land in a folder beside it, as ToolKit's default hub does",
+    () =>
+      withScratch((scratch) => {
+        const repo = join(scratch, "repo");
+        mkdirSync(repo);
+        const stub = stubToolkit(scratch, ["pwsh"], { root: scratch });
+        expect(
+          prepareToolkit(flags, { env: stub.env, stdout: () => {}, stderr: () => {} }, null, repo).detection
+            .state,
+        ).toBe("detected");
+      }),
+  );
+
+  it.skipIf(process.platform === "win32")("files as usual when the hub is elsewhere", () =>
+    withScratch((scratch) => {
+      const repo = join(scratch, "repo");
+      mkdirSync(repo);
+      const stub = stubToolkit(scratch, ["pwsh"], { root: join(scratch, "hub") });
+      expect(
+        prepareToolkit(flags, { env: stub.env, stdout: () => {}, stderr: () => {} }, null, repo).detection
+          .state,
+      ).toBe("detected");
+    }),
+  );
 });

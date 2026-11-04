@@ -45,7 +45,11 @@ export async function investigate(
   const { goal, asked } = await pickGoal(flags.goal, io, terminal.stdin && terminal.stdout);
   const denyList = flags.deny === undefined ? undefined : readDenyList(flags.deny, root);
   const repo = openRepo(root);
-  const { detection, options: toolkitOptions, spaceFrom } = prepareToolkit(flags, io, readRemote(repo));
+  const {
+    detection,
+    options: toolkitOptions,
+    spaceFrom,
+  } = prepareToolkit(flags, io, readRemote(repo), repo.root);
 
   // With --json, stdout carries the record alone and the person reads the rest on stderr.
   const human = flags.json ? io.stderr : io.stdout;
@@ -57,7 +61,8 @@ export async function investigate(
 
   // What may leave the machine is decided, and named, before any check runs; --offline turns it all off.
   const network = !(flags.offline ?? false);
-  const npm = network ? findNpm(env) : undefined;
+  // npm's cache and logs go to Code Sleuth's own folder, never where a repository's .npmrc points.
+  const npm = network ? findNpm(env, process.platform, process.execPath, io.npmFolder) : undefined;
   const gh = network ? findGh(env) : undefined;
   const capabilities = detectCapabilities(repo, {
     env,

@@ -21,7 +21,9 @@ found it unless you'd rather it didn't.
 Code Sleuth reads repositories that may hold secrets, and it promises a few things. A report that breaks any
 of them is a security problem:
 
-- It never writes into the repository it investigates.
+- It never writes into the repository it investigates. That holds for what it runs too: npm's cache and logs go
+  to Code Sleuth's own folder whatever the repository's `.npmrc` says, and `--toolkit` is refused when a
+  folder ToolKit would write a card into is the repository or inside it.
 - A secret's value never appears in any output: the terminal, a case file, a card, or a polish request.
 - The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and is
   never written or printed. No other `.env` is read, and the key never reaches a process Code Sleuth starts.

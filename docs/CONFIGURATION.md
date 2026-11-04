@@ -71,5 +71,9 @@ macOS, `$XDG_DATA_HOME/code-sleuth` or `~/.local/share/code-sleuth` on Linux, `%
 Windows). That folder also holds the one `.env` Code Sleuth reads, for the API key
 ([POLISH.md](POLISH.md#where-the-api-key-goes)). `--out` moves the cases, never the `.env`.
 
+It also holds `npm/`, npm's cache and logs for the lookups Code Sleuth runs. npm would otherwise write them
+where its configuration says, and a repository's own `.npmrc` can say inside the repository. A cache of its own
+makes the first lookup on a machine a little slower than one through your usual npm cache.
+
 The cases folder also holds `machine-key`, a random key made on first use and readable by its owner only, which
 hashes secrets so two runs can tell it is the same secret.

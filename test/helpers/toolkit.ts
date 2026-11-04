@@ -14,6 +14,8 @@ export interface Scenario {
         /** Each Space's address; left out, the probe reports none, as an older ToolKit's would. */
         addresses?: { slug: string; org: string | null; repos: string[] }[];
       };
+  /** The hub's root the probe reports; left out, `/hub`. A card lands in `<root>/<space>/current` or `backlog`. */
+  root?: string;
   /** Titles ToolKit refuses with exit 2 and its own Error: and Hint: lines. */
   refuse?: string[];
   /** Titles ToolKit fails on with exit 1 and no stated reason. */
@@ -48,7 +50,7 @@ if (argv.includes("-Probe")) {
   // ToolKit falls back to another Space for a slug it does not declare.
   const space = asked && probe.spaces.includes(asked) ? asked : probe.spaces[0];
   process.stdout.write("Welcome noise from a profile-less start\n");
-  process.stdout.write("CODE-SLEUTH-PROBE " + JSON.stringify({ prefix: probe.prefix, space, spaces: probe.spaces, addresses: probe.addresses ?? null, root: "/hub" }) + "\n");
+  process.stdout.write("CODE-SLEUTH-PROBE " + JSON.stringify({ prefix: probe.prefix, space, spaces: probe.spaces, addresses: probe.addresses ?? null, root: scenario.root ?? "/hub", folders: ["current", "backlog"].map((f) => path.join(scenario.root ?? "/hub", space, f)) }) + "\n");
   process.exit(0);
 }
 const title = arg("-Title");

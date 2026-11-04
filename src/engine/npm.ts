@@ -1,5 +1,6 @@
 import { spawnChild } from "../spawn.js";
 import { accessSync, constants, existsSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 
 /** How a check runs a tool (npm, gh): an argument array in a folder, and what came back. */
@@ -21,13 +22,24 @@ export function findNpm(
   env: NodeJS.ProcessEnv,
   platform: NodeJS.Platform = process.platform,
   execPath: string = process.execPath,
+  folder: string = join(tmpdir(), "code-sleuth-npm"),
 ): NpmRunner | undefined {
+  const npmEnv = { ...env, ...NPM_QUIET, ...npmWrites(folder) };
   if (platform === "win32") {
     const cli = join(dirname(execPath), "node_modules", "npm", "bin", "npm-cli.js");
-    return existsSync(cli) ? runner(execPath, [cli], { ...env, ...NPM_QUIET }) : undefined;
+    return existsSync(cli) ? runner(execPath, [cli], npmEnv) : undefined;
   }
   const npm = onPath("npm", env, platform);
-  return npm === undefined ? undefined : runner(npm, [], { ...env, ...NPM_QUIET });
+  return npm === undefined ? undefined : runner(npm, [], npmEnv);
+}
+
+/**
+ * Where npm may write: its cache and its debug logs, both in a folder of Code Sleuth's own. A repository's
+ * `.npmrc` could point either into the repository (`cache=./x`, `logs-dir=./y`), and npm writes a log on every
+ * command; npm's settings from the environment outrank the project's `.npmrc`, so these win.
+ */
+export function npmWrites(folder: string): NodeJS.ProcessEnv {
+  return { npm_config_cache: join(folder, "cache"), npm_config_logs_dir: join(folder, "logs") };
 }
 
 /**
@@ -66,7 +78,8 @@ function isExecutable(path: string, platform: NodeJS.Platform): boolean {
 
 /**
  * npm with its own configuration left alone -- .npmrc and any scoped or private registry decide where its calls
- * go -- and only its own chatter turned off: no update notice, no funding message.
+ * go -- and only its own chatter turned off: no update notice, no funding message. Where it writes is set apart
+ * (npmWrites).
  */
 const NPM_QUIET = { npm_config_update_notifier: "false", npm_config_fund: "false" };
 

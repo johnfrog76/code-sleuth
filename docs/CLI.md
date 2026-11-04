@@ -68,6 +68,7 @@ before anything is read or written.
 | `--yes` or `--refile` without `--toolkit` | | yes |
 | `--toolkit` with no ToolKit | no PowerShell, or ToolKit's `NewPrompt` does not resolve | yes |
 | a `--toolkit-space` ToolKit does not confirm | ToolKit falls back silently for a Space it does not declare | yes |
+| `--toolkit` when a card would land in the repository | the Space's `current/` or `backlog/` folder, as ToolKit reports it, is the repository or inside it | yes |
 | ToolKit refused a card, or failed on one | the cards before it stay filed; the case is written first | no |
 
 ## What it prints

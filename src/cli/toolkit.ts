@@ -1,3 +1,4 @@
+import { isInside } from "../case/folder.js";
 import { dirname } from "node:path";
 import type { Card } from "../case/card.js";
 import type { Filing, ToolkitRecord } from "../case/record.js";
@@ -28,6 +29,32 @@ export function prepareToolkit(
   flags: ToolkitFlags,
   io: Io,
   remote: string | null = null,
+  repoRoot: string | null = null,
+): { detection: Detection; options: DetectOptions; spaceFrom: SpaceSource } {
+  const prepared = chooseSpace(flags, io, remote);
+  // Code Sleuth never writes into the repository it investigates, and ToolKit writes the cards it files. Refuse
+  // when a folder a card would land in is the repository or inside it. A hub that only holds the repository, as
+  // ToolKit's default hub holds every repository beside the toolkit, files into a folder beside it, which is fine.
+  if (flags.toolkit && repoRoot !== null && prepared.detection.state === "detected") {
+    // The folders are the Space's: a Space chosen by the origin is probed again with it set.
+    const folders =
+      prepared.spaceFrom === "origin"
+        ? folderOf(detectToolkit(prepared.options))
+        : prepared.detection.folders;
+    if ((folders ?? []).some((folder) => isInside(folder, repoRoot)))
+      throw new Refusal(copy.toolkit.hubInsideRepo, copy.toolkit.hubInsideRepoHint);
+  }
+  return prepared;
+}
+
+function folderOf(detection: Detection): string[] | null {
+  return detection.state === "detected" ? detection.folders : null;
+}
+
+function chooseSpace(
+  flags: ToolkitFlags,
+  io: Io,
+  remote: string | null,
 ): { detection: Detection; options: DetectOptions; spaceFrom: SpaceSource } {
   if (!flags.toolkit && (flags.yes || flags.refile)) {
     throw new Refusal(

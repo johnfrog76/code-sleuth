@@ -20,6 +20,8 @@ export type Detection =
       addresses: SpaceAddress[] | null;
       /** The hub ToolKit resolved, for the tests' guard; never written to a case. */
       root: string | null;
+      /** The folders NewPrompt writes a card into for the Space in play (current/, backlog/), or null. */
+      folders: string[] | null;
     };
 
 export interface DetectOptions {
@@ -52,7 +54,14 @@ export function detectToolkit(options: DetectOptions): Detection {
   if (line === undefined)
     return { state: "not-installed", reason: `${prefix}NewPrompt does not resolve in ${shell.name}` };
 
-  let answer: { prefix?: unknown; space?: unknown; spaces?: unknown; addresses?: unknown; root?: unknown };
+  let answer: {
+    prefix?: unknown;
+    space?: unknown;
+    spaces?: unknown;
+    addresses?: unknown;
+    root?: unknown;
+    folders?: unknown;
+  };
   try {
     answer = JSON.parse(line) as typeof answer;
   } catch {
@@ -70,6 +79,9 @@ export function detectToolkit(options: DetectOptions): Detection {
     spaces,
     addresses: readAddresses(answer.addresses),
     root: typeof answer.root === "string" ? answer.root : null,
+    folders: Array.isArray(answer.folders)
+      ? answer.folders.filter((f): f is string => typeof f === "string" && f !== "")
+      : null,
   };
 }
 

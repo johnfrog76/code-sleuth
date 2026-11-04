@@ -8,7 +8,7 @@
   Windows PowerShell 5.1-clean: no ternary, no ?? or ?., no -AsHashtable, no && or || chains.
 
   -Probe        Resolve <prefix>NewPrompt (which loads ToolKit) and print one line:
-                CODE-SLEUTH-PROBE {"prefix":...,"space":...,"spaces":[...],"addresses":[...],"root":...}
+                CODE-SLEUTH-PROBE {"prefix":...,"space":...,"spaces":[...],"addresses":[...],"root":...,"folders":[...]}
                 Each address is a Space's slug, its org (a repository's URL on GitHub, the organisation's on
                 Azure DevOps) and its projects' repository names, so Code Sleuth can find the Space whose
                 address is the investigated repository's origin.
@@ -46,10 +46,20 @@ if ($Probe) {
     $spaces = $null
     $addresses = $null
     $root = $null
+    $folders = $null
     if ($null -ne $config) {
         $resolvedPrefix = $config.CommandPrefix
         $space = $config.ActiveSpace
         $root = $config.PromptsRoot
+        # Where NewPrompt writes a card for the Space in play: its current/ and backlog/ folders, as ToolKit's
+        # own Get-PromptFolders builds them. Code Sleuth refuses to file when either is inside the repository.
+        if ($null -ne $root -and $root -ne '') {
+            $base = [string]$root
+            if ($null -ne $config.PromptsFolder -and [string]$config.PromptsFolder -ne '') {
+                $base = Join-Path $base ([string]$config.PromptsFolder)
+            }
+            $folders = @((Join-Path $base 'current'), (Join-Path $base 'backlog'))
+        }
         $spaces = @()
         $addresses = @()
         foreach ($entry in @($config.Spaces)) {
@@ -75,6 +85,7 @@ if ($Probe) {
     $answer | Add-Member -NotePropertyName spaces -NotePropertyValue $spaces
     $answer | Add-Member -NotePropertyName addresses -NotePropertyValue $addresses
     $answer | Add-Member -NotePropertyName root -NotePropertyValue $root
+    $answer | Add-Member -NotePropertyName folders -NotePropertyValue $folders
     Write-Output ('CODE-SLEUTH-PROBE ' + (ConvertTo-Json -InputObject $answer -Compress -Depth 4))
     exit 0
 }

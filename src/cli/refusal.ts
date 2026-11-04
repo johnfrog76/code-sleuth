@@ -20,6 +20,8 @@ export interface Io {
   casesFolder?: string;
   /** Code Sleuth's own .env, where the model key may be kept. The command sets it; a test sets a scratch one or none. */
   keyFile?: string;
+  /** Where npm keeps its cache and logs: Code Sleuth's own folder. The command sets it; a test sets a scratch one. */
+  npmFolder?: string;
   /** Only for tests: the home folder a path is shown from, as `~`. */
   home?: string;
   /** Only for tests: the .env.example in place of the one beside the command. */
