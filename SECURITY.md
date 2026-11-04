@@ -38,7 +38,10 @@ of them is a security problem:
   ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)). npm runs on a copy of the project's
   `package.json` and lockfile, so a repository's `.npmrc` cannot redirect those lookups, or have your npm token
   or your environment's variables sent anywhere.
-- Text from the repository never reaches a shell as a command. A repository's own git configuration can name
+- Text from the repository never reaches a shell as a command, and nothing in it is run as a program: git, npm,
+  gh and PowerShell are found in the PATH's absolute folders only and started by their full path, and every
+  process Code Sleuth starts gets a PATH of absolute folders, so neither `./node_modules/.bin` on your PATH nor
+  Windows' habit of looking in the working folder first can start a program the repository holds. A repository's own git configuration can name
   commands too (a file-system monitor, a filter, a signature program, a hook), and so can a submodule's; Code
   Sleuth turns off the ones its read-only git calls could reach, on every call, and never reads into a
   submodule.

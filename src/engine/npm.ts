@@ -1,18 +1,7 @@
-import { spawnChild } from "../spawn.js";
-import {
-  accessSync,
-  constants,
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { onPath, spawnChild } from "../spawn.js";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { delimiter, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 
 /** How a check runs a tool (npm, gh): an argument array in a folder, and what came back. */
 export interface ToolRunner {
@@ -151,26 +140,6 @@ export function findGh(
   return gh === undefined
     ? undefined
     : runner(gh, [], { ...env, GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1" });
-}
-
-function onPath(name: string, env: NodeJS.ProcessEnv, platform: NodeJS.Platform): string | undefined {
-  const separator = platform === "win32" ? ";" : delimiter;
-  for (const folder of (env.PATH ?? env.Path ?? "").split(separator).filter((f) => f !== "")) {
-    const path = join(folder, name);
-    if (isExecutable(path, platform)) return path;
-  }
-  return undefined;
-}
-
-function isExecutable(path: string, platform: NodeJS.Platform): boolean {
-  try {
-    if (!statSync(path).isFile()) return false;
-    // Windows has no execute bit: a .exe file is enough.
-    if (platform !== "win32") accessSync(path, constants.X_OK);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**

@@ -1,6 +1,4 @@
-import { spawnChild } from "../spawn.js";
-import { accessSync, constants, statSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { onPath, spawnChild } from "../spawn.js";
 import { fileURLToPath } from "node:url";
 
 /** The one PowerShell file Code Sleuth ships. The same relative path from `src/toolkit/` and `dist/toolkit/`. */
@@ -15,30 +13,16 @@ export interface Shell {
   path: string;
 }
 
-/** The first shell on the PATH, by asking the file system, never by guessing a location. */
+/** The first shell on the PATH, in its absolute folders, by asking the file system, never by guessing a location. */
 export function findShell(
   env: NodeJS.ProcessEnv,
   platform: NodeJS.Platform = process.platform,
 ): Shell | undefined {
-  const folders = (env.PATH ?? env.Path ?? "").split(delimiter).filter((folder) => folder !== "");
   for (const name of SHELLS) {
-    const file = platform === "win32" && !name.endsWith(".exe") ? `${name}.exe` : name;
-    for (const folder of folders) {
-      const path = join(folder, file);
-      if (isExecutable(path, platform)) return { name, path };
-    }
+    const path = onPath(platform === "win32" && !name.endsWith(".exe") ? `${name}.exe` : name, env, platform);
+    if (path !== undefined) return { name, path };
   }
   return undefined;
-}
-
-function isExecutable(path: string, platform: NodeJS.Platform): boolean {
-  try {
-    if (!statSync(path).isFile()) return false;
-    if (platform !== "win32") accessSync(path, constants.X_OK);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export interface HandoffResult {
