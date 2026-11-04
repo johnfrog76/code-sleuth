@@ -196,6 +196,25 @@ describe("git never runs a command the investigated repository chose", () => {
     );
 
     it.skipIf(process.platform === "win32")(
+      "fetches nothing when the repository's own config re-allows the file transport",
+      () =>
+        withScratch((folder) => {
+          const { root, missing } = partial(folder);
+          execFileSync("git", ["config", "protocol.file.allow", "always"], { cwd: root });
+          const before = missing();
+          readEverything(root);
+          expect(missing()).toBe(before);
+          // And as on a git too old for GIT_NO_LAZY_FETCH: only the -c settings, against the repository's own.
+          const env = { ...process.env };
+          delete env.GIT_NO_LAZY_FETCH;
+          const flags = GIT_SAFE_CONFIG.flatMap((setting) => ["-c", setting]);
+          const log = spawnSync("git", [...flags, "log", "-p", "--all"], { cwd: root, env });
+          expect(log.status).not.toBe(0);
+          expect(missing()).toBe(before);
+        }),
+    );
+
+    it.skipIf(process.platform === "win32")(
       "fetches nothing with only protocol.allow=never, as on a git too old for GIT_NO_LAZY_FETCH",
       () =>
         withScratch((folder) => {

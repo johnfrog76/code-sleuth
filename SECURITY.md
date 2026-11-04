@@ -23,7 +23,8 @@ of them is a security problem:
 
 - It never writes into the repository it investigates. That holds for what it runs too: npm's cache and logs go
   to Code Sleuth's own folder whatever the repository's `.npmrc` says, and `--toolkit` is refused when a
-  folder ToolKit would write a card into is the repository or inside it.
+  folder ToolKit would write a card into is the repository or inside it, and when ToolKit does not say where
+  that is.
 - A secret's value never appears in any output: the terminal, a case file, a card, or a polish request.
 - The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and is
   never written or printed. No other `.env` is read, and the key never reaches a process Code Sleuth starts.
@@ -33,8 +34,9 @@ of them is a security problem:
 - Text from the repository never reaches a shell as a command. A repository's own git configuration can name
   commands too (a file-system monitor, a filter, a signature program, a hook); Code Sleuth turns off the ones
   its read-only git calls could reach, on every call.
-- git never reaches the network on Code Sleuth's behalf. Every git call blocks every transport and lazy
-  fetching, so a partial clone's missing objects are never fetched from its remote.
+- git never reaches the network on Code Sleuth's behalf. Every git call turns off each transport by name, which
+  outranks the repository's own config, and lazy fetching, so a partial clone's missing objects are never
+  fetched from its remote.
 
 ## Supported versions
 

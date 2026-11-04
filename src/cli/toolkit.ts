@@ -41,7 +41,10 @@ export function prepareToolkit(
       prepared.spaceFrom === "origin"
         ? folderOf(detectToolkit(prepared.options))
         : prepared.detection.folders;
-    if ((folders ?? []).some((folder) => isInside(folder, repoRoot)))
+    // Unknown folders could be anywhere, the repository among them: the promise holds whatever the probe says.
+    if (folders === null || folders.length === 0)
+      throw new Refusal(copy.toolkit.foldersUnknown, copy.toolkit.foldersUnknownHint);
+    if (folders.some((folder) => isInside(folder, repoRoot)))
       throw new Refusal(copy.toolkit.hubInsideRepo, copy.toolkit.hubInsideRepoHint);
   }
   return prepared;

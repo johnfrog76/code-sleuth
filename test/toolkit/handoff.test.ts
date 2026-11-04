@@ -485,4 +485,18 @@ describe("--toolkit with the hub inside the repository", () => {
       ).toBe("detected");
     }),
   );
+
+  it.skipIf(process.platform === "win32")(
+    "refuses when ToolKit does not say where the cards would land",
+    () =>
+      withScratch((scratch) => {
+        const repo = join(scratch, "repo");
+        mkdirSync(repo);
+        const stub = stubToolkit(scratch, ["pwsh"], { probe: "no-config" });
+        expect(() =>
+          prepareToolkit(flags, { env: stub.env, stdout: () => {}, stderr: () => {} }, null, repo),
+        ).toThrow(expect.objectContaining({ message: cliCopy.toolkit.foldersUnknown }));
+        expect(stub.calls().filter((call) => call.argv.includes("-Title"))).toEqual([]);
+      }),
+  );
 });

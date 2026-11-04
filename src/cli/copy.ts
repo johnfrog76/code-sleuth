@@ -76,6 +76,9 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
     notInstalledHint:
       "Install ToolKit (https://johnfrog76.github.io/toolkit/) and run its InstallAutoload, or leave --toolkit off: the cards are in the case file either way.",
     undeclaredSpace: (slug: string) => `ToolKit doesn't confirm the Space '${slug}'.`,
+    foldersUnknown: "I can't tell where ToolKit would write the cards, so I won't file them.",
+    foldersUnknownHint:
+      "Check that ToolKit's settings load in a fresh PowerShell (its prompts root and Space), or leave out --toolkit: the cards are in the case file.",
     hubInsideRepo: "This repository holds the ToolKit hub; cards would be written into it.",
     hubInsideRepoHint:
       "Run --toolkit from a repository outside the hub, or leave out --toolkit: the cards are in the case file.",

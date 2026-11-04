@@ -170,6 +170,9 @@ export const GIT_SAFE_CONFIG: readonly string[] = [
   // No transport at all: a partial clone would otherwise fetch missing objects from its promisor remote, a call
   // off the machine nobody named. This holds on every git; GIT_NO_LAZY_FETCH (gitEnv) is the newer gits' own.
   "protocol.allow=never",
+  // protocol.allow is only the default: a repository's own protocol.<name>.allow would win over it, so each
+  // transport git knows is turned off by name too, on the command line, which outranks the repository's config.
+  ...["file", "git", "ssh", "http", "https", "ext"].map((name) => `protocol.${name}.allow=never`),
   "core.fsmonitor=false",
   "log.showSignature=false",
   `core.hooksPath=${process.platform === "win32" ? "NUL" : "/dev/null"}`,

@@ -32,8 +32,9 @@ What is stubbed, specified but not built, or known to read wrong, and what you s
 - **Commands named in a repository's git configuration.** Every git call Code Sleuth makes turns off the file-system
   monitor, every filter driver (including one from an included config file), the signature program, hooks, the
   pager and an external diff. Other settings that name commands -- a credential helper, an SSH command, a proxy
-  -- are used only when git talks to a remote, and Code Sleuth's git calls never do: every one blocks every
-  transport (`protocol.allow=never`) and lazy fetching (`GIT_NO_LAZY_FETCH`), so a partial clone's missing objects
+  -- are used only when git talks to a remote, and Code Sleuth's git calls never do: every one turns off each
+  transport by name (`protocol.<name>.allow=never` for `file`, `git`, `ssh`, `http`, `https` and `ext`, on the
+  command line, which outranks the repository's own config) and lazy fetching (`GIT_NO_LAZY_FETCH`), so a partial clone's missing objects
   stay missing, and `secrets.history` says the history was not read
   ([CHECKS.md](CHECKS.md#secretshistory-secrets-in-the-history)).
 
