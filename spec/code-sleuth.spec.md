@@ -35,6 +35,14 @@ for review.
 > once when others can read the file. `.env.example` ships at the root. What people read says "API key"; the
 > variable's name is in `.env.example` and in `docs/CONFIGURATION.md` alone.
 
+> **Amended 2026-11-04:** D-CS23's exit 1. It comes from `--fail-on`, or from an unexpected error until #25
+> gives an unexpected error a line and an exit code of its own. A stated refusal is still exit 2.
+
+> **Amended 2026-11-04:** the key's variable is named in `.env.example` and in the rules (`AGENTS.md`,
+> `SECURITY.md` and this spec), and nowhere else people read: the docs say "API key". A key set in the
+> environment never reaches a child either: every child process starts through `src/spawn.ts`, which takes the
+> variable out of its environment in any letter case.
+
 > **Amended 2026-11-03:** section 8.2's Space. Without `--toolkit-space`, the cards go to the Space whose
 > address is the repository's `origin` (a GitHub Space's `org` is the repository's URL; an Azure DevOps
 > Space's `org` is the organisation, and its `projects[].repo` lists the repository). The probe reports each
@@ -55,6 +63,14 @@ for review.
 > `Nothing on my checklist stands in the way. Every case is different: the call is yours.` The stamps stay
 > READY, NEARLY and NOT READY. Where the bar comes from, and what Code Sleuth does not judge, is in
 > `docs/CHECKS.md`.
+
+> **Amended 2026-11-04:** the goal's words. What a person reads -- the output, the case file, the cards,
+> `--help`, the goal prompt, the docs and the project's page -- never says "go public", "going public" or
+> "goes public". The goal is the public-facing goal (`Goal  public facing`), its question is `Is it ready to
+> be public facing?`, and its verdict sentences read `ready to be public facing`, `nearly ready to be public
+> facing` and `not ready to be public facing`. The flag stays `--goal public`, and the goal's id stays
+> `public`. The decisions and examples below keep their words as written; where they differ, this note
+> decides. A test holds the output and the docs to it.
 
 > The buildable contract of the design note `design/code-sleuth.md` (titled "Repo Detective"; the
 > product is now named Code Sleuth). The note keeps the idea in its first words; this spec holds the

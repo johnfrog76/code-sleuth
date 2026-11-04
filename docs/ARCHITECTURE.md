@@ -22,7 +22,7 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
   check; their words are `src/engine/copy.ts`.
 - **The goals** (`src/engine/goals.ts`). A goal is an ordered list of check ids, each with a weight. The engine
   (`src/engine/engine.ts`) runs a goal: a check whose need is missing is not investigated and its rule never
-  runs, and evidence weighed as a name guess or an example lowers the weight. Every result comes out of
+  runs, and evidence weighed as a name guess lowers the weight; an example is split off and never counted. Every result comes out of
   `runCheck`, which masks every excerpt with the secret rules, whichever check recorded it.
 - **The secret rules** (`src/engine/secrets/`). Regex strings in the subset every engine reads alike; `scan.ts`
   matches, masks and hashes them.
@@ -58,6 +58,7 @@ folder is ever rewritten.
 | `toolkit/` | `handoff.ps1`, the one PowerShell file, shipped with the package |
 | `assets/` | the logo (light and dark), the favicon and the social preview, made by `scripts/render-atoms.mjs` |
 | `site/` | the project's page on GitHub Pages: plain HTML and CSS, with copies of the logo and favicon. `.github/workflows/pages.yml` publishes it on every push to main that changes it. Not shipped |
+| `agentic/` | prompts for agents that work on the project, such as the claims review of a doc. Not shipped |
 | `scripts/` | development tools, not shipped |
 | `test/` | the tests ([TESTING.md](TESTING.md)) |
 | `docs/` | these documents ([README.md](README.md) is the map) |

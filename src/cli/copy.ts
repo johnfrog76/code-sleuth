@@ -13,14 +13,14 @@ Usage
   code-sleuth --version                    show the version
 
 Options
-  --goal public        the question to answer: is it ready to go public?
+  --goal public        the question to answer: is it ready to be public facing?
   --out <dir>          where the case folder goes (never inside the repository)
   --deny <file>        a list of names that must not appear, one per line, kept outside the repository
   --all                hunches get cards too
-  --polish             have each card reworded by a model, every path and number kept (needs an API key)
-  --offline            make no network call: the checks that would call out read not investigated
+  --polish             have each card reworded by a model, every cited path and number kept (needs an API key)
+  --offline            no dependency lookups: the checks that would call out read not investigated
   --examples <glob>    another example location, beside test/fixtures/ and __fixtures__/; repeatable
-  --json               print case.json to stdout, and the rest to stderr
+  --json               print case.json to stdout, and the report to stderr
   --fail-on <weight>   exit 1 when a smoking-gun (or a loose-end and worse) is found
 
 ToolKit
@@ -30,7 +30,7 @@ ToolKit
   --toolkit-prefix <p>      ToolKit's command prefix, if it is not tk
   --toolkit-space <slug>    file in this Space, without changing ToolKit's own setting
 
-Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a stated refusal.
+Exit codes: 0 the case is closed, whatever it found; 1 with --fail-on, or an unexpected error; 2 a stated refusal.
 `,
   unknownFlag: (flag: string) => `I don't know the flag ${flag}.`,
   unexpectedArgument: (arg: string) => `I don't take ${arg} yet.`,
@@ -38,11 +38,11 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
   unknownGoal: (goal: string) => `I don't know the goal ${goal}.`,
   goalHint: "The goals are public, security and quality.",
   goalNotYet: (goal: string) =>
-    `The ${goal} goal isn't ready to investigate yet: it comes in the next release.`,
+    `The ${goal} goal isn't ready to investigate yet: it is planned for a later release.`,
   goalNotYetHint:
     "Use --goal public for now. code-sleuth checks --goal <goal> shows what each goal will check.",
   ask: {
-    choices: "Which do you want to know?\n  1. Is it ready to go public?\n",
+    choices: "Which do you want to know?\n  1. Is it ready to be public facing?\n",
     prompt: "Pick a number [1]: ",
     notAChoice: (answer: string) => `${answer} isn't one of the choices.`,
     notAChoiceHint: "Answer with the number, or give --goal public.",
@@ -124,7 +124,7 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
     noCards: "none",
     hunchCards: " (hunches get cards with --all)",
   },
-  goalTitle: { public: "Going public", security: "Security", quality: "Quality" },
+  goalTitle: { public: "Public facing", security: "Security", quality: "Quality" },
   weight: { "smoking-gun": "smoking gun", "loose-end": "loose end", hunch: "hunch" },
   weightHeading: "Weight",
   none: "--",

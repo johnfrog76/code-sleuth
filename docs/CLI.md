@@ -1,6 +1,7 @@
 # The command line
 
-Every command, flag and refusal, and the exit codes. `code-sleuth --help` prints the short form. A test holds
+Everything you can ask Code Sleuth from the command line, and how it answers: every command, flag and
+refusal, and the exit codes. `code-sleuth --help` prints the short form. A test holds
 the flags on this page to the ones the parser accepts.
 
 ## Commands
@@ -26,12 +27,12 @@ two are listed by `checks` and refused for a case until their checks are built
 | `--out` | a folder | where the case folder goes; refused inside the repository ([CONFIGURATION.md](CONFIGURATION.md#the-cases-folder)) |
 | `--deny` | a file | the deny list for `names.deny`: names that must not appear, one per line, `#` for a comment. Refused inside the repository |
 | `--all` | | hunches get cards too |
-| `--json` | | prints `case.json` to stdout, and the human output to stderr |
+| `--json` | | prints `case.json` to stdout, and the report to stderr. A question asked at a terminal (the goal, or ToolKit's consent) still goes to stdout |
 | `--fail-on` | `smoking-gun` or `loose-end` | exits 1 when a finding at or above that weight is found |
-| `--offline` | | makes no network call: `deps.outdated` and `deps.advisories` read not investigated, "--offline" ([CONFIGURATION.md](CONFIGURATION.md#what-leaves-the-machine)) |
+| `--offline` | | makes no dependency lookup: `deps.outdated` and `deps.advisories` read not investigated. The polish request, which only `--polish` turns on, is not affected ([CONFIGURATION.md](CONFIGURATION.md#what-leaves-the-machine)) |
 | `--examples` | a glob | another example location, beside `test/fixtures/` and `__fixtures__/`; repeatable. A match there is shown and not counted ([CHECKS.md](CHECKS.md#example-locations)) |
-| `--polish` | | rewords each card with a model, every path and number kept; needs an API key ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
-| `--toolkit` | | files the cards in ToolKit, in the repository's own Space, after asking ([TOOLKIT.md](TOOLKIT.md#which-space)) |
+| `--polish` | | rewords each card with a model, every path its evidence cites and every number kept; needs an API key ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
+| `--toolkit` | | files the cards in ToolKit, after asking: in the repository's own Space, else ToolKit's active one ([TOOLKIT.md](TOOLKIT.md#which-space)) |
 | `--yes` | | with `--toolkit`, files without asking |
 | `--refile` | | with `--toolkit`, files a check again though it is already filed |
 | `--toolkit-prefix` | a prefix | ToolKit's command prefix, if it is not `tk` |
@@ -44,15 +45,15 @@ two are listed by `checks` and refused for a case until their checks are built
 | Code | Means |
 | --- | --- |
 | 0 | the case is closed, whatever it found; also `--help`, `--version` and `checks` |
-| 1 | only with `--fail-on`: a finding at or above the weight it names |
-| 2 | a stated refusal: one `Error:` line and one `Hint:` line on stderr, and nothing else |
+| 1 | with `--fail-on`: a finding at or above the weight it names. An unexpected error also exits 1 for now |
+| 2 | a stated refusal: one `Error:` line and one `Hint:` line on stderr |
 
-A failed polish request is not a refusal: the card stays as written and the run exits 0.
+A failed polish request is not a refusal: the card stays as written, and the exit code is what it would have been without `--polish`.
 
 ## Refusals
 
 Each is one `Error:` line and one `Hint:` line, then exit 2. Those marked *before the case* stop the run
-before anything is read or written.
+before any check runs and before anything is written.
 
 | Refused | When | Before the case |
 | --- | --- | --- |
@@ -77,6 +78,6 @@ before anything is read or written.
 
 The opening line, the repository and the goal, what leaves the machine, the stakeout (a dot per check), the
 stamped verdict (`By my checklist: ...`, and with READY one line saying the call is yours), the checklist
-grouped as the case file groups it, where the case went, one polish line and
-one ToolKit line. Colour only on a terminal, and never with `NO_COLOR`; every line also carries its word, so
-colour is never the only signal.
+grouped as the case file groups it, where the case went, and lines such as the examples line, `Polishing ...`,
+`Filed` and `Skipped`, then one polish line and one ToolKit line. Colour only on a terminal, and never with a
+non-empty `NO_COLOR`; every line also carries its word, so colour is never the only signal.

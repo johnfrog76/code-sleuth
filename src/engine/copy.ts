@@ -114,7 +114,7 @@ export const cards = {
   },
   "files.large": {
     title: "Move large files out of the repository",
-    fix: "Remove each file from the repository and keep it where large files belong: Git LFS, a release asset, or a package. If it is in the history too, rewrite the history before the repository goes public, or every clone keeps it.",
+    fix: "Remove each file from the repository and keep it where large files belong: Git LFS, a release asset, or a package. If it is in the history too, rewrite the history before the repository is public facing, or every clone keeps it.",
   },
   "workflows.permissions": {
     title: "Give each workflow a top-level permissions block",
@@ -205,7 +205,6 @@ export const cards = {
   },
 } satisfies Record<string, CardCopy>;
 
-/** Why license.deps could not read the dependencies' licenses, and what would let it. */
 /** Why a check reads not investigated when a file it needs would not parse. */
 export const unreadableReasons = {
   manifest: (path: string) => `${path} isn't JSON I can read, so I couldn't check what it says.`,
@@ -232,6 +231,7 @@ export const ecosystemReasons = {
     `The npm side is clean, but Code Sleuth reads npm projects so far, and ${path} (${ecosystem}) was not read.`,
 };
 
+/** Why license.deps could not read the dependencies' licenses, and what would let it. */
 export const licenseDepsReasons = {
   noLockfile: "There's a package.json and no package-lock.json: run npm install to make one, and commit it.",
   unreadable: (lockfile: string) => `${lockfile} is not JSON I can read.`,

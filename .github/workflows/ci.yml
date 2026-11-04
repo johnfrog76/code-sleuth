@@ -1,7 +1,7 @@
 # Tests, lint and build on every push to main and every pull request.
 #
 # The job runs only while the repository is public: a private repository here has no hosted minutes, so the
-# guard keeps it from failing until then, and it turns on by itself when the repository goes public.
+# guard keeps it from failing until then, and it turns on by itself when the repository is public.
 name: CI
 
 on:

@@ -1,6 +1,7 @@
 # Contributing
 
-Thank you for wanting to help. Code Sleuth is small, and it means to stay simple, helpful and fun.
+Thank you for wanting to help. This page is how to get a change in: where to start, how to set up and run the
+tests, and what a pull request needs. Code Sleuth is small, and it means to stay simple, helpful and fun.
 
 ## Start with an issue
 
@@ -34,4 +35,5 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
 ## Code of conduct
 
 Everyone here follows [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md). Report a conduct problem to
-`codesleuth.project (at) outlook.com`; reports are kept confidential.
+`codesleuth.project (at) outlook.com`. As the code of conduct says, community leaders are obligated to respect
+the privacy and security of the reporter of any incident ([Enforcement](../CODE_OF_CONDUCT.md#enforcement)).

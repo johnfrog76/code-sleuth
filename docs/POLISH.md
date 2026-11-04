@@ -1,7 +1,8 @@
 # The polish pass
 
-With an API key, `--polish` has each card reworded to read more easily. Every path, number, masked value and
-the fingerprint survive, or the rewrite is thrown away and the card stays as Code Sleuth wrote it.
+With an API key, `--polish` has each card reworded to read more easily. Every path its evidence cites, every
+number, every masked value and the fingerprint survive, or the rewrite is thrown away and the card stays as
+Code Sleuth wrote it.
 
 ## When it runs
 
@@ -26,7 +27,7 @@ On macOS and Linux, make it yours alone: `chmod 600` on the file. If others can 
 with the command that fixes it. An API key already set in your environment wins over the file
 ([CONFIGURATION.md](CONFIGURATION.md#environment-variables)).
 
-- **No other `.env` is read.** Not the investigated repository's, and not the one in the folder you run from:
+- **No other `.env` is read for the key.** Not the investigated repository's, and not the one in the folder you run from:
   those hold someone else's secrets.
 - **It is parsed, never loaded.** Only the API key is taken from the file, and nothing is added to the
   environment, so npm, gh and ToolKit's shell, which Code Sleuth starts, never see it. It is held in memory for
@@ -36,10 +37,10 @@ with the command that fixes it. An API key already set in your environment wins 
 
 | You have | The run says |
 | --- | --- |
-| no API key, no `--polish` | `Polish  off. Add an API key and --polish to have the cards reworded. To add one, run <the copy line> and fill it in.` |
-| an API key, no `--polish` | `Polish  an API key is set (from ~/Library/Application Support/code-sleuth/.env): add --polish to have the cards polished.` |
-| `--polish`, no API key | `Polish  No API key. The cards are as the sleuth wrote them. To add one, run <the copy line> and fill it in.` |
-| an API key and `--polish` | `Polish  5 of 5 cards polished by claude-haiku-5-5, with the API key from the environment.` |
+| no API key, no `--polish` | `Polish     off. Add an API key and --polish to have the cards reworded. To add one, run <the copy line> and fill it in.` |
+| an API key, no `--polish` | `Polish     an API key is set (from ~/Library/Application Support/code-sleuth/.env): add --polish to have the cards polished.` |
+| `--polish`, no API key | `Polish     No API key. The cards are as the sleuth wrote them. To add one, run <the copy line> and fill it in.` |
+| an API key and `--polish` | `Polish     5 of 5 cards polished by claude-haiku-5-5, with the API key from the environment.` |
 
 `--polish` without an API key is not a refusal: the run goes on. It is opt-in each time because it sends text
 off the machine; an API key alone never turns it on.
@@ -76,22 +77,20 @@ no headings. Otherwise the card stays as written, and `case.json` says why on th
 
 **A kept rewrite means the guard's rules did not fire, not that nothing changed.** The guard compares a list;
 it cannot see meaning, so a word that adds a kind ("an email address" for "an address") passes it. The
-prompt asks against that, and mostly holds. A second pass that has a model check the rewrite against the
-original comes in a later release.
+prompt asks against that; nothing checks that it was heeded. A second pass that has a model check the rewrite against the
+original is planned for a later release.
 
 ## When it fails
 
 A failure is a line, not a stop. One attempt per card, a 60-second timeout, no retries: a bad key
 (`bad-key`), a rate limit (`rate-limited`), an API it cannot reach (`unreachable`), a timeout (`timeout`), a
 request the API rejects (`rejected`), a model that declines (`refused`) or an answer it cannot read
-(`unreadable`) keeps that card as written, with the reason in the case, and the run still exits 0.
+(`unreadable`) keeps that card as written, with the reason in the case, and the run goes on: the failure changes no exit code.
 
 ## Why plain `fetch`, not the Anthropic SDK
 
-The request is one small `fetch`, not the official SDK. Code Sleuth's promise is that it sends nothing you did
-not ask for, and it reads other people's dependency trees for a living. The SDK would bring eight packages,
-a telemetry interface among them. That interface sends nothing on its own, but a stranger reading this
-project's lockfile should not have to take that on trust. The polish pass is one optional request whose
-failure changes nothing, so the SDK's retries and typed errors buy little here. Writing the request by hand
-also lets two guarantees be plain in the code: the address is fixed (`ANTHROPIC_BASE_URL` is ignored), and no
-client exists without an API key. The only runtime dependency stays `yaml`.
+The request is one small `fetch`, not the official SDK. Code Sleuth reads other people's dependency trees for
+a living, so its own should be short enough to read: the only runtime dependency stays `yaml`. The polish pass
+is one optional request whose failure changes nothing, so an SDK's retries and typed errors would buy little
+here. Writing the request by hand also keeps two guarantees plain in the code: the address is fixed
+(`ANTHROPIC_BASE_URL` is ignored), and no client exists without an API key.

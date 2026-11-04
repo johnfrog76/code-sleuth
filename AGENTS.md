@@ -42,12 +42,13 @@ a fact lives in the one that owns it, and the others link to it.
    telemetry.
 9. **Check ids are goal-free** (`secrets.tree`); a goal is a list of ids with weights.
 10. **A refusal is one `Error:` line and one `Hint:` line, exit 2**, printed by `src/cli/refusal.ts`. Exit 1
-    only from `--fail-on`.
+    from `--fail-on`, or an unexpected error until #25 gives it a code of its own (amended 2026-11-04).
 11. **Words live in copy files** (`src/cli/copy.ts`, `src/engine/copy.ts`, `src/case/copy.ts`), not in
     the rules. The detective's voice outside, plain facts inside. Card titles carry no detective words.
 
 ## Writing
 
 Everything here is written for strangers: no machine paths, no private repository names, no people's
-names. Plain words, short sentences, double hyphens (`--`) rather than dashes. Docs and `CHANGELOG.md`
+names. Plain words, short sentences, double hyphens (`--`) rather than dashes. The goal is
+"public facing", never "go public" (the flag stays `--goal public`). Docs and `CHANGELOG.md`
 change in the same commit as the code they describe.

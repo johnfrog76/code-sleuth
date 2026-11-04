@@ -1,6 +1,6 @@
 # The checks
 
-Every check Code Sleuth runs, what it reads, what it finds, and how to fix it. A check is defined once; a
+What Code Sleuth looks at for you, what it finds, and how to fix each thing. A check is defined once; a
 goal picks the checks it needs and says how much each one weighs. `code-sleuth checks` prints the same
 table from the code, and a test holds this page to it.
 
@@ -9,7 +9,13 @@ be dealt with before the goal is met, and makes a Task card. A **hunch** is wort
 only with `--all`. A check that cannot run reads **not investigated**, with the reason; it never reads
 clean.
 
-The security and quality goals are listed, and a case can be taken for them in the next release.
+The security and quality goals are listed, and a case can be taken for them in a later release.
+
+## Public-facing code
+
+Public-facing code is a repository whose visibility is public, so its files, its whole history and its tracker
+(issues, pull requests and their comments) are what people see. The public-facing goal (`--goal public`) reads
+the files and the history. It does not read the tracker yet ([KNOWN-GAPS.md](KNOWN-GAPS.md#not-built-yet)).
 
 ## What the verdict means and doesn't
 
@@ -20,21 +26,21 @@ to publish.
 **Where the bar comes from.** The community files follow GitHub's community profile: a README, a license, a
 code of conduct, a contributing guide, a security policy, and issue and pull request templates. The workflow,
 dependency and CI checks follow OpenSSF Scorecard where Scorecard has a matching check. The secret, path and
-deny-list checks are what a stranger could read the moment the repository opens.
+deny-list checks look for what anyone could read in the files and the history once they are public.
 
 **Your context moves it.** Who owns the code, what it is and who will read it can raise the bar or lower it.
 A solo project may not need templates; an employer's repository may need a review this list knows nothing
 about. Where a check can reasonably not apply, its entry below says so.
 
 **What Code Sleuth doesn't judge:** legal and provenance questions (who may publish this code, and where it
-came from), an employer's or a client's rules, trademarks and names beyond your deny list, and the code
-itself, which is a review's job. A person decides those.
+came from), an employer's or a client's rules, trademarks and names beyond your deny list, the text in the
+tracker, and the code itself, which is a review's job. A person decides those.
 
 ## Weights
 
 <!-- The rows below are held to the code by test/docs/checks.test.ts. -->
 
-| Check | Going public | Security | Quality |
+| Check | Public facing | Security | Quality |
 | --- | --- | --- | --- |
 | `secrets.tree` | smoking gun | smoking gun | -- |
 | `secrets.history` | smoking gun | smoking gun | -- |
@@ -62,6 +68,11 @@ itself, which is a review's job. A person decides those.
 | `quality.markers` | hunch | -- | -- |
 
 ## What each check does
+
+Every check that reads a file's contents or the history skips anything under a `node_modules/`, `vendor/`,
+`dist/` or `build/` folder. `files.sensitive` and `files.large` look at every tracked file,
+those folders included, since a key file or a heavy file there is published too: their names and sizes, an
+`.npmrc`'s contents, and the first bytes of a large file to tell binary from text.
 
 A check that reads a `package.json` reads **not investigated** when that file isn't JSON it can read, naming it:
 `deps.advisories`, `deps.outdated`, `deps.lockfile`, `license.deps`, `license.file`, `ci.tests` and
@@ -121,7 +132,7 @@ A check that reads a `package.json` reads **not investigated** when that file is
 ### `names.deny`: Names on the deny list
 
 - **Reads:** tracked text files and every commit message, against `--deny <file>`
-- **Finds:** any line of the deny list, whole-word, ignoring case; the finding names the list line, never the word
+- **Finds:** any name on the deny list (each line that is not blank or a `#` comment), whole-word, ignoring case; the finding names the list line, never the word
 - **Needs:** `denyList`. Outside git, with nothing in the files, it reads **not investigated**: the commit messages
   were not read
 - **What the books call it:** information disclosure
@@ -133,7 +144,7 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Finds:** a file over 5 MB, or a binary over 1 MB that is not an image or a font
 - **Needs:** nothing
 - **What the books call it:** repository bloat
-- **The fix:** Remove each file from the repository and keep it where large files belong: Git LFS, a release asset, or a package. If it is in the history too, rewrite the history before the repository goes public, or every clone keeps it.
+- **The fix:** Remove each file from the repository and keep it where large files belong: Git LFS, a release asset, or a package. If it is in the history too, rewrite the history before the repository is public facing, or every clone keeps it.
 
 ### `docs.readme`: A README that says how to start
 
@@ -243,19 +254,20 @@ A check that reads a `package.json` reads **not investigated** when that file is
 
 - **Reads:** every package and version in `package-lock.json` (or `npm-shrinkwrap.json`), through
   `npm audit --json` when npm is found, else through GitHub's advisory database with `gh api /advisories`
-- **Finds:** a locked package with a known advisory against its version. The evidence lists each package once,
+- **Finds:** a locked package with a known advisory against its version. The evidence lists each package and version once,
   at its heaviest advisory, with the line it sits on in the lockfile. A package that is only vulnerable
   through another is not listed again
 - **Weighs:** by severity. Critical or high keeps the goal's weight; moderate is one step down, low or info two.
   The heaviest piece of evidence decides, and each lighter one says why on its card
 - **Needs:** `network`, and npm or `gh`. With both, npm is asked. Whether `gh` is signed in is not asked ahead,
   since that would call GitHub: a `gh` that is not reads not investigated with the reason
-- **Sends:** the lockfile's package names and versions: to npm's configured registry through `npm audit`,
-  which is what it always does, or to GitHub, in batches of fifty, through `gh`. Nothing from the
-  repository's files, and never its path. `--offline` turns it off, and the run's header names it before it
+- **Sends:** through `npm audit`, what it always sends to npm's configured registry: the lockfile's
+  dependency tree, the package names and versions in it. Through `gh`, the package names and versions, to
+  GitHub, in batches of fifty. Nothing else from the files, and never the repository's path; npm's own `.npmrc`
+  settings, its auth included, still apply. `--offline` turns it off, and the run's header names it before it
   runs
-- **Reads clean** with no `package.json`, or none with dependencies, and no other ecosystem's manifest, and makes
-  no call. **Not investigated** with no npm lockfile, with another package manager's lockfile, with `--offline`,
+- **Reads clean** with no `package.json` at the root, or none with dependencies, and no other ecosystem's manifest, and makes
+  no call (with `--offline`, it reads not investigated even then). **Not investigated** with no npm lockfile, with another package manager's lockfile, with `--offline`,
   with neither tool, or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** known vulnerable component
 - **The fix:** Update each package listed to a version with the fix (`npm audit fix` does what it safely can), or replace it. A package deep in the tree is fixed by updating the dependency that pulls it in.
@@ -276,11 +288,12 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Finds:** a direct dependency a major version or more behind its latest (for a `0.x` version, a minor
   counts, as npm's caret does). The evidence lists each one; the check counts once
 - **Needs:** `npm`, `network`
-- **Sends:** package names, to npm's configured registry, the one `npm outdated` asks. Nothing from the
-  repository's files, and never its path. It leaves npm's own configuration (`.npmrc`, a private registry)
-  alone. `--offline` turns it off, and the run's header names it before it runs
-- **Reads clean** with no `package.json`, or none of its dependencies, and no other ecosystem's manifest, and
-  makes no call; **not investigated** with no lockfile, a lockfile from another package manager, no npm,
+- **Sends:** package names, read from `package.json`, to npm's configured registry, the one `npm outdated` asks.
+  Nothing else from the files, and never the repository's path; npm's own `.npmrc` settings, its auth included,
+  still apply. It leaves npm's registry settings (`.npmrc`, a scoped or private registry)
+  alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
+- **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest, and
+  makes no call, when npm is found and the run is not `--offline`; **not investigated** with no lockfile, a lockfile from another package manager, no npm,
   `--offline`, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** outdated dependency
 - **The fix:** For each dependency listed, read its changelog for the breaking changes between your version and the latest, update it, and run the tests. npm outdated lists them all.
@@ -300,12 +313,13 @@ manifest of another ecosystem -- `requirements.txt`, `pyproject.toml` or `Pipfil
 `Cargo.toml` (Rust), `Gemfile` (Ruby), `pom.xml` or `build.gradle` (Java), `composer.json` (PHP) -- makes a
 check that would read clean read **not investigated** instead, naming the file. Beside an npm project, the npm
 side is still checked: what it finds stands, and a clean npm side says the other side was not read. With no
-manifest of any of these, there is nothing to check, and the checks read clean.
+manifest of any of these, there is nothing to check, and the checks read clean, unless one cannot run (with `--offline`, or with no npm
+for `deps.outdated`).
 
 ## A guess from a name
 
-The `assigned-secret` rule (a long, random-looking value assigned to a name with `secret`, `token`, `password`
-or `key` in it) is a guess, so it weighs one step down: a smoking gun becomes a loose end. The case says which
+The `assigned-secret` rule (a long, random-looking value assigned to a name with `secret`, `token`,
+`password`, `passwd`, `api_key`, `access_key`, `private_key` or `auth_key` in it, the underscore optional) is a guess, so it weighs one step down: a smoking gun becomes a loose end. The case says which
 evidence was weighed down, and why.
 
 ## Example locations
@@ -314,15 +328,17 @@ A repository that tests a scanner keeps deliberate bait in its fixtures: a fake 
 `TODO`. A match in an example location is **shown and never counted**: it makes no card, even with `--all`,
 and never changes the verdict. A real match elsewhere still counts.
 
-The example locations are, for every check:
+The example locations are:
 
-- a path under a `test/fixtures/` or `__fixtures__/` folder, at any depth;
-- a line carrying `code-sleuth:example`;
+- a path under a `test/fixtures/` or `__fixtures__/` folder, at any depth, for every check;
+- a line carrying `code-sleuth:example`, for the secret checks, `paths.machine`, `files.sensitive`,
+  `quality.markers`, and `names.deny` in files (not yet `workflows.injection`, `workflows.prtarget`, or a commit
+  message);
 - a path matching any `--examples <glob>` given on the run ([CLI.md](CLI.md#flags)).
 
 A check whose only matches were examples reads **Clean**, with its own line saying so:
 `[x] paths.machine  Clean, apart from 3 matches in example locations, not counted.` A check with real matches
-too stays found, on its real evidence, and says how many more were examples. The case ends with one line:
+too stays found, on its real evidence, and says how many more were examples. Below the checklist, the case adds one line:
 `N matches in example locations were not counted; check that they are fake.` A real key committed into a
 fixture is still a real leak: the case stops counting it, but never hides it. `case.json` keeps every example
 match, with its path and line, and records the example locations in force ([CASE-FILE.md](CASE-FILE.md)).

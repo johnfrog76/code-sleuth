@@ -33,7 +33,7 @@ function evidenceOf(result: Result) {
 }
 
 describe("secrets.tree", () => {
-  it("is a smoking gun for a token in a tracked file, under going public and security", () => {
+  it("is a smoking gun for a token in a tracked file, under the public-facing goal and security", () => {
     for (const goal of ["public", "security"]) {
       const o = outcome(
         "secrets.tree",

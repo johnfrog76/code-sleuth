@@ -50,7 +50,7 @@ describe("code-sleuth checks", () => {
     const { code, stdout, stderr } = await capture(["checks"]);
     expect(code).toBe(0);
     expect(stderr).toBe("");
-    expect(stdout.split("\n")[0]).toMatch(/^Check\s+Title\s+Needs\s+Going public\s+Security\s+Quality$/);
+    expect(stdout.split("\n")[0]).toMatch(/^Check\s+Title\s+Needs\s+Public facing\s+Security\s+Quality$/);
     expect(stdout).toMatch(/^docs\.conduct\s+A code of conduct\s+--\s+loose end\s+--\s+--$/m);
     expect(stdout).toMatch(/^docs\.changelog\s+A changelog\s+--\s+hunch\s+--\s+hunch$/m);
   });

@@ -1,9 +1,9 @@
 # Case 2026-10-31-public-1
 
-**NOT READY** -- By my checklist: not ready to go public. One smoking gun, six loose ends.
+**NOT READY** -- By my checklist: not ready to be public facing. One smoking gun, six loose ends.
 
 - Repo: bare (main @ cf617d7, clean)
-- Goal: going public
+- Goal: public facing
 - Counts: 1 smoking gun, 6 loose ends, 3 hunches, 11 clean, 3 not investigated.
 
 ## Smoking guns

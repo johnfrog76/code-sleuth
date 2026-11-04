@@ -20,11 +20,11 @@ The cards go to the repository's own Space:
 2. Else the one Space whose address is this repository's `origin`: on GitHub, a Space whose address is the
    repository's URL (`https://github.com/<owner>/<repo>`); on Azure DevOps, a Space for the repository's
    organisation that lists the repository among its projects. Names match without regard to case.
-3. Else ToolKit's active Space, and the footer says so:
+3. Else ToolKit's active Space, and when ToolKit reports which one, the footer says so:
    `ToolKit    found (tk, Space 'widget', the active one: no Space matches this repository)`.
 
-The Space chosen reaches ToolKit as `P20_ACTIVE_SPACE` in its child shell only, so ToolKit's own setting is
-never changed. The case records how it was chosen (`spaceFrom`: `flag`, `origin` or `active`).
+A Space chosen by `--toolkit-space` or by the origin reaches ToolKit as `P20_ACTIVE_SPACE`, in its child shell
+only; with the active one, nothing is set. Either way ToolKit's own setting is never changed. The case records how it was chosen (`spaceFrom`: `flag`, `origin` or `active`).
 
 Without `--toolkit`, a run that finds ToolKit ends with the command that would file the cards.
 
@@ -42,7 +42,7 @@ own success lines.
 
 ## Consent and order
 
-It asks once, naming the count and the Space:
+It asks once, naming the count, and the Space when ToolKit reports one:
 
 ```text
 File 5 cards in ToolKit, in the Space 'widget'? [y/N]
@@ -50,7 +50,7 @@ File 5 cards in ToolKit, in the Space 'widget'? [y/N]
 
 `--yes` files without asking; with no terminal and no `--yes`, nothing is filed and the run says how. Cards
 are filed one at a time, in the case's order. The first refusal stops the batch: the cards before it stay
-filed, the refusal is printed once, and the run exits 2.
+filed, ToolKit's refusal is shown on the ToolKit line and as the run's `Error:` line, and the run exits 2.
 
 ## One check, one card
 
@@ -71,5 +71,6 @@ a name it does not declare, so Code Sleuth checks that the Space it was told is 
 ## What it never does
 
 It never writes a ToolKit card file, never changes ToolKit's configuration, never files without asking (or
-`--yes`), and never files the same check twice without `--refile`. On Windows, a Restricted execution policy
+`--yes`), and never files a check that is already on the ledger without `--refile`. The ledger belongs to one
+cases folder and one repository path: another `--out`, or a clone at another path, starts a ledger of its own. On Windows, a Restricted execution policy
 can stop the hand-off script; that case is tracked for the release that proves Windows.

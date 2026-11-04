@@ -1,12 +1,5 @@
 # Code Sleuth
 
-<p>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-    <img src="assets/logo.svg" alt="Code Sleuth" height="96">
-  </picture>
-</p>
-
 ```text
  ===============___=============================================
  ==============( ( (============================================
@@ -28,13 +21,17 @@
                                                                 `----'
 ```
 
-**Point it at a repo, pick a goal, run. A checklist and card-ready issues come back.**
+**Point it at a repo and run. A checklist and card-ready issues come back.**
 
 The project's page: [johnfrog76.github.io/code-sleuth](https://johnfrog76.github.io/code-sleuth/).
 
-Code Sleuth is a sloth private eye for your repository. Ask whether it's ready to go public, and it takes
-the case: it investigates, then hands back a checklist of what could hurt you and what a stranger would trip
-over. Every case is different, so the checklist is the lead, and the verdict is yours.
+Code Sleuth gives you a helpful list of what's worth doing before your code is public facing. Your public
+repositories are often how people first meet your work, so it pays to have them show it well. Every project's
+bar is its own, so treat the list as a place to start, not the final word.
+
+It's a sloth private eye for your repository: point it at one and it investigates, then hands back that list
+and a card for each item that needs work, written so you can file it. The lightest items, hunches, get a card
+when you ask with `--all`.
 
 It runs on your machine. Without `--polish`, the only calls it makes are the dependency lookups, which it
 names before it runs and `--offline` turns off. Two things make it better, and neither is required:
@@ -42,8 +39,8 @@ names before it runs and `--offline` turns off. Two things make it better, and n
 | You have | You get |
 | --- | --- |
 | A repository | The investigation, the checklist, and card-ready issues as markdown |
-| An API key in Code Sleuth's `.env`, and `--polish` | Each card reworded by a small model, with every path, number and masked value checked to be unchanged |
-| ToolKit installed | Each card filed as a real ToolKit card |
+| An API key in Code Sleuth's `.env`, and `--polish` | Each card reworded by a small model, with every path its evidence cites, every number and every masked value checked to be unchanged |
+| ToolKit installed, and `--toolkit` | Each card filed as a real ToolKit card, once you say yes |
 
 ## Quick start
 
@@ -85,8 +82,8 @@ before you act on one.
 
 ## Status
 
-Version 0.1.0, the first release: the whole loop on one goal, going public. It is not on npm yet. The
-security and quality goals come in the next release.
+Version 0.1.0, the first release: the whole loop on one goal, the public-facing goal. It is not on npm yet. The
+security and quality goals are planned for a later release.
 
 ## License
 

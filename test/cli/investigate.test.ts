@@ -48,9 +48,9 @@ describe("investigating", () => {
     expect(lines[0]).toMatch(/^Code Sleuth -- case \d{4}-\d{2}-\d{2}-public-1$/);
     expect(lines[2]).toBe("So, you want to know what's going on with your repo?");
     expect(stdout).toMatch(/^ {2}Repo {2}bare \(main @ [0-9a-f]{7}, clean\)$/m);
-    expect(stdout).toContain("  Goal  going public\n");
+    expect(stdout).toContain("  Goal  public facing\n");
     expect(stdout).toContain(`Taking my time. 24 leads to run down ${".".repeat(24)} done.\n`);
-    expect(stdout).toContain("NOT READY  By my checklist: not ready to go public. One smoking gun,");
+    expect(stdout).toContain("NOT READY  By my checklist: not ready to be public facing. One smoking gun,");
     expect(stdout).toMatch(/^Smoking guns\n {2}\[ \] license\.file {3,}No license/m);
     expect(stdout).toMatch(/^Clean\n {2}\[x\] \S+ +.+ {2}\.\.\. and \d+ more$/m);
     expect(stdout).toMatch(/^Case file {2}.*case\.md$/m);
@@ -78,11 +78,11 @@ describe("investigating", () => {
     expect(asked).toBe("Pick a number [1]: ");
     expect(
       stdout.startsWith(
-        "So, you want to know what's going on with your repo?\n\nWhich do you want to know?\n  1. Is it ready to go public?\n",
+        "So, you want to know what's going on with your repo?\n\nWhich do you want to know?\n  1. Is it ready to be public facing?\n",
       ),
     ).toBe(true);
     expect(stdout.match(/So, you want to know/g)).toHaveLength(1);
-    expect(stdout).toContain("READY  By my checklist: ready to go public.");
+    expect(stdout).toContain("READY  By my checklist: ready to be public facing.");
     expect(stdout).toContain(
       "Nothing on my checklist stands in the way. Every case is different: the call is yours.",
     );
@@ -272,7 +272,7 @@ describe("every refusal", () => {
       "don't know the goal nope",
     );
     expect(await refusal((root, out) => [root, "--goal", "security", "--out", out])).toContain(
-      "next release",
+      "planned for a later release",
     );
   });
 

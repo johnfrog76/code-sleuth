@@ -1,5 +1,8 @@
 # Security
 
+Thank you for helping keep Code Sleuth trustworthy. It reads repositories that may hold secrets, so a report
+that one of its promises below is broken is the most useful kind there is.
+
 ## Reporting a problem
 
 Please report a security problem privately, by email to `codesleuth.project (at) outlook.com`, the
@@ -28,7 +31,8 @@ of them is a security problem:
   that is.
 - A secret's value never appears in any output: the terminal, a case file, a card, or a polish request.
 - The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and is
-  never written or printed. No other `.env` is read, and the key never reaches a process Code Sleuth starts.
+  never written or printed. The key is read from no other `.env`, and it never reaches a process Code Sleuth
+  starts.
 - It sends nothing over the network except the calls the run names on its `Out` line before it makes them:
   the dependency lookups, which `--offline` turns off, and the polish request you asked for with `--polish`
   ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)).

@@ -1,7 +1,9 @@
 # Quick start
 
-Code Sleuth investigates a repository on your machine against one goal, and hands back a checklist and a
-card for each thing that stands in the way. It reads the repository and never writes to it.
+From a clone to your first case: a checklist of what's worth doing before a repository is public facing, and a
+card, ready to file, for each item that needs work (the lightest items, hunches, get one when you ask with
+`--all`). Code Sleuth runs on your machine, reads the repository and
+never writes to it.
 
 ## What you need
 
@@ -9,7 +11,8 @@ card for each thing that stands in the way. It reads the repository and never wr
   or with a version manager: [nvm](https://github.com/nvm-sh/nvm) on macOS and Linux (`nvm install` in the
   clone reads `.nvmrc`), [nvm-windows](https://github.com/coreybutler/nvm-windows) on Windows
   (`nvm install 24`, then `nvm use 24`).
-- **git**, for the history checks. Without it, those checks read *not investigated* and say why.
+- **git**, for the history checks. Without it, `secrets.history` reads *not investigated* and says why, and
+  `names.deny` reads the files but not the commit messages, and says so when the files are clean.
 
 Code Sleuth is not on npm yet. You run it from a clone.
 
@@ -34,7 +37,7 @@ code-sleuth --goal public
 ```
 
 Or point it at one: `code-sleuth path/to/repo --goal public`. With no `--goal` in a terminal, it asks. For
-now there is one goal to pick: **going public**. Security and quality come in the next release.
+now there is one goal to pick: **the public-facing goal**. Security and quality are planned for a later release.
 
 You get the verdict by Code Sleuth's checklist (READY, NEARLY or NOT READY), the checklist grouped by how
 much each finding weighs, and where the case file went. READY means nothing on the checklist stands in the
@@ -47,7 +50,7 @@ Cards      5 in cards/ (hunches get cards with --all)
 ```
 
 The case file is written to your own cases folder, never into the repository. It holds `case.json`, `case.md`
-and one card per finding: see [CASE-FILE.md](CASE-FILE.md). Every check, and how to fix what it finds, is in
+and a card for each smoking gun and loose end (hunches get one with `--all`): see [CASE-FILE.md](CASE-FILE.md). Every check, and how to fix what it finds, is in
 [CHECKS.md](CHECKS.md).
 
 Where your cases folder is, on each platform, is in [CONFIGURATION.md](CONFIGURATION.md#the-cases-folder).
@@ -60,9 +63,10 @@ CI; `--json` prints the record. Every flag, every refusal and the exit codes are
 ## Turn on the polish pass
 
 With an Anthropic API key, `--polish` has each card reworded to read more easily, and a rewrite that drops or
-changes a path, a number or a masked value is thrown away.
+changes a path its evidence cites, a number or a masked value is thrown away ([POLISH.md](POLISH.md#the-guard)).
 
-The API key goes in a `.env` in Code Sleuth's own folder, beside your cases, and nowhere else. From the clone,
+The API key goes in a `.env` in Code Sleuth's own folder, beside your cases; no other `.env` is read. A key set
+in your environment works too, and wins. From the clone,
 copy the example there, then open the copy and fill in your API key:
 
 ```sh
@@ -90,8 +94,9 @@ came with it and gives the one line that copies it into place, with both paths i
 code-sleuth --goal public --polish
 ```
 
-The Polish line says where the API key came from, never what it is. It sends each card's text, already
-masked, and nothing else. See [POLISH.md](POLISH.md).
+The Polish line says where the API key came from, never what it is. Each request carries one card's text, already
+masked, and Code Sleuth's prompt. A card's evidence lines quote the lines they point at, so short excerpts of your
+files go with it, masked like everything else; never a whole file. See [POLISH.md](POLISH.md).
 
 ## File the cards in ToolKit
 
@@ -102,4 +107,4 @@ ToolKit card, through ToolKit's own command, once each:
 code-sleuth --goal public --toolkit
 ```
 
-It asks first, naming the count and the Space. See [TOOLKIT.md](TOOLKIT.md).
+It asks first, naming the count, and the Space when ToolKit reports one. See [TOOLKIT.md](TOOLKIT.md).

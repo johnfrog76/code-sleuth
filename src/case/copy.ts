@@ -29,13 +29,13 @@ export const copy = {
 
   stamp: { ready: "READY", nearly: "NEARLY", "not-ready": "NOT READY" } satisfies Record<CaseVerdict, string>,
 
-  goal: { public: "going public", security: "security", quality: "quality" } as Record<string, string>,
+  goal: { public: "public facing", security: "security", quality: "quality" } as Record<string, string>,
 
   verdict: {
     public: {
-      ready: "ready to go public",
-      nearly: "nearly ready to go public",
-      "not-ready": "not ready to go public",
+      ready: "ready to be public facing",
+      nearly: "nearly ready to be public facing",
+      "not-ready": "not ready to be public facing",
     },
     security: {
       ready: "nothing stands out on security",
@@ -45,7 +45,7 @@ export const copy = {
     quality: { ready: "in good shape", nearly: "nearly in good shape", "not-ready": "not in good shape yet" },
   } as Record<string, Record<CaseVerdict, string>>,
 
-  /** `By my checklist: not ready to go public. Two smoking guns, three loose ends.` */
+  /** `By my checklist: not ready to be public facing. Two smoking guns, three loose ends.` */
   verdictLine(goal: string, verdict: CaseVerdict, counts: Counts): string {
     const found = [
       count(counts["smoking-gun"], "smoking gun", "smoking guns"),
