@@ -1,7 +1,13 @@
 import { mkdirSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { defaultCasesFolder, guardCasesFolder, newCaseFolder, repoKey } from "../../src/case/folder.js";
+import {
+  defaultCasesFolder,
+  guardCasesFolder,
+  isWithin,
+  newCaseFolder,
+  repoKey,
+} from "../../src/case/folder.js";
 import { Refusal } from "../../src/refusal.js";
 import { withScratch } from "../helpers/scratch.js";
 
@@ -56,6 +62,24 @@ describe("the refusals", () => {
       symlinkSync(join(repo, "inside"), join(root, "link"), "dir");
       expect(() => guardCasesFolder(repo, join(root, "link", "cases"), true)).toThrow(Refusal);
     });
+  });
+
+  it("refuses a folder inside the repository whose name starts with two dots", () => {
+    withScratch((root) => {
+      const repo = join(root, "widget");
+      mkdirSync(repo);
+      for (const name of ["..cases", "...", ".. cases", "..\u2024"])
+        expect(() => guardCasesFolder(repo, join(repo, name), true)).toThrow(Refusal);
+    });
+  });
+
+  it("takes a step up only as a whole segment", () => {
+    expect(isWithin(join("/r", "..cases"), "/r")).toBe(true);
+    expect(isWithin(join("/r", "a", "..b"), "/r")).toBe(true);
+    expect(isWithin("/r", "/r")).toBe(true);
+    expect(isWithin("/", "/r")).toBe(false);
+    expect(isWithin("/r-cases", "/r")).toBe(false);
+    expect(isWithin(join("/", "..cases"), "/r")).toBe(false);
   });
 
   it("lets a cases folder beside the repository through", () => {

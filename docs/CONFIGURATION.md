@@ -76,7 +76,8 @@ Where every case is written. Never inside the repository it investigates.
 | Linux | `$XDG_DATA_HOME/code-sleuth/cases`, else `~/.local/share/code-sleuth/cases` |
 | Windows | `%LOCALAPPDATA%\code-sleuth\cases` |
 
-`--out <dir>` names another. Either way, a cases folder inside the repository is refused, and so is a
+`--out <dir>` names another. Either way, a cases folder inside the repository is refused -- the whole
+repository, when you point Code Sleuth at a folder inside one, and the superproject, for a submodule -- and so is a
 repository that holds the cases folder (`code-sleuth ~`). Both compare real paths, links and letter case
 resolved. What is inside the folder is in [CASE-FILE.md](CASE-FILE.md).
 

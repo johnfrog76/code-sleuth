@@ -43,13 +43,13 @@ export async function investigate(
   const failOn = flags.failOn === undefined ? undefined : checkWeight(flags.failOn);
   const terminal = io.terminal ?? { stdin: false, stdout: false, stderr: false };
   const { goal, asked } = await pickGoal(flags.goal, io, terminal.stdin && terminal.stdout);
-  const denyList = flags.deny === undefined ? undefined : readDenyList(flags.deny, root);
   const repo = openRepo(root);
+  const denyList = flags.deny === undefined ? undefined : readDenyList(flags.deny, repo.top);
   const {
     detection,
     options: toolkitOptions,
     spaceFrom,
-  } = prepareToolkit(flags, io, readRemote(repo), repo.root);
+  } = prepareToolkit(flags, io, readRemote(repo), repo.top);
 
   // With --json, stdout carries the record alone and the person reads the rest on stderr.
   const human = flags.json ? io.stderr : io.stdout;

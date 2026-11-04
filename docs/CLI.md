@@ -66,7 +66,7 @@ before any check runs and before anything is written.
 | an answer that is not one of the choices | at the goal prompt | yes |
 | an unknown `--fail-on` weight | `--fail-on hunch` | yes |
 | a deny list it cannot read, or one inside the repository | the list would publish the names it guards | yes |
-| a cases folder inside the repository, or a repository that holds the cases folder | `--out` inside it; `code-sleuth ~` | yes |
+| a cases folder inside the repository, or a repository that holds the cases folder | `--out` inside it, or anywhere in the repository a folder you point at is in, a submodule's superproject included; `code-sleuth ~` | yes |
 | a repository that holds Code Sleuth's own npm folder | `code-sleuth ~ --out elsewhere`, when npm would run; `--offline` runs no npm | yes |
 | `--yes` or `--refile` without `--toolkit` | | yes |
 | `--toolkit` with no ToolKit | no PowerShell, or ToolKit's `NewPrompt` does not resolve | yes |

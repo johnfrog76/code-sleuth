@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { Refusal } from "../refusal.js";
 import { copy } from "./copy.js";
 
@@ -103,9 +103,15 @@ export function isInside(path: string, root: string): boolean {
   return isWithin(canonical(path), canonical(root));
 }
 
-function isWithin(child: string, parent: string): boolean {
+/**
+ * True when `child` is `parent` or inside it. A step up is the whole segment `..`: a folder named `..cases`
+ * inside the repository starts with two dots, and is still inside.
+ */
+export function isWithin(child: string, parent: string): boolean {
   const path = relative(parent, child);
-  return path === "" || (!path.startsWith("..") && !isAbsolute(path));
+  if (path === "") return true;
+  if (isAbsolute(path)) return false;
+  return path !== ".." && !path.startsWith(`..${sep}`);
 }
 
 /** The file in the cases folder that holds this machine's key for hashing secrets. */

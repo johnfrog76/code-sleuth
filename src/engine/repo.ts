@@ -10,6 +10,11 @@ export const SKIPPED_FOLDERS: readonly string[] = ["node_modules", "vendor", "di
 export interface RepoReader {
   /** The absolute path of the root the investigation was pointed at. */
   readonly root: string;
+  /**
+   * The repository the root is in: the outermost git work tree holding it, a submodule's superproject included,
+   * or the root itself outside git. Nothing Code Sleuth writes may be inside it.
+   */
+  readonly top: string;
   /** True when the root is inside a git work tree, and `files` came from `git ls-files`. */
   readonly isGitRepository: boolean;
   /**
@@ -58,6 +63,7 @@ export function openRepo(root: string): RepoReader {
 
   return {
     root: absolute,
+    top: tracked === undefined ? absolute : outermostWorkTree(absolute),
     isGitRepository: tracked !== undefined,
     isPartialClone: tracked !== undefined && partialClone(absolute),
     files,
@@ -349,6 +355,27 @@ function partialClone(root: string): boolean {
   if (promisor.status === 0 && /\btrue\b/i.test(promisor.stdout.toString("utf8"))) return true;
   const extension = git(root, ["config", "--get", "extensions.partialClone"]);
   return extension.status === 0 && extension.stdout.toString("utf8").trim() !== "";
+}
+
+/**
+ * The outermost work tree holding `root`: its own top level, then each superproject above it, for a submodule.
+ * git prints the superproject's work tree first, when there is one, then the top level.
+ */
+function outermostWorkTree(root: string): string {
+  let top = root;
+  for (let depth = 0; depth < 32; depth++) {
+    const asked = git(top, ["rev-parse", "--show-superproject-working-tree", "--show-toplevel"]);
+    if (asked.status !== 0) return top;
+    const [first] = asked.stdout
+      .toString("utf8")
+      .split("\n")
+      .filter((line) => line !== "");
+    if (first === undefined) return top;
+    const next = resolve(first);
+    if (next === top) return top;
+    top = next;
+  }
+  return top;
 }
 
 function gitTrackedFiles(root: string): string[] | undefined {

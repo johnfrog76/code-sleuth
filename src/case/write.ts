@@ -85,7 +85,8 @@ export function takeCase(options: TakeCaseOptions & { enhancements?: Enhancement
  */
 export function openCase(options: TakeCaseOptions): CaseDraft {
   const { repo, goal, capabilities, casesFolder, chosen, all = false, now = () => new Date() } = options;
-  guardWrites(repo.root, [{ kind: "cases", path: casesFolder, chosen }, ...(options.alsoWrites ?? [])]);
+  // Against the repository the root is in, not only the folder given: a subfolder's --out could land beside it.
+  guardWrites(repo.top, [{ kind: "cases", path: casesFolder, chosen }, ...(options.alsoWrites ?? [])]);
 
   const opened = now();
   const info = readRepoInfo(repo);
