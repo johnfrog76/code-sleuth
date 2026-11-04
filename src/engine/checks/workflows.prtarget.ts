@@ -31,11 +31,11 @@ export const workflowsPrtarget: Check = {
           evidence.push({
             path: workflow.path,
             line: step.line,
-            excerpt: excerptOf(`${fromWith[0]}: ${String(fromWith[1])}`),
+            excerpt: excerptOf(`${fromWith[0]}: ${String(fromWith[1])}`, workflow.path),
           });
         } else if (step.run !== undefined && RUN_CHECKOUT.test(step.run)) {
           const line = step.run.split("\n").find((l) => RUN_CHECKOUT.test(l))!;
-          evidence.push({ path: workflow.path, line: step.line, excerpt: excerptOf(line) });
+          evidence.push({ path: workflow.path, line: step.line, excerpt: excerptOf(line, workflow.path) });
         }
       }
     }

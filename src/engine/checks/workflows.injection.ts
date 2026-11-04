@@ -33,7 +33,11 @@ export const workflowsInjection: Check = {
       for (const step of workflow.steps) {
         (step.run ?? "").split("\n").forEach((text, i) => {
           if ([...text.matchAll(EXPRESSION)].some((m) => STRANGER.test(m[1]!))) {
-            evidence.push({ path: workflow.path, line: lineInRun(step, i), excerpt: excerptOf(text) });
+            evidence.push({
+              path: workflow.path,
+              line: lineInRun(step, i),
+              excerpt: excerptOf(text, workflow.path),
+            });
           }
         });
       }

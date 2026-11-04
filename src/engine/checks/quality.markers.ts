@@ -82,7 +82,7 @@ export const qualityMarkers: Check = {
           evidence.push({
             path,
             line: i + 1,
-            excerpt: excerptOf(text),
+            excerpt: excerptOf(text, path),
             rule: marker[1]!,
             ...(isMarked(text) ? { marked: true as const } : {}),
           });

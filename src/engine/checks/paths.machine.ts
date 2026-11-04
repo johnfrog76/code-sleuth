@@ -50,7 +50,7 @@ export const pathsMachine: Check = {
         evidence.push({
           path,
           line: i + 1,
-          excerpt: excerptOf(text),
+          excerpt: excerptOf(text, path),
           ...(isMarked(text) ? { marked: true as const } : {}),
         });
       });

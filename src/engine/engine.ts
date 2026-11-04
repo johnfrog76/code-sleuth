@@ -146,6 +146,9 @@ export function runCheck(
  * leaves a check, so no evidence reaches a case, a card or a polish request unmasked.
  */
 export function masked(result: Result): Result {
+  // A reason can quote the repository too: a file's name, a manifest's license field.
+  if (result.verdict === "not-investigated")
+    return { verdict: "not-investigated", reason: maskSecrets(result.reason, "") };
   if (result.verdict !== "found") return result;
   return {
     verdict: "found",

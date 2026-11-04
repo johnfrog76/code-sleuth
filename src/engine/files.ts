@@ -1,4 +1,5 @@
 import type { RepoReader } from "./repo.js";
+import { maskSecrets } from "./secrets/scan.js";
 
 /**
  * The first file, in folder order, directly in one of `folders` whose name starts with `prefix`, ignoring
@@ -24,10 +25,13 @@ export const COMMUNITY_FOLDERS: readonly string[] = ["", ".github", "docs"];
 /** The longest excerpt a finding keeps. */
 export const EXCERPT_LIMIT = 160;
 
-/** A line, trimmed and cut to the excerpt limit. */
-export function excerptOf(text: string): string {
-  const trimmed = text.trim();
-  return trimmed.length <= EXCERPT_LIMIT ? trimmed : `${trimmed.slice(0, EXCERPT_LIMIT)}...`;
+/**
+ * A line, trimmed, masked, then cut to the excerpt limit. Masked first: a secret the cut would split no longer
+ * matches its rule, and would go out with most of it in clear.
+ */
+export function excerptOf(text: string, path: string): string {
+  const masked = maskSecrets(text.trim(), path);
+  return masked.length <= EXCERPT_LIMIT ? masked : `${masked.slice(0, EXCERPT_LIMIT)}...`;
 }
 
 /** A text file's lines, or none for a binary file. */

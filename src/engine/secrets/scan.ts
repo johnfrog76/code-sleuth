@@ -19,8 +19,12 @@ export interface SecretMatch {
   index: number;
 }
 
-/** Every rule's matches in one line. A value a known-shape rule matched is not matched again as a guess. */
-export function matchLine(text: string, path: string): SecretMatch[] {
+/**
+ * Every rule's matches in one line. A value a known-shape rule matched is not matched again as a guess, as
+ * evidence; `forMasking` keeps those guesses too, since a guess can run past the known match's end, and what
+ * runs past would otherwise stay in clear.
+ */
+export function matchLine(text: string, path: string, forMasking = false): SecretMatch[] {
   const matches: SecretMatch[] = [];
   const lockfile = LOCKFILES.has(path.split("/").at(-1)!);
   for (const { rule, regex } of compiled) {
@@ -31,7 +35,8 @@ export function matchLine(text: string, path: string): SecretMatch[] {
       if (value === undefined || value === "") continue;
       const index = m.index + m[0].lastIndexOf(value);
       if (rule.nameGuess && (!looksRandom(value) || !isLiteral(text, index, value))) continue;
-      if (rule.nameGuess && matches.some((known) => overlaps(known, index, value.length))) continue;
+      if (rule.nameGuess && !forMasking && matches.some((known) => overlaps(known, index, value.length)))
+        continue;
       matches.push({ rule, value, index });
     }
   }
@@ -48,16 +53,40 @@ export function mask(value: string): string {
  * already-masked value (`ghp_****9f`) matches no rule, so masking twice changes nothing.
  */
 export function maskSecrets(text: string, path: string): string {
-  const matches = matchLine(text, path);
+  const matches = matchLine(text, path, true);
   if (matches.length === 0) return text;
   let masked = "";
   let at = 0;
-  for (const m of matches) {
-    if (m.index < at) continue;
-    masked += text.slice(at, m.index) + (m.rule.marker ? m.value : mask(m.value));
-    at = m.index + m.value.length;
+  for (const span of spans(matches)) {
+    masked += text.slice(at, span.start) + span.shown(text);
+    at = span.end;
   }
   return masked + text.slice(at);
+}
+
+/**
+ * The matches as spans of the line, overlapping ones merged: each span is masked whole, so a value that runs
+ * past the end of another (an access key id, then its secret) never keeps its tail in clear. A span that is one
+ * marker match alone (a private key's header) is shown as it is.
+ */
+function spans(
+  matches: readonly SecretMatch[],
+): { start: number; end: number; shown: (text: string) => string }[] {
+  const sorted = [...matches].sort((a, b) => a.index - b.index);
+  const merged: { start: number; end: number; marker: boolean }[] = [];
+  for (const m of sorted) {
+    const end = m.index + m.value.length;
+    const last = merged.at(-1);
+    if (last !== undefined && m.index < last.end) {
+      last.end = Math.max(last.end, end);
+      last.marker = false;
+    } else merged.push({ start: m.index, end, marker: m.rule.marker === true });
+  }
+  return merged.map(({ start, end, marker }) => ({
+    start,
+    end,
+    shown: (text: string) => (marker ? text.slice(start, end) : mask(text.slice(start, end))),
+  }));
 }
 
 /** The line with every value in it masked, trimmed, and cut to a window around the first match. */
@@ -65,12 +94,11 @@ export function maskedExcerpt(text: string, matches: readonly SecretMatch[]): st
   let masked = "";
   let at = 0;
   let first = -1;
-  for (const m of matches) {
-    if (m.index < at) continue;
-    masked += text.slice(at, m.index);
+  for (const span of spans(matches)) {
+    masked += text.slice(at, span.start);
     if (first < 0) first = masked.length;
-    masked += m.rule.marker ? m.value : mask(m.value);
-    at = m.index + m.value.length;
+    masked += span.shown(text);
+    at = span.end;
   }
   masked += text.slice(at);
   const lead = masked.length - masked.trimStart().length;
@@ -102,7 +130,7 @@ export function scanLine(
   const { commit } = options;
   const matches = matchLine(text, path);
   if (matches.length === 0) return [];
-  const excerpt = maskedExcerpt(text, matches);
+  const excerpt = maskedExcerpt(text, matchLine(text, path, true));
   const marked = isMarked(text);
   return matches.map((m) => {
     const weighed = m.rule.nameGuess ? "name-guess" : undefined;

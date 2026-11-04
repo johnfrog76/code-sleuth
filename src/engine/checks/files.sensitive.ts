@@ -31,10 +31,13 @@ export const filesSensitive: Check = {
       }
       if (name !== ".npmrc" || repo.isBinary(path)) continue;
       (repo.readText(path) ?? "").split(/\r?\n/).forEach((text, i) => {
-        const value = AUTH_TOKEN.exec(text)?.[1];
+        const found = AUTH_TOKEN.exec(text);
+        const value = found?.[1];
         // `_authToken=${NPM_TOKEN}` reads the token from the environment, which is the fix, not the finding.
-        if (value === undefined || value.startsWith("${")) return;
-        const excerpt = text.replace(value, mask(value)).trim();
+        if (found === null || value === undefined || value.startsWith("${")) return;
+        // Spliced at the token's own place, never through replace(): a `$&` in the mask would paste the value back.
+        const at = found.index + found[0].lastIndexOf(value);
+        const excerpt = (text.slice(0, at) + mask(value) + text.slice(at + value.length)).trim();
         evidence.push({
           path,
           line: i + 1,
