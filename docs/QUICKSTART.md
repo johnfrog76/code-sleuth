@@ -11,7 +11,8 @@ never writes to it.
   or with a version manager: [nvm](https://github.com/nvm-sh/nvm) on macOS and Linux (`nvm install` in the
   clone reads `.nvmrc`), [nvm-windows](https://github.com/coreybutler/nvm-windows) on Windows
   (`nvm install 24`, then `nvm use 24`).
-- **git**, for the history checks. Without it, `secrets.history` reads *not investigated* and says why, and
+- **git 2.31 or newer**, for the history checks. An older git is refused, since it would ignore the settings
+  that keep a repository from running its own commands. Without git, `secrets.history` reads *not investigated* and says why, and
   `names.deny` reads the files but not the commit messages, and says so when the files are clean.
 
 Code Sleuth is not on npm yet. You run it from a clone.

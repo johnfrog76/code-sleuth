@@ -21,6 +21,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Fixed
 
+- A repository can no longer have Code Sleuth's `git status` run a filter through a submodule, or through a filter named with an `=`. `status` read into each submodule, whose own config can name a filter; it no longer reads into one, so a change inside a submodule no longer marks the repository dirty. A setting given with `-c` is split at its first `=`, so a driver named `a=b` was never turned off; every setting now goes through git's `GIT_CONFIG_KEY_<n>` variables, which take the key whole. A git older than 2.31, which would ignore those variables without a word, is refused: one `Error:` line and one `Hint:` line, before the repository is read.
 - Every folder Code Sleuth writes to goes through one guard. A repository that holds Code Sleuth's own folder, as `code-sleuth ~ --out elsewhere` does, is refused when npm would run, since npm keeps its cache and logs there.
 - git's `fd`, `ftp` and `ftps` transports, and any `git-remote-<name>` helper on the machine, are turned off by name too.
 - The case file keeps the `.env.example` to copy as a record (`keyExample`), not a line with a quoted `~` that would not run; the terminal still prints the line to run.

@@ -37,8 +37,9 @@ of them is a security problem:
   the dependency lookups, which `--offline` turns off, and the polish request you asked for with `--polish`
   ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)).
 - Text from the repository never reaches a shell as a command. A repository's own git configuration can name
-  commands too (a file-system monitor, a filter, a signature program, a hook); Code Sleuth turns off the ones
-  its read-only git calls could reach, on every call.
+  commands too (a file-system monitor, a filter, a signature program, a hook), and so can a submodule's; Code
+  Sleuth turns off the ones its read-only git calls could reach, on every call, and never reads into a
+  submodule.
 - git never reaches the network on Code Sleuth's behalf. Every git call turns off each transport by name, which
   outranks the repository's own config, and lazy fetching, so a partial clone's missing objects are never
   fetched from its remote.

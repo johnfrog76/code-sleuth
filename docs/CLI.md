@@ -60,6 +60,7 @@ before any check runs and before anything is written.
 | an unknown flag, or an argument it does not take | `--nope`, `code-sleuth a b` | yes |
 | a URL in place of a folder | `https://...` or `git@host:...`; the hint says to clone it | yes |
 | a folder it cannot find, a file in place of a folder, or a folder it cannot read | | yes |
+| a git older than 2.31 | it would ignore the settings that keep a repository from running its own commands | yes |
 | an unknown goal, or a goal not ready yet | `--goal nope`; `--goal security` | yes |
 | no goal and no terminal to ask in | a script without `--goal` | yes |
 | an answer that is not one of the choices | at the goal prompt | yes |

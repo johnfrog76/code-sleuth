@@ -1,4 +1,6 @@
+import { Refusal } from "../refusal.js";
 import { spawnChild } from "../spawn.js";
+import { gitTooOld, gitTooOldHint } from "./copy.js";
 import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
 import { delimiter, join, resolve, sep } from "node:path";
 
@@ -231,20 +233,39 @@ export const GIT_SAFE_CONFIG: readonly string[] = [
   `core.hooksPath=${process.platform === "win32" ? "NUL" : "/dev/null"}`,
   "core.pager=cat",
   "diff.external=",
+  // A submodule is a repository of its own, with its own config: git status would descend into it and run its
+  // filters. Code Sleuth never reads into one (status is told so too, in git()), and a diff never opens one.
+  "submodule.recurse=false",
+  "diff.ignoreSubmodules=all",
+  "diff.submodule=short",
+  "status.submoduleSummary=false",
 ];
 
-function gitEnv(): NodeJS.ProcessEnv {
+/**
+ * git's environment, with each setting given as `GIT_CONFIG_KEY_<n>` and `GIT_CONFIG_VALUE_<n>`. They rank with
+ * `-c` above the repository's own config, and a key is never split at an `=`: `-c filter.a=b.clean=` would set
+ * `filter.a`, and leave a driver named `a=b` running.
+ */
+export function gitEnv(config: readonly string[] = []): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: "0", GIT_NO_LAZY_FETCH: "1" };
+  for (const name of Object.keys(env))
+    if (/^GIT_CONFIG_(?:COUNT|KEY_\d+|VALUE_\d+|PARAMETERS)$/i.test(name)) delete env[name];
   for (const name of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CEILING_DIRECTORIES"])
     delete env[name];
+  config.forEach((setting, n) => {
+    // A key may hold an `=` (a driver's name is the repository's to choose); a value Code Sleuth sets never does.
+    const split = setting.lastIndexOf("=");
+    env[`GIT_CONFIG_KEY_${n}`] = setting.slice(0, split);
+    env[`GIT_CONFIG_VALUE_${n}`] = setting.slice(split + 1);
+  });
+  env.GIT_CONFIG_COUNT = String(config.length);
   return env;
 }
 
 function spawnGit(root: string, config: readonly string[], args: readonly string[]) {
-  const flags = config.flatMap((setting) => ["-c", setting]);
-  return spawnChild("git", [...flags, ...args], {
+  return spawnChild("git", [...args], {
     cwd: root,
-    env: gitEnv(),
+    env: gitEnv(config),
     encoding: "buffer",
     maxBuffer: 1024 * 1024 * 1024,
   });
@@ -282,8 +303,44 @@ function filtersOff(root: string): readonly string[] {
  * `git` in the root, with an argument array, none of the variables that would point it elsewhere, and none of the
  * settings that would have it run a command the repository chose.
  */
+/** The first git that takes settings from GIT_CONFIG_COUNT, GIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n>. */
+export const GIT_ENV_CONFIG_SINCE: readonly [number, number] = [2, 31];
+
+/** `git version 2.39.3 (Apple Git-145)` -> [2, 39, "2.39.3"]; undefined for anything else. */
+export function parseGitVersion(text: string): { major: number; minor: number; shown: string } | undefined {
+  const match = /^git version (\d+)\.(\d+)(\S*)/.exec(text.trim());
+  return match
+    ? { major: Number(match[1]), minor: Number(match[2]), shown: `${match[1]}.${match[2]}${match[3]}` }
+    : undefined;
+}
+
+/** Whether this git version takes settings from the environment. */
+export function takesEnvConfig(version: { major: number; minor: number }): boolean {
+  const [major, minor] = GIT_ENV_CONFIG_SINCE;
+  return version.major > major || (version.major === major && version.minor >= minor);
+}
+
+let gitChecked = false;
+
+/**
+ * Refuses a git older than 2.31 before it reads the repository: it would ignore every GIT_CONFIG_KEY_<n>
+ * setting without a word, leaving the repository's own commands on. Asked once; a git that does not answer is no
+ * git, and reads as before.
+ */
+function refuseOldGit(): void {
+  if (gitChecked) return;
+  const answer = spawnChild("git", ["--version"], { env: gitEnv(), encoding: "utf8" });
+  const version = answer.status === 0 ? parseGitVersion(answer.stdout) : undefined;
+  if (version !== undefined && !takesEnvConfig(version))
+    throw new Refusal(gitTooOld(version.shown), gitTooOldHint);
+  gitChecked = true;
+}
+
 export function git(root: string, args: readonly string[]) {
-  return spawnGit(root, [...gitSafeConfig(), ...filtersOff(root)], args);
+  refuseOldGit();
+  // status is the one read that would descend into a submodule; told not to, it never reads one's config.
+  const read = args[0] === "status" ? ["status", "--ignore-submodules=all", ...args.slice(1)] : args;
+  return spawnGit(root, [...gitSafeConfig(), ...filtersOff(root)], read);
 }
 
 /** A partial clone names a promisor remote, or the older extension. Reading the config runs nothing. */

@@ -275,6 +275,11 @@ export const outdatedReasons = {
   unreadableLockfile: (lockfile: string) => `${lockfile} is not JSON I can read.`,
 };
 
+/** The refusal for a git too old to take its safe settings from GIT_CONFIG_KEY_<n>, which it would ignore. */
+export const gitTooOld = (version: string) =>
+  `git ${version} is too old for me: it would ignore the settings that keep a repository from running its own commands.`;
+export const gitTooOldHint = "Install git 2.31 or newer, then run me again.";
+
 /** Why the history could not be read, though git is there. */
 export const historyPartial =
   "This is a partial clone: some of the history isn't here, and I don't fetch it. Run me on a full clone to read it.";

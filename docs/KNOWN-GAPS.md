@@ -39,12 +39,13 @@ to read wrong, and what has not been proven, with what you see when you hit each
 ## Not proven yet
 
 - **Commands named in a repository's git configuration.** Every git call that reads the repository turns off the file-system
-  monitor, every filter driver (including one from an included config file), the signature program, hooks, the
-  pager and an external diff. Other settings that name commands -- a credential helper, an SSH command, a proxy
+  monitor, every filter driver (including one from an included config file, and one whose name holds an `=`),
+  the signature program, hooks, the pager and an external diff, and never reads into a submodule, which has a
+  config of its own. Other settings that name commands -- a credential helper, an SSH command, a proxy
   -- are used only when git talks to a remote, and Code Sleuth's git calls never do: every one turns off each
   transport by name (`protocol.<name>.allow=never` for git's own -- `file`, `git`, `ssh`, `http`, `https`, `ext`,
-  `fd`, `ftp`, `ftps` -- and every `git-remote-<name>` helper in git's exec-path or on the PATH, on the command
-  line, which outranks the repository's own config) and lazy fetching (`GIT_NO_LAZY_FETCH`), so a partial
+  `fd`, `ftp`, `ftps` -- and every `git-remote-<name>` helper in git's exec-path or on the PATH, set through
+  git's own `GIT_CONFIG_KEY_<n>` variables, which outrank the repository's own config) and lazy fetching (`GIT_NO_LAZY_FETCH`), so a partial
   clone's missing objects stay missing, and `secrets.history` says the history was not read
   ([CHECKS.md](CHECKS.md#secretshistory-secrets-in-the-history)).
 

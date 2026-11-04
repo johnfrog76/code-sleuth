@@ -1,5 +1,13 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -7,7 +15,15 @@ import { readRepoInfo } from "../src/case/repoInfo.js";
 import { CHECKS } from "../src/engine/checks/index.js";
 import { historyPartial, historyUnreadable } from "../src/engine/copy.js";
 import { runCheck, secretHasher } from "../src/engine/engine.js";
-import { GIT_SAFE_CONFIG, git, gitSafeConfig, helperNamesIn, openRepo } from "../src/engine/repo.js";
+import {
+  GIT_SAFE_CONFIG,
+  git,
+  gitSafeConfig,
+  helperNamesIn,
+  openRepo,
+  parseGitVersion,
+  takesEnvConfig,
+} from "../src/engine/repo.js";
 import { withScratch } from "./helpers/scratch.js";
 
 const SRC = fileURLToPath(new URL("../src", import.meta.url));
@@ -44,6 +60,25 @@ function readEverything(root: string) {
 
 const touch = (marker: string) => `touch '${marker}'`;
 
+/** A submodule whose own config names a filter, and a file whose stat is newer than its index. Built once. */
+function submoduleWithFilter(root: string, marker: string): void {
+  const source = join(root, "..", "sub-source");
+  if (!existsSync(source)) {
+    mkdirSync(source);
+    const run = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, stdio: "ignore" });
+    run(source, "init", "-q");
+    writeFileSync(join(source, ".gitattributes"), "* filter=sly\n");
+    writeFileSync(join(source, "b.txt"), "one\n");
+    run(source, "add", ".");
+    run(source, "-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-qm", "one");
+    run(root, "-c", "protocol.file.allow=always", "submodule", "add", "-q", source, "sub");
+    config(join(root, "sub"), "filter.sly.clean", `sh -c "${touch(marker)}; cat"`);
+  }
+  // Newer than the index holds, so status must look again, and would clean the file through the filter.
+  const later = new Date(Date.now() + 60_000);
+  utimesSync(join(root, "sub", "b.txt"), later, later);
+}
+
 const ROWS: [string, (root: string, marker: string) => void][] = [
   ["a file-system monitor", (root, marker) => config(root, "core.fsmonitor", `${touch(marker)}; false`)],
   [
@@ -78,6 +113,21 @@ const ROWS: [string, (root: string, marker: string) => void][] = [
         `[filter "sly.two"]\n\tclean = "sh -c 'touch ${marker}; cat'"\n`,
       );
       config(root, "include.path", "extra.cfg");
+    },
+  ],
+  [
+    "a filter whose name holds an =, which a -c setting would split",
+    (root, marker) => {
+      writeFileSync(join(root, ".gitattributes"), "* filter=a=b\n");
+      config(root, "filter.a=b.clean", `sh -c "${touch(marker)}; cat"`);
+    },
+  ],
+  ["a filter named in a submodule's own config", (root, marker) => submoduleWithFilter(root, marker)],
+  [
+    "a filter in a submodule the repository's config says to look into (submodule.<name>.ignore=none)",
+    (root, marker) => {
+      submoduleWithFilter(root, marker);
+      config(root, "submodule.sub.ignore", "none");
     },
   ],
   [
@@ -288,5 +338,75 @@ describe("git never runs a command the investigated repository chose", () => {
           expect(helperNamesIn([folder, join(folder, "missing")])).toEqual(["sly"]);
         }),
     );
+  });
+});
+
+describe("a git too old to take its settings from the environment", () => {
+  const MAIN = fileURLToPath(new URL("../dist/cli/main.js", import.meta.url));
+
+  /** A git that answers --version as `version` and passes everything else to the real git, logging each call. */
+  function oldGit(folder: string, version: string) {
+    const bin = join(folder, "git-bin");
+    mkdirSync(bin);
+    const real = execFileSync("sh", ["-c", "command -v git"]).toString().trim();
+    const log = join(folder, "git-calls.log");
+    writeFileSync(
+      join(bin, "git"),
+      `#!/bin/sh\necho "$*" >> '${log}'\nif [ "$1" = "--version" ]; then echo "git version ${version}"; exit 0; fi\nexec '${real}' "$@"\n`,
+    );
+    chmodSync(join(bin, "git"), 0o755);
+    return { bin, calls: () => (existsSync(log) ? readFileSync(log, "utf8").trim().split("\n") : []) };
+  }
+
+  function runWith(folder: string, version: string) {
+    const { root } = repoWith(folder, () => {});
+    const stub = oldGit(folder, version);
+    const result = spawnSync(
+      process.execPath,
+      [MAIN, root, "--goal", "public", "--offline", "--out", join(folder, "cases")],
+      { env: { ...process.env, PATH: `${stub.bin}:${process.env.PATH ?? ""}` }, encoding: "utf8" },
+    );
+    return { result, calls: stub.calls() };
+  }
+
+  it.skipIf(process.platform === "win32")("refuses git 2.30, and asks it nothing but its version", () =>
+    withScratch((folder) => {
+      const { result, calls } = runWith(folder, "2.30.9");
+      expect(result.status).toBe(2);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toBe(
+        "Error: git 2.30.9 is too old for me: it would ignore the settings that keep a repository from running its own commands.\n" +
+          "Hint: Install git 2.31 or newer, then run me again.\n",
+      );
+      expect(calls).toEqual(["--version"]);
+    }),
+  );
+
+  it.skipIf(process.platform === "win32").each(["2.31.0", "2.56.0 (Apple Git-200)", "3.0.0"])(
+    "investigates with git %s",
+    (version) =>
+      withScratch((folder) => {
+        const { result, calls } = runWith(folder, version);
+        expect(result.status).toBe(0);
+        expect(calls.length).toBeGreaterThan(1);
+      }),
+  );
+
+  it("reads a version only from git's own answer", () => {
+    expect(parseGitVersion("git version 2.39.3 (Apple Git-145)")).toEqual({
+      major: 2,
+      minor: 39,
+      shown: "2.39.3",
+    });
+    expect(parseGitVersion("git version 2.45.1.windows.1")).toEqual({
+      major: 2,
+      minor: 45,
+      shown: "2.45.1.windows.1",
+    });
+    expect(parseGitVersion("hub version 2.14")).toBeUndefined();
+    expect(takesEnvConfig({ major: 2, minor: 30 })).toBe(false);
+    expect(takesEnvConfig({ major: 2, minor: 31 })).toBe(true);
+    expect(takesEnvConfig({ major: 3, minor: 0 })).toBe(true);
+    expect(takesEnvConfig({ major: 1, minor: 99 })).toBe(false);
   });
 });
