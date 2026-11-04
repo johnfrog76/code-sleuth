@@ -56,6 +56,12 @@ to read wrong, and what has not been proven, with what you see when you hit each
   runs npm's own `npm-cli.js` under Node where it is found beside it. Where it is not, `deps.outdated` reads
   *not investigated*, and `deps.advisories` asks `gh` instead, or reads *not investigated* too. None of this
   has run on Windows yet: CI runs on Linux only, and Windows CI is planned for a later release.
+- **A ToolKit that runs a native program under Stop, on Windows PowerShell 5.1.** A program ToolKit runs (git)
+  can write to stderr on the way to a card it files. `handoff.ps1` reads the verb's error stream to tell a
+  failure from that, and sets its own scope to `Continue`. But under 5.1 a native program's stderr in a
+  redirected call is an error record, and inside a ToolKit script that sets `$ErrorActionPreference` to `Stop`
+  it throws: the card is made, the hand-off reads it as failed, and the next run files it again. Unproven until
+  the hand-off runs under 5.1.
 - **Windows.** The suite has not run on Windows, and neither has the ToolKit hand-off. A test holds `handoff.ps1`
   free of the newer syntax Windows PowerShell 5.1 cannot parse (`??`, `?.`, a ternary, `&&` and `||` chains,
   `-AsHashtable`), but it has not run under 5.1, and a `Restricted` execution

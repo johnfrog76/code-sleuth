@@ -26,6 +26,14 @@ param(
     [string]$ModuleRoot
 )
 
+# This script's own errors decide nothing by preference: an error the verb writes is read from its stream below.
+# Set here, so a shell or profile default of Stop never changes how this script reads one.
+$ErrorActionPreference = 'Continue'
+
+# ToolKit's marker for a caller that is not a person at a terminal: it silences the first-run banner, and has
+# ToolKit's guard throw a stated refusal or failure, rather than only setting $LASTEXITCODE and returning.
+$env:TOOLKIT_QUIET_STARTUP = '1'
+
 if ($ModuleRoot) {
     $env:PSModulePath = $ModuleRoot
 }
@@ -90,12 +98,30 @@ if ($Probe) {
     exit 0
 }
 
+# The verb's own outcome, read by ToolKit's own contract (its AGENTS.md, "The refusal contract"). ToolKit's
+# guard leaves $LASTEXITCODE as the verb's outcome: 0 success, 2 a stated refusal (it has printed Error: and
+# Hint:), anything else a failure. With TOOLKIT_QUIET_STARTUP set, as above, the guard also throws a refusal or
+# a failure, with $LASTEXITCODE set first. An error ToolKit writes and does not handle comes through its error
+# stream, and is a failure though nothing throws; a native program's stderr (git) comes through as a
+# RemoteException record, and is passed on as text.
+$verbErrors = 0
+$global:LASTEXITCODE = 0
 try {
-    & $verb -Title $Title -Type $Type -Description $Description
+    & $verb -Title $Title -Type $Type -Description $Description 2>&1 | ForEach-Object {
+        if ($_ -is [System.Management.Automation.ErrorRecord]) {
+            [Console]::Error.WriteLine($_.ToString())
+            if (-not ($_.Exception -is [System.Management.Automation.RemoteException])) { $verbErrors = $verbErrors + 1 }
+        }
+        else { $_ }
+    }
 }
 catch {
     [Console]::Error.WriteLine($_.Exception.Message)
+    if ($LASTEXITCODE -eq 2) { exit 2 }
     exit 1
 }
-if ($null -eq $LASTEXITCODE) { exit 0 }
-exit $LASTEXITCODE
+if ($verbErrors -gt 0) { exit 1 }
+# A ToolKit that states a refusal and returns, without throwing: its $LASTEXITCODE says so all the same.
+if ($LASTEXITCODE -eq 2) { exit 2 }
+if ($LASTEXITCODE) { exit 1 }
+exit 0

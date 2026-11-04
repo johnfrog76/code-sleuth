@@ -52,6 +52,13 @@ File 5 cards in ToolKit, in the Space 'widget'? [y/N]
 are filed one at a time, in the case's order. The first refusal stops the batch: the cards before it stay
 filed, ToolKit's refusal is shown on the ToolKit line and as the run's `Error:` line, and the run exits 2.
 
+What counts is ToolKit's own outcome, read by its refusal contract: its guard leaves `$LASTEXITCODE` at 0 for
+success, 2 for a refusal it stated, and anything else for a failure. The hand-off sets `TOOLKIT_QUIET_STARTUP`,
+ToolKit's marker for a caller that is not a person at a terminal, so the guard also throws a refusal or a
+failure, and the first-run banner stays quiet. An error ToolKit writes and does not handle is a failure too,
+though nothing throws, and that card goes on no ledger. A program ToolKit runs along the way, git among them,
+can write to stderr without changing the outcome: its stderr is passed on as text.
+
 ## One check, one card
 
 `filed.json`, beside the repository's cases, records each filed check: the check, ToolKit's card id, the Space,
