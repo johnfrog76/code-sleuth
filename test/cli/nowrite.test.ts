@@ -130,6 +130,7 @@ describe("a whole run writes nothing into the repository", () => {
         ),
       )
       .sort();
-    expect(writers).toEqual(["case/folder.ts", "case/write.ts", "toolkit/ledger.ts"]);
+    // engine/npm.ts writes only in npm's own folder, which the guard holds outside the repository.
+    expect(writers).toEqual(["case/folder.ts", "case/write.ts", "engine/npm.ts", "toolkit/ledger.ts"]);
   });
 });

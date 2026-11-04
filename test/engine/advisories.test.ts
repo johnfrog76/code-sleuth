@@ -110,7 +110,7 @@ describe("deps.advisories through npm audit", () => {
     }
   });
 
-  it("is clean when the report finds nothing, after one npm audit --json in the repository", () => {
+  it("is clean when the report finds nothing, after one npm audit --json on a copy of the project", () => {
     const { result, npmCalls } = run(app);
     expect(result).toEqual({ verdict: "clean" });
     expect(npmCalls).toHaveLength(1);

@@ -33,7 +33,9 @@ npm run lint     # type check, ESLint and Prettier
   command's own default is set by `src/cli/main.ts`, and its one test runs it with a scratch home.
 - **No network.** The polish client is stubbed, or given a fake `fetch`; ToolKit is a stub shell on a test-only
   PATH, and so are npm and gh (`test/helpers/npm.ts`), which log each call and answer from a scenario. A run
-  given no PATH finds neither, so no other test can reach a registry or GitHub.
+  given no PATH finds neither, so no other test can reach a registry or GitHub. The one test of a hostile
+  `.npmrc` runs the real npm against two listeners on `127.0.0.1`, with a scratch user config that names one of
+  them as the registry: nothing leaves the machine.
 - **No real secrets.** Test secrets are assembled from pieces at test time (`test/helpers/secrets.ts`), so
   nothing committed matches a secret rule.
 

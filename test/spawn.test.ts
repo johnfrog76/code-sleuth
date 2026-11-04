@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -44,6 +44,7 @@ describe("the model key never reaches a child process", () => {
   it.skipIf(process.platform === "win32")("never reaches npm, with the key in the environment", () =>
     withScratch((folder) => {
       const npm = stubNpm(folder);
+      writeFileSync(join(folder, "package.json"), "{}");
       findNpm({ ...npm.env, [KEY_VARIABLE]: FAKE_KEY })!.run(["outdated", "--json", "--long"], folder);
       expect(npm.calls()).toHaveLength(1);
       expect(npm.calls()[0]!.key).toBeNull();
@@ -53,6 +54,7 @@ describe("the model key never reaches a child process", () => {
   it.skipIf(process.platform === "win32")("never reaches a child in another casing either", () =>
     withScratch((folder) => {
       const npm = stubNpm(folder);
+      writeFileSync(join(folder, "package.json"), "{}");
       findNpm({ ...npm.env, anthropic_api_key: FAKE_KEY })!.run(["outdated", "--json", "--long"], folder);
       expect(npm.calls()).toHaveLength(1);
       expect(npm.calls()[0]!.lowerKey).toBeNull();

@@ -34,7 +34,12 @@ Some are set or cleared by Code Sleuth itself for the processes it starts, never
 - `npm_config_update_notifier=false` and `npm_config_fund=false` are set for npm, and `GH_PROMPT_DISABLED=1`
   and `GH_NO_UPDATE_NOTIFIER=1` for gh, so neither prints a notice or asks a question.
 - `npm_config_cache` and `npm_config_logs_dir` are set for npm, to `npm/` in Code Sleuth's own folder
-  ([below](#code-sleuths-own-folder)), so a repository's `.npmrc` cannot have npm write into the repository.
+  ([below](#code-sleuths-own-folder)).
+- npm runs on a copy of the repository's `package.json` and lockfile, in a fresh folder under `npm/` that is
+  removed after, never in the repository. A repository's `.npmrc` is never read, so it cannot point npm at a
+  registry or a proxy of its choosing, have your token sent there, or put one of your variables in a URL.
+- npm sees only the variables it needs: the PATH, the home and temporary folders, the locale, proxies and
+  certificates, your own `npm_config_*` settings, and each variable your own `.npmrc` names as `${NAME}`.
 
 **Deliberately not read:** `ANTHROPIC_BASE_URL`. The polish request always goes to
 `https://api.anthropic.com/v1/messages`. Nor are `ANTHROPIC_AUTH_TOKEN` or saved credential profiles.
@@ -52,7 +57,7 @@ call but the polish request, which only `--polish` turns on.
 
 | Call | Made by | When | What is sent |
 | --- | --- | --- | --- |
-| `npm outdated --json --long` | `deps.outdated` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` or `npm-shrinkwrap.json` | package names, to npm's configured registry. npm's own configuration decides where that is (`.npmrc`, a scoped or private registry), and Code Sleuth leaves it alone. Never a file's contents, the repository's path or its URL |
+| `npm outdated --json --long` | `deps.outdated` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` or `npm-shrinkwrap.json` | package names, to npm's configured registry. Your own npm configuration decides where that is (your `.npmrc`, a scoped or private registry), and Code Sleuth leaves it alone; the repository's `.npmrc` is never read. Never a file's contents, the repository's path or its URL |
 | `npm audit --json` | `deps.advisories` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` or `npm-shrinkwrap.json` | what `npm audit` always sends to npm's configured registry: the lockfile's dependency tree, every locked package's name and version. Never a file's contents, the repository's path or its URL |
 | `gh api /advisories` | `deps.advisories` | no npm, `gh` found, not `--offline`, and the same lockfile | the ecosystem (`npm`) and every locked package's name and version, to GitHub, in batches of fifty. Which advisory belongs to which locked version is worked out on the machine |
 | the polish request | `--polish` | an API key, from the environment or Code Sleuth's `.env` | each card's text, already masked, to `https://api.anthropic.com/v1/messages` ([POLISH.md](POLISH.md)) |
@@ -82,8 +87,8 @@ macOS, `$XDG_DATA_HOME/code-sleuth` or `~/.local/share/code-sleuth` on Linux, `%
 Windows). That folder also holds the one `.env` Code Sleuth reads, for the API key
 ([POLISH.md](POLISH.md#where-the-api-key-goes)). `--out` moves the cases, never the `.env`.
 
-It also holds `npm/`, npm's cache and logs for the lookups Code Sleuth runs. npm would otherwise write them
-where its configuration says, and a repository's own `.npmrc` can say inside the repository. A cache of its own
+It also holds `npm/`, npm's cache and logs for the lookups Code Sleuth runs, and for each lookup a short-lived
+copy of the project's `package.json` and lockfile, which npm reads in place of the repository. A cache of its own
 makes the first lookup on a machine a little slower than one through your usual npm cache. A
 repository that holds this folder is refused when npm would run, as one that holds the cases folder is.
 

@@ -263,8 +263,9 @@ A check that reads a `package.json` reads **not investigated** when that file is
   since that would call GitHub: a `gh` that is not reads not investigated with the reason
 - **Sends:** through `npm audit`, what it always sends to npm's configured registry: the lockfile's
   dependency tree, the package names and versions in it. Through `gh`, the package names and versions, to
-  GitHub, in batches of fifty. Nothing else from the files, and never the repository's path; npm's own `.npmrc`
-  settings, its auth included, still apply. `--offline` turns it off, and the run's header names it before it
+  GitHub, in batches of fifty. Nothing else from the files, and never the repository's path. npm runs on a copy of
+  `package.json` and the lockfile in Code Sleuth's own folder, so the repository's `.npmrc` is never read; your
+  own npm settings, your auth among them, still apply. `--offline` turns it off, and the run's header names it before it
   runs
 - **Reads clean** with no `package.json` at the root, or none with dependencies, and no other ecosystem's manifest, and makes
   no call (with `--offline`, it reads not investigated even then). **Not investigated** with no npm lockfile, with another package manager's lockfile, with `--offline`,
@@ -289,9 +290,9 @@ A check that reads a `package.json` reads **not investigated** when that file is
   counts, as npm's caret does). The evidence lists each one; the check counts once
 - **Needs:** `npm`, `network`
 - **Sends:** package names, read from `package.json`, to npm's configured registry, the one `npm outdated` asks.
-  Nothing else from the files, and never the repository's path; npm's own `.npmrc` settings, its auth included,
-  still apply. It leaves npm's registry settings (`.npmrc`, a scoped or private registry)
-  alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
+  Nothing else from the files, and never the repository's path. npm runs on a copy of `package.json` and the
+  lockfile in Code Sleuth's own folder, so the repository's `.npmrc` is never read. It leaves your own npm
+  registry settings (your `.npmrc`, a scoped or private registry) alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
 - **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest, and
   makes no call, when npm is found and the run is not `--offline`; **not investigated** with no lockfile, a lockfile from another package manager, no npm,
   `--offline`, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))

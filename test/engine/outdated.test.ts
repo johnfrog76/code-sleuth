@@ -82,7 +82,7 @@ describe("deps.outdated", () => {
     });
   });
 
-  it("asks npm once, in the repository, with names only: no path, no file, no URL in its arguments", () => {
+  it("asks npm once, on a copy of the project, with names only: no path, no file, no URL in its arguments", () => {
     const { calls } = run(app, { outdated: {} });
     expect(calls).toHaveLength(1);
     expect(calls[0]!.argv).toEqual(["outdated", "--json", "--long"]);

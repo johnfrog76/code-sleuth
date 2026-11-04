@@ -35,7 +35,9 @@ of them is a security problem:
   starts.
 - It sends nothing over the network except the calls the run names on its `Out` line before it makes them:
   the dependency lookups, which `--offline` turns off, and the polish request you asked for with `--polish`
-  ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)).
+  ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)). npm runs on a copy of the project's
+  `package.json` and lockfile, so a repository's `.npmrc` cannot redirect those lookups, or have your npm token
+  or your environment's variables sent anywhere.
 - Text from the repository never reaches a shell as a command. A repository's own git configuration can name
   commands too (a file-system monitor, a filter, a signature program, a hook), and so can a submodule's; Code
   Sleuth turns off the ones its read-only git calls could reach, on every call, and never reads into a

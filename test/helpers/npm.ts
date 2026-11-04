@@ -20,7 +20,7 @@ export interface NpmScenario {
 const STUB = String.raw`
 const fs = require("fs");
 const scenario = JSON.parse(fs.readFileSync(process.env.STUB_NPM_SCENARIO, "utf8"));
-fs.appendFileSync(process.env.STUB_NPM_LOG, JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd(), key: process.env.ANTHROPIC_API_KEY ?? null, lowerKey: process.env.anthropic_api_key ?? null }) + "\n");
+fs.appendFileSync(process.env.STUB_NPM_LOG, JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd(), files: fs.readdirSync(process.cwd()).sort(), env: Object.keys(process.env).sort(), key: process.env.ANTHROPIC_API_KEY ?? null, lowerKey: process.env.anthropic_api_key ?? null }) + "\n");
 if (process.argv[2] === "audit") {
   const audit = scenario.audit ?? { vulnerabilities: {} };
   process.stdout.write(audit.raw !== undefined ? audit.raw : JSON.stringify({ auditReportVersion: 2, ...audit }));
@@ -34,14 +34,23 @@ process.exit(scenario.status ?? (Object.keys(scenario.outdated ?? {}).length > 0
 export function stubNpm(folder: string, scenario: NpmScenario = {}) {
   const bin = join(folder, "npm-bin");
   mkdirSync(bin, { recursive: true });
-  writeFileSync(join(bin, "npm"), `#!${process.execPath}\n${STUB}`);
-  chmodSync(join(bin, "npm"), 0o755);
   const log = join(folder, "npm-calls.log");
   const scenarioFile = join(folder, "npm-scenario.json");
+  // The paths are written into the stub: npm sees only the variables it needs, not the test's own.
+  const paths = `process.env.STUB_NPM_LOG = ${JSON.stringify(log)}; process.env.STUB_NPM_SCENARIO = ${JSON.stringify(scenarioFile)};\n`;
+  writeFileSync(join(bin, "npm"), `#!${process.execPath}\n${paths}${STUB}`);
+  chmodSync(join(bin, "npm"), 0o755);
   writeFileSync(scenarioFile, JSON.stringify(scenario));
   return {
     env: { PATH: bin, STUB_NPM_LOG: log, STUB_NPM_SCENARIO: scenarioFile },
-    calls: (): { argv: string[]; cwd: string; key: string | null; lowerKey: string | null }[] =>
+    calls: (): {
+      argv: string[];
+      cwd: string;
+      files: string[];
+      env: string[];
+      key: string | null;
+      lowerKey: string | null;
+    }[] =>
       existsSync(log)
         ? readFileSync(log, "utf8")
             .trim()
