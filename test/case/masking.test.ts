@@ -1,7 +1,11 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { takeCase } from "../../src/case/write.js";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import { openCase, takeCase } from "../../src/case/write.js";
+import type { CardText } from "../../src/polish/guard.js";
+import { polishCards } from "../../src/polish/pass.js";
 import { findGoal } from "../../src/engine/goals.js";
 import { investigate } from "../helpers/investigate.js";
 import { withScratch } from "../helpers/scratch.js";
@@ -86,5 +90,85 @@ describe("the masking test", () => {
       counts: Record<string, number>;
     };
     expect(record.counts["smoking-gun"]).toBeGreaterThanOrEqual(2);
+  });
+
+  it("masks a secret on a line another check reports, in the case, the cards and the polish request", async () => {
+    // One token per check that keeps an excerpt of a line it reads; none of them is a secret check.
+    const token = (seed: number) =>
+      SECRETS["github-token"]!.value.slice(0, -2) + String(seed).padStart(2, "0");
+    const tokens = { marker: token(11), path: token(12), injection: token(13), prtarget: token(14) };
+    const workflow = (on: string, steps: string) =>
+      `on: ${on}\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n${steps}`;
+
+    const sent: CardText[] = [];
+    const out = mkdtempSync(join(tmpdir(), "code-sleuth-masking-"));
+    onTestFinished(() => rmSync(out, { recursive: true, force: true }));
+    const draft = investigate(
+      {
+        name: "chatty",
+        files: {
+          "src/marker.ts": `// TODO rotate ${tokens.marker} before release\n`, // code-sleuth:example
+          "src/path.ts": `const notes = "/Users/riverbank/notes/${tokens.path}";\n`, // code-sleuth:example
+          ".github/workflows/injection.yml": workflow(
+            "issues",
+            `      - run: echo "\${{ github.event.issue.title }}" ${tokens.injection}\n`,
+          ),
+          ".github/workflows/prtarget.yml": workflow(
+            "pull_request_target",
+            `      - uses: actions/checkout@v4\n        with:\n          ref: \${{ github.event.pull_request.head.sha }} # ${tokens.prtarget}\n`,
+          ),
+        },
+      },
+      (repo, capabilities) =>
+        openCase({
+          repo,
+          goal: findGoal("public")!,
+          capabilities,
+          casesFolder: out,
+          chosen: true,
+          all: true,
+        }),
+    );
+
+    // The checks that read those lines found them.
+    const found = draft.outcomes.filter((o) => o.result.verdict === "found").map((o) => o.check.id);
+    expect(found).toEqual(
+      expect.arrayContaining([
+        "quality.markers",
+        "paths.machine",
+        "workflows.injection",
+        "workflows.prtarget",
+      ]),
+    );
+
+    const polished = await polishCards(draft.cards, async (card) => {
+      sent.push(card);
+      return { ok: true, card };
+    });
+    draft.close(undefined, polished);
+    const files = everyFile(draft.path);
+
+    const everything = [
+      JSON.stringify(draft.outcomes),
+      ...Object.values(files),
+      ...sent.map((card) => `${card.title}\n${card.body}`),
+    ].join("\n");
+    expect(sent.length).toBeGreaterThanOrEqual(4);
+    for (const value of Object.values(tokens)) expect(everything).not.toContain(value);
+    // Masked, not dropped: each shows as its first four and last two characters.
+    for (const value of Object.values(tokens))
+      expect(everything).toContain(`${value.slice(0, 4)}****${value.slice(-2)}`);
+  });
+
+  it("has one place a check's result comes out: only the engine's runCheck calls a check's run", () => {
+    const src = fileURLToPath(new URL("../../src", import.meta.url));
+    const callers = (readdirSync(src, { recursive: true }) as string[])
+      .map((name) => name.split("\\").join("/"))
+      .filter((name) => name.endsWith(".ts"))
+      .filter((name) => /\bcheck\.run\(|\.run\(repo\b/.test(readFileSync(join(src, name), "utf8")));
+    expect(callers).toEqual(["engine/engine.ts"]);
+    expect(readFileSync(join(src, "engine/engine.ts"), "utf8")).toMatch(
+      /return masked\(check\.run\(repo, context\)\)/,
+    );
   });
 });

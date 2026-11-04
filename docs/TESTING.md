@@ -13,7 +13,7 @@ npm run lint     # type check, ESLint and Prettier
 | --- | --- |
 | `test/cli/` | the command: help, version, every refusal, `checks`, investigating, `--json`, `--fail-on`, `--deny`, colour |
 | `test/engine/` | the reader, the check contract, every check (one row per input its rule tells apart), the secret rules and masking |
-| `test/case/` | the cases folder and its refusals, the record, the cards, golden case files, determinism, and the masking test |
+| `test/case/` | the cases folder and its refusals, the record, the cards, golden case files, determinism, and the masking test (a secret check's finding, and a secret on a line any other check reports) |
 | `test/polish/` | the guard's table, the client over a fake `fetch`, and whole runs with a stubbed client |
 | `test/toolkit/` | detection, the call and the ledger with stub shells, the `handoff.ps1` syntax, and a real ToolKit run |
 | `test/docs/` | `CHECKS.md` against the check table, every relative link, and `CLI.md` against the parser |

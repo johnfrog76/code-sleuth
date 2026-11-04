@@ -43,6 +43,23 @@ export function mask(value: string): string {
   return value.length < 10 ? "****" : `${value.slice(0, 4)}****${value.slice(-2)}`;
 }
 
+/**
+ * Any text with every value the secret rules match masked, and nothing else changed: no trim, no window. An
+ * already-masked value (`ghp_****9f`) matches no rule, so masking twice changes nothing.
+ */
+export function maskSecrets(text: string, path: string): string {
+  const matches = matchLine(text, path);
+  if (matches.length === 0) return text;
+  let masked = "";
+  let at = 0;
+  for (const m of matches) {
+    if (m.index < at) continue;
+    masked += text.slice(at, m.index) + (m.rule.marker ? m.value : mask(m.value));
+    at = m.index + m.value.length;
+  }
+  return masked + text.slice(at);
+}
+
 /** The line with every value in it masked, trimmed, and cut to a window around the first match. */
 export function maskedExcerpt(text: string, matches: readonly SecretMatch[]): string {
   let masked = "";

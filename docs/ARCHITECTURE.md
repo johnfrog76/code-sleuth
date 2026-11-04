@@ -22,7 +22,8 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
   check; their words are `src/engine/copy.ts`.
 - **The goals** (`src/engine/goals.ts`). A goal is an ordered list of check ids, each with a weight. The engine
   (`src/engine/engine.ts`) runs a goal: a check whose need is missing is not investigated and its rule never
-  runs, and evidence weighed as a name guess or an example lowers the weight.
+  runs, and evidence weighed as a name guess or an example lowers the weight. Every result comes out of
+  `runCheck`, which masks every excerpt with the secret rules, whichever check recorded it.
 - **The secret rules** (`src/engine/secrets/`). Regex strings in the subset every engine reads alike; `scan.ts`
   matches, masks and hashes them.
 - **The case writer** (`src/case/`). `openCase` refuses a cases folder that overlaps the repository, runs the

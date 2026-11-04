@@ -206,6 +206,8 @@ function filtersOff(root: string): readonly string[] {
     `filter.${name}.clean=`,
     `filter.${name}.smudge=`,
     `filter.${name}.process=`,
+    // git-lfs marks its filter required: emptied but still required, status would fail instead of reading.
+    `filter.${name}.required=false`,
   ]);
   filterOverrides.set(root, off);
   return off;

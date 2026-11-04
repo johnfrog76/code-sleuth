@@ -1,3 +1,4 @@
+import { maskSecrets } from "./secrets/scan.js";
 import { createHmac, randomBytes } from "node:crypto";
 import type { Check, CheckContext, Evidence, Need, Result } from "./check.js";
 import { CHECKS } from "./checks/index.js";
@@ -136,7 +137,22 @@ export function runCheck(
 ): Result {
   const missing = check.needs.find((need) => !capabilities.has(need));
   if (missing !== undefined) return { verdict: "not-investigated", reason: needReasons[missing] };
-  return check.run(repo, context);
+  return masked(check.run(repo, context));
+}
+
+/**
+ * Every excerpt a check records goes through the secret rules here, whatever check found it: a token on a line
+ * that a marker, a path or a workflow check reports is masked like any other. This is the one place a result
+ * leaves a check, so no evidence reaches a case, a card or a polish request unmasked.
+ */
+export function masked(result: Result): Result {
+  if (result.verdict !== "found") return result;
+  return {
+    verdict: "found",
+    evidence: result.evidence.map((piece) =>
+      piece.excerpt === undefined ? piece : { ...piece, excerpt: maskSecrets(piece.excerpt, piece.path) },
+    ),
+  };
 }
 
 /**

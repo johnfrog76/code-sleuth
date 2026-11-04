@@ -58,6 +58,14 @@ const ROWS: [string, (root: string, marker: string) => void][] = [
     },
   ],
   [
+    "a required filter, as git-lfs sets one",
+    (root, marker) => {
+      writeFileSync(join(root, ".gitattributes"), "* filter=lfsish\n");
+      config(root, "filter.lfsish.clean", `sh -c "${touch(marker)}; cat"`);
+      config(root, "filter.lfsish.required", "true");
+    },
+  ],
+  [
     "a filter named in an included config file",
     (root, marker) => {
       writeFileSync(join(root, ".gitattributes"), "* filter=sly.two\n");
@@ -95,6 +103,20 @@ describe("git never runs a command the investigated repository chose", () => {
     withScratch((folder) => {
       const { root, marker } = repoWith(folder, setup);
       readEverything(root);
+      expect(existsSync(marker)).toBe(false);
+    }),
+  );
+
+  it.skipIf(process.platform === "win32")("still reads status with a required filter on a changed file", () =>
+    withScratch((folder) => {
+      const { root, marker } = repoWith(folder, (r, m) => {
+        writeFileSync(join(r, ".gitattributes"), "* filter=lfsish\n");
+        config(r, "filter.lfsish.clean", `sh -c "${touch(m)}; cat"`);
+        config(r, "filter.lfsish.required", "true");
+      });
+      const status = git(root, ["status", "--porcelain"]);
+      expect(status.status).toBe(0);
+      expect(status.stdout.toString()).toContain("a.txt");
       expect(existsSync(marker)).toBe(false);
     }),
   );
