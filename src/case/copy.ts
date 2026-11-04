@@ -57,11 +57,17 @@ export const copy = {
       `${counts["not-investigated"]} not investigated`,
     ].join(", ") + ".",
 
-  repoLine(name: string, branch: string | null, head: string | null, dirty: boolean | null): string {
+  repoLine(
+    name: string,
+    branch: string | null,
+    head: string | null,
+    dirty: boolean | null,
+    partial = false,
+  ): string {
     if (head === null && branch === null) return `${name} (not a git repository)`;
     const at = head === null ? "no commits" : head.slice(0, 7);
     const state = dirty === null ? "" : dirty ? ", dirty" : ", clean";
-    return `${name} (${branch ?? "detached"} @ ${at}${state})`;
+    return `${name} (${branch ?? "detached"} @ ${at}${state}${partial ? ", a partial clone" : ""})`;
   },
 
   groups: {

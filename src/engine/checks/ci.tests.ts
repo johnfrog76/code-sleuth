@@ -1,4 +1,4 @@
-import type { Check } from "../check.js";
+import type { Check, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { readPackageJson } from "../manifest.js";
 import { readWorkflows } from "../workflows.js";
@@ -17,7 +17,7 @@ export const ciTests: Check = {
   needs: [],
   voice: voices["ci.tests"],
   card: cards["ci.tests"],
-  run(repo) {
+  run(repo): Result {
     const scripts = readPackageJson(repo)?.scripts;
     const test =
       typeof scripts === "object" && scripts !== null ? (scripts as Record<string, unknown>).test : undefined;

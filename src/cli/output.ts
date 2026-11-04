@@ -45,7 +45,7 @@ export function header(
   const lines = [copy.run.title(id), ""];
   if (!asked) lines.push(copy.run.question, "");
   lines.push(
-    `  ${copy.run.repo}  ${caseCopy.repoLine(repo.name, repo.branch, repo.head, repo.dirty)}`,
+    `  ${copy.run.repo}  ${caseCopy.repoLine(repo.name, repo.branch, repo.head, repo.dirty, repo.partialClone === true)}`,
     `  ${copy.run.goal}  ${caseCopy.goal[goal] ?? goal}`,
     ...(outgoing.length === 0
       ? [`  ${copy.run.out}   ${copy.run.nothingLeaves}`]

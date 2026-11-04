@@ -1,5 +1,5 @@
-import type { Check, Evidence } from "../check.js";
-import { cards, historyUnreadable, voices } from "../copy.js";
+import type { Check, Evidence, Result } from "../check.js";
+import { cards, historyPartial, historyUnreadable, voices } from "../copy.js";
 import { SKIPPED_FOLDERS } from "../repo.js";
 import { blockFrom, scanLine } from "../secrets/scan.js";
 
@@ -10,7 +10,9 @@ export const secretsHistory: Check = {
   needs: ["git"],
   voice: voices["secrets.history"],
   card: cards["secrets.history"],
-  run(repo, context) {
+  run(repo, context): Result {
+    // A partial clone holds only part of the history, and the rest is never fetched: say so, rather than read part.
+    if (repo.isPartialClone) return { verdict: "not-investigated", reason: historyPartial };
     const added = repo.addedLines();
     if (added === undefined) return { verdict: "not-investigated", reason: historyUnreadable };
     const kept = added.filter(({ path }) => !path.split("/").some((part) => SKIPPED_FOLDERS.includes(part)));

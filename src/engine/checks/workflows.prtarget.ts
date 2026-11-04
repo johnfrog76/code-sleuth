@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf } from "../files.js";
 import { readWorkflows, cleanOrUnreadable } from "../workflows.js";
@@ -15,7 +15,7 @@ export const workflowsPrtarget: Check = {
   needs: [],
   voice: voices["workflows.prtarget"],
   card: cards["workflows.prtarget"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     for (const workflow of readWorkflows(repo)) {
       if (!workflow.events.includes("pull_request_target")) continue;

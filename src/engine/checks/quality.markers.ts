@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { isMarked } from "../examples.js";
 import { excerptOf, readableLines } from "../files.js";
@@ -65,7 +65,7 @@ export const qualityMarkers: Check = {
   needs: [],
   voice: voices["quality.markers"],
   card: cards["quality.markers"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     for (const path of repo.textFiles) {
       if (PROSE.test(path) || LOCKFILES.includes(path.split("/").at(-1)!)) continue;

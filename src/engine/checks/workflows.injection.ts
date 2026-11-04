@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf } from "../files.js";
 import { lineInRun, readWorkflows, cleanOrUnreadable } from "../workflows.js";
@@ -27,7 +27,7 @@ export const workflowsInjection: Check = {
   needs: [],
   voice: voices["workflows.injection"],
   card: cards["workflows.injection"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     for (const workflow of readWorkflows(repo)) {
       for (const step of workflow.steps) {

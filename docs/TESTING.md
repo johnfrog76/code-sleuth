@@ -19,7 +19,7 @@ npm run lint     # type check, ESLint and Prettier
 | `test/docs/` | `CHECKS.md` against the check table, every relative link, and `CLI.md` against the parser |
 | `test/atoms/` | every atom renders as a standalone SVG with a title and no warning, carries no words in its art, and passes the contrast check on the light, dark and office backgrounds |
 | `test/spawn.test.ts` | the model key never reaches a child process, in any letter case, and every child starts through `src/spawn.ts` |
-| `test/gitsafe.test.ts` | with a real git, a repository's own configuration never has Code Sleuth run a command: a file-system monitor, each kind of filter, a signature program, a hook; and only `src/engine/repo.ts` spawns git |
+| `test/gitsafe.test.ts` | with a real git, a repository's own configuration never has Code Sleuth run a command: a file-system monitor, each kind of filter, a signature program, a hook; a partial clone fetches nothing, with both guards and with `protocol.allow=never` alone; and only `src/engine/repo.ts` spawns git |
 | `test/notices.test.ts` | `THIRD-PARTY-NOTICES.md` against `package.json`: every runtime dependency, its version and its license |
 
 ## What every test can rely on

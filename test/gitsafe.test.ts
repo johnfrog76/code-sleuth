@@ -1,10 +1,13 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { readRepoInfo } from "../src/case/repoInfo.js";
-import { git, openRepo } from "../src/engine/repo.js";
+import { CHECKS } from "../src/engine/checks/index.js";
+import { historyPartial, historyUnreadable } from "../src/engine/copy.js";
+import { runCheck, secretHasher } from "../src/engine/engine.js";
+import { GIT_SAFE_CONFIG, git, openRepo } from "../src/engine/repo.js";
 import { withScratch } from "./helpers/scratch.js";
 
 const SRC = fileURLToPath(new URL("../src", import.meta.url));
@@ -142,5 +145,96 @@ describe("git never runs a command the investigated repository chose", () => {
       .filter((file) => /spawnChild\(\s*["']git["']/.test(readFileSync(file, "utf8")))
       .map((file) => relative(SRC, file).split(sep).join("/"));
     expect(spawnsGit).toEqual(["engine/repo.ts"]);
+  });
+
+  describe("a partial clone", () => {
+    /** A source with two commits, and a blobless clone of it: the first commit's blob is not in the clone. */
+    function partial(folder: string) {
+      const source = join(folder, "source");
+      mkdirSync(source);
+      const run = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, stdio: "pipe" });
+      run(source, "init", "-q");
+      writeFileSync(join(source, "a.txt"), "one\n");
+      run(source, "add", "a.txt");
+      run(source, "-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-qm", "one");
+      writeFileSync(join(source, "a.txt"), "two\n");
+      run(source, "-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-qam", "two");
+      run(source, "config", "uploadpack.allowFilter", "true");
+      const root = join(folder, "clone");
+      run(folder, "clone", "-q", "--filter=blob:none", `file://${source}`, root);
+      const missing = () =>
+        execFileSync("git", ["rev-list", "--objects", "--missing=print", "--all"], {
+          cwd: root,
+          env: { ...process.env, GIT_NO_LAZY_FETCH: "1" },
+        })
+          .toString()
+          .split("\n")
+          .filter((line) => line.startsWith("?")).length;
+      return { root, missing };
+    }
+
+    it.skipIf(process.platform === "win32")(
+      "fetches nothing in a whole run, and says the history was not read",
+      () =>
+        withScratch((folder) => {
+          const { root, missing } = partial(folder);
+          const before = missing();
+          expect(before).toBeGreaterThan(0);
+          const repo = openRepo(root);
+          expect(repo.isPartialClone).toBe(true);
+          readEverything(root);
+          const history = runCheck(
+            CHECKS.find((c) => c.id === "secrets.history")!,
+            repo,
+            new Set(["git"]),
+            secretHasher(Buffer.alloc(32)),
+          );
+          expect(history).toEqual({ verdict: "not-investigated", reason: historyPartial });
+          expect(readRepoInfo(repo).partialClone).toBe(true);
+          expect(missing()).toBe(before);
+        }),
+    );
+
+    it.skipIf(process.platform === "win32")(
+      "fetches nothing with only protocol.allow=never, as on a git too old for GIT_NO_LAZY_FETCH",
+      () =>
+        withScratch((folder) => {
+          const { root, missing } = partial(folder);
+          const before = missing();
+          expect(GIT_SAFE_CONFIG).toContain("protocol.allow=never");
+          const env = { ...process.env };
+          delete env.GIT_NO_LAZY_FETCH;
+          const log = spawnSync("git", ["-c", "protocol.allow=never", "log", "-p", "--all"], {
+            cwd: root,
+            env,
+          });
+          expect(log.status).not.toBe(0);
+          expect(missing()).toBe(before);
+        }),
+    );
+
+    it.skipIf(process.platform === "win32")(
+      "says the history could not be read, not that it is partial, when git log fails on a full clone",
+      () =>
+        withScratch((folder) => {
+          const { root } = repoWith(folder, () => {});
+          const repo = { ...openRepo(root), addedLines: () => undefined };
+          expect(repo.isPartialClone).toBe(false);
+          const history = runCheck(
+            CHECKS.find((c) => c.id === "secrets.history")!,
+            repo,
+            new Set(["git"]),
+            secretHasher(Buffer.alloc(32)),
+          );
+          expect(history).toEqual({ verdict: "not-investigated", reason: historyUnreadable });
+        }),
+    );
+
+    it.skipIf(process.platform === "win32")("is not a partial clone when nothing is a promisor", () =>
+      withScratch((folder) => {
+        const { root } = repoWith(folder, () => {});
+        expect(openRepo(root).isPartialClone).toBe(false);
+      }),
+    );
   });
 });

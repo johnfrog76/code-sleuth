@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { readPackageJson } from "../manifest.js";
 
@@ -21,7 +21,7 @@ export const depsLockfile: Check = {
   needs: [],
   voice: voices["deps.lockfile"],
   card: cards["deps.lockfile"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     for (const path of repo.textFiles.filter((p) => p.split("/").at(-1) === "package.json")) {
       const manifest = readPackageJson(repo, path);

@@ -31,7 +31,7 @@ The record, for scripts and for a later run. `--json` prints the same object.
 | `caseFile` | the format's version, `1`. A reader refuses a version it does not know |
 | `tool` | `{ "name": "code-sleuth", "version": ... }` |
 | `case`, `goal` | the case's id (`2026-10-31-public-1`) and its goal |
-| `repo` | `name`, `head`, `branch`, `dirty`, and the `origin` remote with no scheme or credentials; null past the name outside git |
+| `repo` | `name`, `head`, `branch`, `dirty`, and the `origin` remote with no scheme or credentials; null past the name outside git. `partialClone: true` on a partial clone |
 | `openedAt`, `closedAt` | UTC, to the second |
 | `verdict` | by the checklist: `ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` |
 | `counts` | `smoking-gun`, `loose-end`, `hunch`, `clean`, `not-investigated` |

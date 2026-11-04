@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
 import { cards, outdatedReasons, voices } from "../copy.js";
 import { lineContaining, readPackageJson } from "../manifest.js";
@@ -56,7 +56,7 @@ export const depsOutdated: Check = {
   voice: voices["deps.outdated"],
   card: cards["deps.outdated"],
   outgoing: (repo) => (lookup(repo) === "ready" ? outdatedReasons.outgoing : undefined),
-  run(repo, context) {
+  run(repo, context): Result {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can be behind, and no call is made.
     if (state === "nothing") return cleanOrUnread(repo, false);

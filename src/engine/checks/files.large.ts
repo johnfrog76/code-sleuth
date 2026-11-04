@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 
 export const LARGE = 5 * 1024 * 1024;
@@ -14,7 +14,7 @@ export const filesLarge: Check = {
   needs: [],
   voice: voices["files.large"],
   card: cards["files.large"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     for (const path of repo.files) {
       const size = repo.size(path);

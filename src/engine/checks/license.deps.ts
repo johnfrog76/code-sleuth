@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
 import { cards, licenseDepsReasons, voices } from "../copy.js";
 import { isStrongCopyleft } from "../licenses.js";
@@ -17,7 +17,7 @@ export const licenseDeps: Check = {
   needs: [],
   voice: voices["license.deps"],
   card: cards["license.deps"],
-  run(repo) {
+  run(repo): Result {
     const lockfiles = repo.textFiles.filter((path) => path.split("/").at(-1) === "package-lock.json");
     if (lockfiles.length === 0) {
       const npmWithoutLock = repo.textFiles.some((path) => path.split("/").at(-1) === "package.json");

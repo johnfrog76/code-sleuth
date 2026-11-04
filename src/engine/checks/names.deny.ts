@@ -1,4 +1,4 @@
-import { COMMIT_MESSAGE, type Check, type Evidence } from "../check.js";
+import { COMMIT_MESSAGE, type Check, type Evidence, type Result } from "../check.js";
 import { cards, denyReasons, voices } from "../copy.js";
 import { readableLines } from "../files.js";
 import { isMarked } from "../examples.js";
@@ -23,7 +23,7 @@ export const namesDeny: Check = {
   needs: ["denyList"],
   voice: voices["names.deny"],
   card: cards["names.deny"],
-  run(repo, context) {
+  run(repo, context): Result {
     const patterns = denyPatterns(context.denyList ?? []);
     // A finding names the deny list's line, never the word: the word is what must not leave the machine.
     const hits = (text: string) =>

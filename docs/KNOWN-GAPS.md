@@ -32,7 +32,10 @@ What is stubbed, specified but not built, or known to read wrong, and what you s
 - **Commands named in a repository's git configuration.** Every git call Code Sleuth makes turns off the file-system
   monitor, every filter driver (including one from an included config file), the signature program, hooks, the
   pager and an external diff. Other settings that name commands -- a credential helper, an SSH command, a proxy
-  -- are used only when git talks to a remote, and Code Sleuth's git calls only read the local repository.
+  -- are used only when git talks to a remote, and Code Sleuth's git calls never do: every one blocks every
+  transport (`protocol.allow=never`) and lazy fetching (`GIT_NO_LAZY_FETCH`), so a partial clone's missing objects
+  stay missing, and `secrets.history` says the history was not read
+  ([CHECKS.md](CHECKS.md#secretshistory-secrets-in-the-history)).
 
 - **npm on Windows.** There, `npm` is a `.cmd` shim that Node will not start without a shell, so Code Sleuth
   runs npm's own `npm-cli.js` under Node where it is found beside it. Where it is not, `deps.outdated` reads

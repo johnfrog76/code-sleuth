@@ -269,6 +269,9 @@ export const outdatedReasons = {
 };
 
 /** Why the history could not be read, though git is there. */
+export const historyPartial =
+  "This is a partial clone: some of the history isn't here, and I don't fetch it. Run me on a full clone to read it.";
+
 export const historyUnreadable =
   "git could not read the history: check that git log works in this repository.";
 

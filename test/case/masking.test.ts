@@ -186,4 +186,15 @@ describe("the masking test", () => {
       .map(([field]) => field);
     expect(repositoryText.sort()).toEqual(["excerpt", "path"]);
   });
+
+  it("types every check's run as returning a Result, so a stray key in a result does not compile", () => {
+    const checks = fileURLToPath(new URL("../../src/engine/checks", import.meta.url));
+    const untyped = (readdirSync(checks) as string[])
+      .filter((name) => name.endsWith(".ts"))
+      .filter((name) => {
+        const source = readFileSync(join(checks, name), "utf8");
+        return /^ {2}run\(/m.test(source) && !/^ {2}run\([^)]*\): Result \{/m.test(source);
+      });
+    expect(untyped).toEqual([]);
+  });
 });

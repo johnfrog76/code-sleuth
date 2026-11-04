@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf, readableLines } from "../files.js";
 import { isMarked } from "../examples.js";
@@ -41,7 +41,7 @@ export const pathsMachine: Check = {
   needs: [],
   voice: voices["paths.machine"],
   card: cards["paths.machine"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     for (const path of repo.textFiles) {
       readableLines(repo, path).forEach((text, i) => {

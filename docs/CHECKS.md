@@ -75,7 +75,8 @@ itself, which is a review's job. A person decides those.
 
 - **Reads:** every line added in `git log -p --all`
 - **Finds:** the same rules over history: a secret removed from the tree but still in history is still a secret
-- **Needs:** `git`
+- **Needs:** `git`. On a partial clone it reads **not investigated**: some of the history is not there, and
+  Code Sleuth never fetches it
 - **What the books call it:** credential in version control history
 - **The fix:** Revoke each secret where it was issued: anyone with a clone has the history. Then either rewrite the history to remove it (git filter-repo does this) and force-push, or accept that the old value is public.
 

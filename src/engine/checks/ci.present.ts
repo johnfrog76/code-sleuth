@@ -1,4 +1,4 @@
-import type { Check } from "../check.js";
+import type { Check, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { readWorkflows } from "../workflows.js";
 
@@ -11,7 +11,7 @@ export const ciPresent: Check = {
   needs: [],
   voice: voices["ci.present"],
   card: cards["ci.present"],
-  run(repo) {
+  run(repo): Result {
     const workflows = readWorkflows(repo);
     if (workflows.some(({ events }) => events.some((event) => CI_EVENTS.includes(event))))
       return { verdict: "clean" };

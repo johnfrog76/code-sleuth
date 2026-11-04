@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { isMarked } from "../examples.js";
 import { mask } from "../secrets/scan.js";
@@ -20,7 +20,7 @@ export const filesSensitive: Check = {
   needs: [],
   voice: voices["files.sensitive"],
   card: cards["files.sensitive"],
-  run(repo, context) {
+  run(repo, context): Result {
     const evidence: Evidence[] = [];
     for (const path of repo.files) {
       const name = path.split("/").at(-1)!;

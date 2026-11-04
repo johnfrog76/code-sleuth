@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { baseLicense, identifyLicense, licenseIds } from "../licenses.js";
 import { lineContaining, readPackageJson } from "../manifest.js";
@@ -12,7 +12,7 @@ export const licenseFile: Check = {
   needs: [],
   voice: voices["license.file"],
   card: cards["license.file"],
-  run(repo) {
+  run(repo): Result {
     const files = repo.files.filter((path) => !path.includes("/") && LICENSE_FILE.test(path));
     if (files.length === 0) return { verdict: "found", evidence: [] };
 

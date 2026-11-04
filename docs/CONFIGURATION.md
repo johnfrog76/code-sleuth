@@ -23,8 +23,8 @@ Two more, set or cleared by Code Sleuth itself for the processes it starts, neve
   the Space whose address is the repository's origin ([TOOLKIT.md](TOOLKIT.md#which-space)). Your own ToolKit
   setting is never changed.
 - `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and `GIT_CEILING_DIRECTORIES` are removed for every `git` it runs,
-  and `GIT_OPTIONAL_LOCKS=0` is set, so an inherited variable cannot point git at another repository and a
-  read never refreshes the index.
+  and `GIT_OPTIONAL_LOCKS=0` and `GIT_NO_LAZY_FETCH=1` are set, so an inherited variable cannot point git at
+  another repository, a read never refreshes the index, and a partial clone never fetches what it is missing.
 
 **Deliberately not read:** `ANTHROPIC_BASE_URL`. The polish request always goes to
 `https://api.anthropic.com/v1/messages`. Nor are `ANTHROPIC_AUTH_TOKEN` or saved credential profiles.

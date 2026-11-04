@@ -10,6 +10,11 @@ export interface RepoReader {
   readonly root: string;
   /** True when the root is inside a git work tree, and `files` came from `git ls-files`. */
   readonly isGitRepository: boolean;
+  /**
+   * True for a partial clone: a remote is a promisor, so some of the history's objects are not here. Code Sleuth
+   * never fetches them, so the history cannot be read whole.
+   */
+  readonly isPartialClone: boolean;
   /** Every file: tracked files in a repository, else every file under the root. Sorted, relative, `/`. */
   readonly files: readonly string[];
   /** `files` without anything under a skipped folder. What the text checks read. */
@@ -52,6 +57,7 @@ export function openRepo(root: string): RepoReader {
   return {
     root: absolute,
     isGitRepository: tracked !== undefined,
+    isPartialClone: tracked !== undefined && partialClone(absolute),
     files,
     textFiles: files.filter((path) => !path.split("/").some((part) => SKIPPED_FOLDERS.includes(part))),
     has: (path) => known.has(path),
@@ -161,6 +167,9 @@ function readHistory(root: string): AddedLine[] | undefined {
  * call itself (`--no-ext-diff --no-textconv`).
  */
 export const GIT_SAFE_CONFIG: readonly string[] = [
+  // No transport at all: a partial clone would otherwise fetch missing objects from its promisor remote, a call
+  // off the machine nobody named. This holds on every git; GIT_NO_LAZY_FETCH (gitEnv) is the newer gits' own.
+  "protocol.allow=never",
   "core.fsmonitor=false",
   "log.showSignature=false",
   `core.hooksPath=${process.platform === "win32" ? "NUL" : "/dev/null"}`,
@@ -169,7 +178,7 @@ export const GIT_SAFE_CONFIG: readonly string[] = [
 ];
 
 function gitEnv(): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: "0" };
+  const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: "0", GIT_NO_LAZY_FETCH: "1" };
   for (const name of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CEILING_DIRECTORIES"])
     delete env[name];
   return env;
@@ -219,6 +228,14 @@ function filtersOff(root: string): readonly string[] {
  */
 export function git(root: string, args: readonly string[]) {
   return spawnGit(root, [...GIT_SAFE_CONFIG, ...filtersOff(root)], args);
+}
+
+/** A partial clone names a promisor remote, or the older extension. Reading the config runs nothing. */
+function partialClone(root: string): boolean {
+  const promisor = git(root, ["config", "--get-regexp", "^remote\\..*\\.promisor$"]);
+  if (promisor.status === 0 && /\btrue\b/i.test(promisor.stdout.toString("utf8"))) return true;
+  const extension = git(root, ["config", "--get", "extensions.partialClone"]);
+  return extension.status === 0 && extension.stdout.toString("utf8").trim() !== "";
 }
 
 function gitTrackedFiles(root: string): string[] | undefined {

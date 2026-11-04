@@ -1,4 +1,4 @@
-import type { Check, Evidence } from "../check.js";
+import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { COMMUNITY_FOLDERS } from "../files.js";
 
@@ -28,7 +28,7 @@ export const githubTemplates: Check = {
   needs: [],
   voice: voices["github.templates"],
   card: cards["github.templates"],
-  run(repo) {
+  run(repo): Result {
     const evidence: Evidence[] = [];
     if (!hasIssueTemplate(repo.files))
       evidence.push({ path: ".github/ISSUE_TEMPLATE/", rule: "no-issue-template" });

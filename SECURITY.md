@@ -31,6 +31,8 @@ of them is a security problem:
 - Text from the repository never reaches a shell as a command. A repository's own git configuration can name
   commands too (a file-system monitor, a filter, a signature program, a hook); Code Sleuth turns off the ones
   its read-only git calls could reach, on every call.
+- git never reaches the network on Code Sleuth's behalf. Every git call blocks every transport and lazy
+  fetching, so a partial clone's missing objects are never fetched from its remote.
 
 ## Supported versions
 

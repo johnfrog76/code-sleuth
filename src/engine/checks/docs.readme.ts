@@ -1,4 +1,4 @@
-import type { Check } from "../check.js";
+import type { Check, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { findDoc } from "../files.js";
 
@@ -34,7 +34,7 @@ export const docsReadme: Check = {
   needs: [],
   voice: voices["docs.readme"],
   card: cards["docs.readme"],
-  run(repo) {
+  run(repo): Result {
     const path = findDoc(repo, "README", [""]);
     if (path === undefined) return { verdict: "found", evidence: [] };
     const text = repo.readText(path) ?? "";

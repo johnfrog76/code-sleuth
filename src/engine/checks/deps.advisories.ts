@@ -1,4 +1,4 @@
-import type { Check, Evidence, Need } from "../check.js";
+import type { Check, Evidence, Need, Result } from "../check.js";
 import { advisoriesReasons, cards, voices } from "../copy.js";
 import { cleanOrUnread } from "../ecosystems.js";
 import { lineContaining, readPackageJson } from "../manifest.js";
@@ -246,7 +246,7 @@ export const depsAdvisories: Check = {
     const using = tool(capabilities);
     return using === undefined ? undefined : advisoriesReasons.outgoing[using];
   },
-  run(repo, context) {
+  run(repo, context): Result {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can carry an advisory, and no call is made.
     if (state === "nothing") return cleanOrUnread(repo, false);

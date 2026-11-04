@@ -9,6 +9,8 @@ export interface RepoInfo {
   dirty: boolean | null;
   /** The `origin` remote, without a scheme or credentials: `github.com/<owner>/<repo>`. */
   remote: string | null;
+  /** Present, and true, for a partial clone, whose history is not all here. */
+  partialClone?: true;
 }
 
 /** What the case says about the repository. Outside git, everything but the name is null. */
@@ -26,6 +28,7 @@ export function readRepoInfo(repo: RepoReader): RepoInfo {
   info.dirty = status === null ? null : status !== "";
   const url = out(["remote", "get-url", "origin"]);
   info.remote = url ? cleanRemote(url) : null;
+  if (repo.isPartialClone) info.partialClone = true;
   return info;
 }
 

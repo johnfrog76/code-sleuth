@@ -1,4 +1,4 @@
-import type { Check } from "../check.js";
+import type { Check, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { cleanOrUnreadable, readWorkflows } from "../workflows.js";
 
@@ -9,7 +9,7 @@ export const workflowsPermissions: Check = {
   needs: [],
   voice: voices["workflows.permissions"],
   card: cards["workflows.permissions"],
-  run(repo) {
+  run(repo): Result {
     const evidence = readWorkflows(repo)
       .filter(({ readable, keys }) => readable && !keys.includes("permissions"))
       .map(({ path }) => ({ path, rule: "no-top-level-permissions" }));
