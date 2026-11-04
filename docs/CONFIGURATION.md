@@ -7,12 +7,15 @@ never writes a setting anywhere.
 
 | Variable | Read by | Does |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | the polish pass | the API key, for people who set it in their environment rather than in Code Sleuth's `.env`. It wins over the file. Never written or printed. With `--polish`, turns the polish pass on ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
 | `CODE_SLEUTH_MODEL` | the polish pass | the model, in place of `claude-haiku-5-5` |
 | `NO_COLOR` | the terminal output | any value turns colour off |
 | `XDG_DATA_HOME` | the cases folder, on Linux | where the cases folder goes, in place of `~/.local/share` |
 | `LOCALAPPDATA` | the cases folder, on Windows | where the cases folder goes |
 | `PATH` | the ToolKit hand-off | where `pwsh` or `powershell.exe` is looked for |
+
+The API key goes in Code Sleuth's own `.env` ([POLISH.md](POLISH.md#where-the-api-key-goes)), or set the
+variable named in `.env.example` in your environment; a value there wins. Either way it is never written or
+printed, and with `--polish` it turns the polish pass on.
 
 Two more, set or cleared by Code Sleuth itself for the processes it starts, never read from you:
 

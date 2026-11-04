@@ -160,7 +160,8 @@ describe("the model key from Code Sleuth's own .env", () => {
 });
 
 describe("what a person reads", () => {
-  // The variable's name is for .env.example and CONFIGURATION.md: the output says "API key".
+  // The variable's name is for .env.example alone, and the rules (AGENTS.md, SECURITY.md, the spec): what a
+  // person reads, the output and the docs, says "API key".
   it("never prints the variable's name, with a key or without, from the file or the environment", async () => {
     await withScratch(async (home) => {
       const file = keyFile(home, `ANTHROPIC_API_KEY=${FAKE_KEY}\n`);
@@ -177,6 +178,31 @@ describe("what a person reads", () => {
       const help = await sleuth(["--help"], { casesFolder: join(home, "cases") });
       expect(help.stdout + help.stderr).not.toContain("ANTHROPIC_API_KEY");
     });
+  });
+
+  it("never names the variable in the docs, only in .env.example", () => {
+    const root = new URL("../../", import.meta.url);
+    const docs = [
+      "README.md",
+      "CHANGELOG.md",
+      ...readdirSync(new URL("docs/", root))
+        .filter((name) => name.endsWith(".md"))
+        .map((name) => `docs/${name}`),
+    ];
+    expect(docs).toEqual(
+      expect.arrayContaining([
+        "README.md",
+        "docs/QUICKSTART.md",
+        "docs/CONFIGURATION.md",
+        "docs/POLISH.md",
+        "docs/CLI.md",
+      ]),
+    );
+    const naming = docs.filter((doc) =>
+      readFileSync(new URL(doc, root), "utf8").includes("ANTHROPIC_API_KEY"),
+    );
+    expect(naming).toEqual([]);
+    expect(readFileSync(new URL(".env.example", root), "utf8")).toContain("ANTHROPIC_API_KEY=");
   });
 });
 
