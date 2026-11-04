@@ -273,7 +273,26 @@ export const outdatedReasons = {
   failed:
     "npm outdated did not answer with its list: check that npm install works here, and that npm can reach its registry.",
   unreadableLockfile: (lockfile: string) => `${lockfile} is not JSON I can read.`,
+  /** Some dependencies come from elsewhere, and none of those looked up is behind. */
+  leftOut: (deps: readonly LeftOut[]) =>
+    `${leftOutList(deps)}: I only look up dependencies from npm's registry, and none of those is behind.`,
+  /** Every dependency comes from elsewhere, so nothing was looked up. */
+  allLeftOut: (deps: readonly LeftOut[]) =>
+    `${leftOutList(deps)}: I only look up dependencies from npm's registry, so I looked nothing up.`,
 };
+
+type LeftOut = { name: string; source: "git" | "path" | "url" | "alias" | "other" };
+
+const SOURCE_WORDS: Record<LeftOut["source"], string> = {
+  git: "comes from git",
+  path: "comes from a path on disk",
+  url: "comes from a URL",
+  alias: "is an npm: alias",
+  other: "names a source I don't read",
+};
+
+const leftOutList = (deps: readonly LeftOut[]) =>
+  deps.map(({ name, source }) => `${name} ${SOURCE_WORDS[source]}`).join("; ");
 
 /** The refusal for a git too old to take its safe settings from GIT_CONFIG_KEY_<n>, which it would ignore. */
 export const gitTooOld = (version: string) =>

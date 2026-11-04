@@ -22,7 +22,13 @@ export interface ToolRunner {
   ): { status: number | null; stdout: string; stderr: string; error?: Error };
 }
 
-export type NpmRunner = ToolRunner;
+/**
+ * How a check runs npm: on a copy of the project. With `manifest`, the copy holds that package.json alone, in
+ * place of the project's files.
+ */
+export interface NpmRunner {
+  run(args: readonly string[], project: string, manifest?: string): ReturnType<ToolRunner["run"]>;
+}
 
 /**
  * Finds npm by asking the file system. On Windows `npm` is a .cmd shim, which Node will not start without a
@@ -59,14 +65,16 @@ export const NPM_PROJECT_FILES: readonly string[] = [
  */
 function inCopy(npm: ToolRunner, folder: string): NpmRunner {
   return {
-    run(args, project) {
+    run(args, project, manifest) {
       mkdirSync(folder, { recursive: true });
       const work = mkdtempSync(join(folder, "project-"));
       try {
-        for (const name of NPM_PROJECT_FILES) {
-          const from = join(project, name);
-          if (isRegularFile(from)) writeFileSync(join(work, name), readFileSync(from));
-        }
+        if (manifest !== undefined) writeFileSync(join(work, "package.json"), manifest);
+        else
+          for (const name of NPM_PROJECT_FILES) {
+            const from = join(project, name);
+            if (isRegularFile(from)) writeFileSync(join(work, name), readFileSync(from));
+          }
         // npm takes the nearest folder up with a package.json as the project, and reads its .npmrc. With the
         // copy's own, that is the copy; without one it would climb into Code Sleuth's folders, so npm is not run.
         // (--prefix would pin it too, but moves npm's global config away from the user's own.)

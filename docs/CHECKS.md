@@ -290,11 +290,15 @@ A check that reads a `package.json` reads **not investigated** when that file is
   counts, as npm's caret does). The evidence lists each one; the check counts once
 - **Needs:** `npm`, `network`
 - **Sends:** package names, read from `package.json`, to npm's configured registry, the one `npm outdated` asks.
-  Nothing else from the files, and never the repository's path. npm runs on a copy of `package.json` and the
-  lockfile in Code Sleuth's own folder, so the repository's `.npmrc` is never read. It leaves your own npm
+  Nothing else from the files, and never the repository's path. npm runs in Code Sleuth's own folder, on a
+  `package.json` that names each direct dependency from npm's registry at `*` and nothing else, so no spec from
+  the repository reaches npm and the repository's `.npmrc` is never read; the installed versions come from the
+  lockfile, on the machine. A dependency from anywhere else -- git (`git+ssh:`, `github:`, `user/repo`), a path
+  (`file:`, `link:`, `workspace:`, a tarball), a URL, or an `npm:` alias -- is never looked up, and is named. It leaves your own npm
   registry settings (your `.npmrc`, a scoped or private registry) alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
 - **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest, and
   makes no call, when npm is found and the run is not `--offline`; **not investigated** with no lockfile, a lockfile from another package manager, no npm,
+  a dependency from a source other than npm's registry and none of the others behind (each one named),
   `--offline`, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** outdated dependency
 - **The fix:** For each dependency listed, read its changelog for the breaking changes between your version and the latest, update it, and run the tests. npm outdated lists them all.

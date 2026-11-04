@@ -2,6 +2,10 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CHECKS } from "../../src/engine/checks/index.js";
+import { runCheck, secretHasher } from "../../src/engine/engine.js";
+import { dependencySource } from "../../src/engine/checks/deps.outdated.js";
+import { outdatedReasons } from "../../src/engine/copy.js";
 import { findNpm, npmEnvironment } from "../../src/engine/npm.js";
 import { investigate } from "../helpers/investigate.js";
 import { stubNpm } from "../helpers/npm.js";
@@ -120,6 +124,14 @@ function listeners(folder: string): { user: number; chosen: number; seen: () => 
        const listen = (name) => new Promise((done) => {
          const s = http.createServer((q, r) => {
            fs.appendFileSync(${JSON.stringify(log)}, name + " " + q.method + " " + q.url + " auth=" + (q.headers.authorization ?? "") + "\\n");
+           // The user's registry knows every package as having versions 1.3.0 and 9.0.0, the latest.
+           const pkg = decodeURIComponent(q.url.slice(1));
+           if (name === "user" && q.method === "GET" && /^[@\\w./-]+$/.test(pkg) && !pkg.startsWith("-/")) {
+             const v = (version) => ({ name: pkg, version, dist: { tarball: "http://127.0.0.1/none.tgz" } });
+             r.setHeader("content-type", "application/json");
+             r.end(JSON.stringify({ name: pkg, "dist-tags": { latest: "9.0.0" }, versions: { "1.3.0": v("1.3.0"), "9.0.0": v("9.0.0") } }));
+             return;
+           }
            r.statusCode = 404; r.end("{}");
          });
          s.listen(0, "127.0.0.1", () => done(s.address().port));
@@ -237,4 +249,232 @@ describe("a repository's .npmrc, with the real npm, against listeners on this ma
         expect(requests.join("\n")).not.toContain("secret-value-456");
       }),
   );
+
+  it.skipIf(!hasNpm || process.platform === "win32")(
+    "finds a devDependency a major version behind, though nothing is installed in the copy",
+    () =>
+      withScratch((scratch) => {
+        const net = listeners(scratch);
+        try {
+          writeFileSync(join(scratch, "user.npmrc"), `registry=http://127.0.0.1:${net.user}/\n`);
+          writeFileSync(join(scratch, "global.npmrc"), "");
+          const npm = findNpm(
+            {
+              PATH: process.env.PATH,
+              HOME: scratch,
+              npm_config_userconfig: join(scratch, "user.npmrc"),
+              npm_config_globalconfig: join(scratch, "global.npmrc"),
+              npm_config_fetch_retries: "0",
+            },
+            process.platform,
+            process.execPath,
+            join(scratch, "npm"),
+          )!;
+          const dev = {
+            "package.json": JSON.stringify({
+              name: "widget",
+              version: "1.0.0",
+              devDependencies: { "left-pad": "^1.3.0" },
+            }),
+            "package-lock.json": project["package-lock.json"],
+          };
+          const result = investigate({ name: "widget", files: dev }, (repo, capabilities) =>
+            runCheck(
+              CHECKS.find((c) => c.id === "deps.outdated")!,
+              repo,
+              new Set([...capabilities, "npm", "network"]),
+              {
+                ...secretHasher(Buffer.alloc(32)),
+                npm,
+              },
+            ),
+          );
+          expect(result).toMatchObject({
+            verdict: "found",
+            evidence: [{ excerpt: "left-pad 1.3.0, latest 9.0.0 (dev)" }],
+          });
+        } finally {
+          net.stop();
+        }
+      }),
+  );
+
+  it.skipIf(!hasNpm || process.platform === "win32")(
+    "asks the registry about registry dependencies alone: never a git, path, URL or alias source",
+    () =>
+      withScratch((scratch) => {
+        const net = listeners(scratch);
+        try {
+          writeFileSync(join(scratch, "user.npmrc"), `registry=http://127.0.0.1:${net.user}/\n`);
+          writeFileSync(join(scratch, "global.npmrc"), "");
+          const npm = findNpm(
+            {
+              PATH: process.env.PATH,
+              HOME: scratch,
+              npm_config_userconfig: join(scratch, "user.npmrc"),
+              npm_config_globalconfig: join(scratch, "global.npmrc"),
+              npm_config_fetch_retries: "0",
+            },
+            process.platform,
+            process.execPath,
+            join(scratch, "npm"),
+          )!;
+          const chosen = `127.0.0.1:${net.chosen}`;
+          const manifest = {
+            name: "widget",
+            version: "1.0.0",
+            dependencies: {
+              "keep-me": "^1.3.0",
+              "from-git": `git+http://${chosen}/r.git`,
+              "from-url": `http://${chosen}/x.tgz`,
+              "from-path": "file:../outside",
+              "from-alias": "npm:alias-target@^1.0.0",
+            },
+          };
+          const lock = {
+            name: "widget",
+            lockfileVersion: 3,
+            packages: { "": { name: "widget" }, "node_modules/keep-me": { version: "1.3.0" } },
+          };
+          const result = investigate(
+            {
+              name: "widget",
+              files: { "package.json": JSON.stringify(manifest), "package-lock.json": JSON.stringify(lock) },
+            },
+            (repo, capabilities) =>
+              runCheck(
+                CHECKS.find((c) => c.id === "deps.outdated")!,
+                repo,
+                new Set([...capabilities, "npm", "network"]),
+                {
+                  ...secretHasher(Buffer.alloc(32)),
+                  npm,
+                },
+              ),
+          );
+          expect(result).toMatchObject({
+            verdict: "found",
+            evidence: [{ excerpt: "keep-me 1.3.0, latest 9.0.0" }],
+          });
+          const seen = net.seen();
+          expect(seen.filter((line) => line.startsWith("chosen"))).toEqual([]);
+          expect(seen.filter((line) => line.startsWith("user ")).map((line) => line.split(" ")[2])).toEqual([
+            "/keep-me",
+          ]);
+        } finally {
+          net.stop();
+        }
+      }),
+  );
+});
+
+describe("which dependencies npm is asked about", () => {
+  it.each([
+    ["^1.2.3", "registry"],
+    ["1.2.3", "registry"],
+    ["~1.2.3", "registry"],
+    [">=1 <2 || 3.x", "registry"],
+    ["latest", "registry"],
+    ["*", "registry"],
+    ["", "registry"],
+    ["1.0.0-beta.1+build", "registry"],
+    ["git+ssh://git@host.example.invalid/x.git", "git"],
+    ["git+https://host.example.invalid/x.git", "git"],
+    ["git://host.example.invalid/x.git", "git"],
+    ["github:user/repo", "git"],
+    ["gitlab:user/repo", "git"],
+    ["user/repo", "git"],
+    ["user/repo#v1", "git"],
+    ["file:../../somewhere", "path"],
+    ["link:../x", "path"],
+    ["workspace:*", "path"],
+    ["./local", "path"],
+    ["../up", "path"],
+    ["~/home", "path"],
+    ["/abs", "path"],
+    ["C:\\x", "path"],
+    ["x.tgz", "path"],
+    ["https://host.example.invalid/x.tgz", "url"],
+    ["http://host.example.invalid/x", "url"],
+    ["npm:other@^1.0.0", "alias"],
+    ["something:else", "other"],
+  ])("reads %j as %s", (spec, source) => {
+    expect(dependencySource("left-pad", spec)).toBe(source);
+  });
+
+  it("asks nothing for a name the registry could not hold, or a spec that is not text", () => {
+    expect(dependencySource("../escape", "^1.0.0")).toBe("other");
+    expect(dependencySource("UPPER", "^1.0.0")).toBe("other");
+    expect(dependencySource("left-pad", { version: "1" })).toBe("other");
+    expect(dependencySource("@scope/name", "^1.0.0")).toBe("registry");
+  });
+
+  it("gives npm each registry dependency at *, and none of the others, with a stub npm", () =>
+    withScratch((scratch) => {
+      const npm = stubNpm(scratch, { outdated: {} });
+      const manifest = {
+        name: "widget",
+        version: "1.0.0",
+        dependencies: { "keep-me": "^1.3.0", "from-git": "github:user/repo" },
+        devDependencies: { "keep-dev": "~2.0.0", "from-path": "file:../x" },
+      };
+      const lock = { name: "widget", lockfileVersion: 3, packages: { "": { name: "widget" } } };
+      const result = investigate(
+        {
+          name: "widget",
+          files: { "package.json": JSON.stringify(manifest), "package-lock.json": JSON.stringify(lock) },
+        },
+        (repo, capabilities) =>
+          runCheck(
+            CHECKS.find((c) => c.id === "deps.outdated")!,
+            repo,
+            new Set([...capabilities, "npm", "network"]),
+            {
+              ...secretHasher(Buffer.alloc(32)),
+              npm: findNpm(npm.env, process.platform, process.execPath, join(scratch, "npm"))!,
+            },
+          ),
+      );
+      expect(npm.calls()[0]!.manifest!.dependencies).toEqual({ "keep-me": "*", "keep-dev": "*" });
+      expect(result).toEqual({
+        verdict: "not-investigated",
+        reason: outdatedReasons.leftOut([
+          { name: "from-git", source: "git" },
+          { name: "from-path", source: "path" },
+        ]),
+      });
+    }));
+
+  it("asks npm nothing when every dependency comes from elsewhere", () =>
+    withScratch((scratch) => {
+      const npm = stubNpm(scratch, { outdated: {} });
+      const manifest = {
+        name: "widget",
+        version: "1.0.0",
+        dependencies: { "from-url": "https://host.example.invalid/x.tgz" },
+      };
+      const lock = { name: "widget", lockfileVersion: 3, packages: { "": { name: "widget" } } };
+      const result = investigate(
+        {
+          name: "widget",
+          files: { "package.json": JSON.stringify(manifest), "package-lock.json": JSON.stringify(lock) },
+        },
+        (repo, capabilities) =>
+          runCheck(
+            CHECKS.find((c) => c.id === "deps.outdated")!,
+            repo,
+            new Set([...capabilities, "npm", "network"]),
+            {
+              ...secretHasher(Buffer.alloc(32)),
+              npm: findNpm(npm.env, process.platform, process.execPath, join(scratch, "npm"))!,
+            },
+          ),
+      );
+      expect(npm.calls()).toEqual([]);
+      expect(result).toEqual({
+        verdict: "not-investigated",
+        reason:
+          "from-url comes from a URL: I only look up dependencies from npm's registry, so I looked nothing up.",
+      });
+    }));
 });
