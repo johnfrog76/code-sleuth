@@ -36,8 +36,8 @@ const excerpts = (result: ReturnType<typeof check>) =>
 
 describe("a secret on a line another check reports, cut at the excerpt's limit", () => {
   it.each([
-    ["quality.markers", (v: string) => `// TODO rotate ${"x".repeat(123)} ${v}`],
-    ["paths.machine", (v: string) => `const p = "/Users/alice/proj"; ${"x".repeat(80)} const k = "${v}";`],
+    ["quality.markers", (v: string) => `// TODO rotate ${"x".repeat(123)} ${v}`], // code-sleuth:example
+    ["paths.machine", (v: string) => `const p = "/Users/alice/proj"; ${"x".repeat(80)} const k = "${v}";`], // code-sleuth:example
   ])("is masked before %s's excerpt is cut", (id, line) => {
     const result = check(id, { "a.js": `${line(github)}\n` });
     expect(result.verdict).toBe("found");
@@ -47,7 +47,7 @@ describe("a secret on a line another check reports, cut at the excerpt's limit",
   it("masks a guess from a name past the limit too", () => {
     const value = SECRETS["assigned-secret"]!.value;
     const result = check("quality.markers", {
-      "a.js": `// TODO ${"x".repeat(110)} client_secret=${value}\n`,
+      "a.js": `// TODO ${"x".repeat(110)} client_secret=${value}\n`, // code-sleuth:example
     });
     expect(leaks(excerpts(result), value)).toBe(false);
   });

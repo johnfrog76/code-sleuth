@@ -153,12 +153,10 @@ describe("a case folder that cannot be written", () => {
 describe("the ToolKit hand-off", () => {
   it("reads a Prompt: path with a space or a bare % as written, rather than throwing", () => {
     const created = "[+] Created a.md in backlog/ -- Task K7M2, offline.\n";
-    expect(readCreated(`${created}    Prompt: file:///Users/A Person/hub/backlog/a.md\n`).path).toBe(
-      "/Users/A Person/hub/backlog/a.md",
-    );
-    expect(readCreated(`${created}    Prompt: file:///Users/x/100%done/backlog/a.md\n`).path).toBe(
-      "/Users/x/100%done/backlog/a.md",
-    );
+    const spaced = `${created}    Prompt: file:///Users/A Person/hub/backlog/a.md\n`; // code-sleuth:example
+    const percent = `${created}    Prompt: file:///Users/x/100%done/backlog/a.md\n`; // code-sleuth:example
+    expect(readCreated(spaced).path).toBe("/Users/A Person/hub/backlog/a.md"); // code-sleuth:example
+    expect(readCreated(percent).path).toBe("/Users/x/100%done/backlog/a.md"); // code-sleuth:example
   });
 
   it("refuses a ledger it cannot read, before anything is filed", () =>

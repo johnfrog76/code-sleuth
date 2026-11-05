@@ -1,5 +1,7 @@
+import { matchesGlob } from "node:path";
 import type { Result } from "./check.js";
 import { ecosystemReasons } from "./copy.js";
+import { BUILT_IN_EXAMPLE_GLOBS } from "./examples.js";
 import { manifestOf, readManifest } from "./manifest.js";
 import type { RepoReader } from "./repo.js";
 
@@ -60,6 +62,8 @@ export function nestedNpmProject(
 ): string | undefined {
   return repo.textFiles.find((path) => {
     if (!path.includes("/") || path.split("/").at(-1) !== "package.json") return false;
+    // A test's fixture project is bait, not the repository's own: an example location is left out.
+    if (BUILT_IN_EXAMPLE_GLOBS.some((glob) => matchesGlob(path, glob))) return false;
     const manifest = manifestOf(readManifest(repo as RepoReader, path));
     return ["dependencies", "devDependencies", "optionalDependencies"].some((field) => {
       const deps = manifest?.[field];

@@ -243,7 +243,7 @@ describe("a repository's .npmrc, with the real npm, against listeners on this ma
     () =>
       withScratch((scratch) => {
         const { requests } = audit(scratch, "registry=http://127.0.0.1:CHOSEN/${SLEUTH_SECRET}/\n", {
-          SLEUTH_SECRET: "secret-value-456",
+          SLEUTH_SECRET: "secret-value-456", // code-sleuth:example
         });
         expect(requests.filter((line) => line.startsWith("chosen"))).toEqual([]);
         expect(requests.join("\n")).not.toContain("secret-value-456");

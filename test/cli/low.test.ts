@@ -14,7 +14,7 @@ describe("the PowerShell copy line (POL-11)", () => {
   it("doubles a curly apostrophe as it doubles a straight one", () => {
     const line = copyCommand(
       "C:\\code\\.env.example",
-      "C:\\Users\\O\u2019Brien\\AppData\\Local\\code-sleuth\\.env",
+      "C:\\Users\\O\u2019Brien\\AppData\\Local\\code-sleuth\\.env", // code-sleuth:example
       "win32",
     );
     expect(line).toContain("O\u2019\u2019Brien");
@@ -22,7 +22,7 @@ describe("the PowerShell copy line (POL-11)", () => {
 
   const hasPwsh = spawnSync("pwsh", ["-NoProfile", "-Command", "exit 0"], { stdio: "ignore" }).status === 0;
   it.skipIf(!hasPwsh)("is a line PowerShell parses whole", () => {
-    const line = copyCommand("C:\\code\\.env.example", "C:\\Users\\O\u2019Brien\\.env", "win32");
+    const line = copyCommand("C:\\code\\.env.example", "C:\\Users\\O\u2019Brien\\.env", "win32"); // code-sleuth:example
     const parsed = spawnSync(
       "pwsh",
       [
@@ -44,7 +44,7 @@ describe("a path shown from home (POL-12)", () => {
     expect(shownPath("C:\\Users\\me\\AppData\\code-sleuth\\.env", "C:\\Users\\me", win32)).toBe(
       "~\\AppData\\code-sleuth\\.env",
     );
-    expect(shownPath("C:\\Users\\me..x\\a", "C:\\Users\\me", win32)).toBe("C:\\Users\\me..x\\a");
+    expect(shownPath("C:\\Users\\me..x\\a", "C:\\Users\\me", win32)).toBe("C:\\Users\\me..x\\a"); // code-sleuth:example
   });
 });
 

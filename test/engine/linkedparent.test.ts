@@ -9,14 +9,14 @@ import { SECRETS } from "../helpers/secrets.js";
 // The code review's medium finding 18 (ENG-8, PROC-4): git still lists a tracked path whose folder has been
 // replaced in the work tree by a link, and Code Sleuth read through it, outside the repository.
 
-const outsideLine = `// TODO outside-the-repo ${SECRETS["github-token"]!.line(SECRETS["github-token"]!.value)}`;
+const outsideLine = `// TODO outside-the-repo ${SECRETS["github-token"]!.line(SECRETS["github-token"]!.value)}`; // code-sleuth:example
 
 describe("a tracked path whose folder is now a link", () => {
   it.skipIf(process.platform === "win32")("is never read: nothing from outside reaches a finding", () => {
     const seen = investigate(
       {
         name: "widget",
-        files: { "README.md": "# widget\n", "d/f.js": "// TODO inside\n", "e/g.js": "// fine\n" },
+        files: { "README.md": "# widget\n", "d/f.js": "// TODO inside\n", "e/g.js": "// fine\n" }, // code-sleuth:example
       },
       (repo, capabilities) => ({
         files: repo.files,

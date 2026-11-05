@@ -56,7 +56,7 @@ describe("text from the repository, in case.md and the cards", () => {
       name: "widget",
       files: {
         "README.md": "# widget\n",
-        "conf.txt": 'a = "/Users/alice/proj"\r\r# INJECTED HEADING\r<script>x</script>\n',
+        "conf.txt": 'a = "/Users/alice/proj"\r\r# INJECTED HEADING\r<script>x</script>\n', // code-sleuth:example
       },
     });
     for (const [name, text] of Object.entries(written)) {

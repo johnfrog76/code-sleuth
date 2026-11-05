@@ -70,9 +70,9 @@ describe("what the terminal shows", () => {
       license: `MIT${ESC}]52;c;ZWNobw==${BEL}${ESC}[2J`,
     }),
     LICENSE: "Custom terms of my own.\n",
-    [`notes${ESC}[1A${ESC}[2K.txt`]: "path /Users/alice/proj\n",
+    [`notes${ESC}[1A${ESC}[2K.txt`]: "path /Users/alice/proj\n", // code-sleuth:example
     // One of Code Sleuth's own styles: the last pass lets it through, so it is taken out where the name goes in.
-    [`green${ESC}[32m.js`]: "// TODO remove this\n",
+    [`green${ESC}[32m.js`]: "// TODO remove this\n", // code-sleuth:example
   };
 
   it.each([
