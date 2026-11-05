@@ -1,5 +1,6 @@
 import type { Result } from "./check.js";
 import { ecosystemReasons } from "./copy.js";
+import { manifestOf, readManifest } from "./manifest.js";
 import type { RepoReader } from "./repo.js";
 
 /** A manifest Code Sleuth knows the ecosystem of, and does not read yet. */
@@ -36,11 +37,33 @@ export function otherManifests(repo: Pick<RepoReader, "textFiles">): OtherManife
  * left unread. With one, clean would claim a side that was never read, so the check reads not investigated and
  * names what it found. `npmRead` says whether an npm side was checked and found clean first.
  */
-export function cleanOrUnread(repo: Pick<RepoReader, "textFiles">, npmRead: boolean): Result {
+export function cleanOrUnread(
+  repo: Pick<RepoReader, "textFiles" | "readText" | "has">,
+  npmRead: boolean,
+  rootOnly = false,
+): Result {
+  // A check that reads the root's npm project alone has not read one in a folder below it.
+  const nested = rootOnly ? nestedNpmProject(repo) : undefined;
+  if (nested !== undefined)
+    return { verdict: "not-investigated", reason: ecosystemReasons.nestedNpm(nested) };
   const [first] = otherManifests(repo);
   if (first === undefined) return { verdict: "clean" };
   const reason = npmRead
     ? ecosystemReasons.npmCleanOtherUnread(first.path, first.ecosystem)
     : ecosystemReasons.otherOnly(first.path, first.ecosystem);
   return { verdict: "not-investigated", reason };
+}
+
+/** The first package.json below the root, outside the folders the text checks skip, that has dependencies. */
+export function nestedNpmProject(
+  repo: Pick<RepoReader, "textFiles" | "readText" | "has">,
+): string | undefined {
+  return repo.textFiles.find((path) => {
+    if (!path.includes("/") || path.split("/").at(-1) !== "package.json") return false;
+    const manifest = manifestOf(readManifest(repo as RepoReader, path));
+    return ["dependencies", "devDependencies", "optionalDependencies"].some((field) => {
+      const deps = manifest?.[field];
+      return typeof deps === "object" && deps !== null && Object.keys(deps).length > 0;
+    });
+  });
 }

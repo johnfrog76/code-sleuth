@@ -108,7 +108,8 @@ A check that reads a `package.json` reads **not investigated** when that file is
 
 ### `license.file`: A license
 
-- **Reads:** `LICENSE*`, `LICENCE*`, `COPYING*` at the root, and `package.json` `license`
+- **Reads:** `LICENSE*`, `LICENCE*`, `COPYING*` at the root (not code or data that starts so, such as
+  `license-checker.json`), and `package.json` `license`
 - **Finds:** no license file; or a manifest license that the file, identified by its text, contradicts
 - **Needs:** nothing
 - **Not investigated** when `package.json` states a license and the file's text is not one it can tell, so the two cannot be compared
@@ -117,10 +118,10 @@ A check that reads a `package.json` reads **not investigated** when that file is
 
 ### `license.deps`: Dependency licenses
 
-- **Reads:** `package-lock.json` (lockfile v2 or v3)
-- **Finds:** a dependency under a strong copyleft license (GPL, AGPL, SSPL) in a project that is not, or with no license stated; development-only packages are not read
+- **Reads:** every `package-lock.json` (lockfile v2 or v3), each on its own
+- **Finds:** a dependency under a strong copyleft license (GPL, AGPL, SSPL) in a project that is not, or with no license stated; development-only packages are not read. An SPDX expression is read with its grouping: `GPL-3.0 AND (MIT OR Apache-2.0)` binds to the GPL
 - **Needs:** nothing
-- **Not investigated** with a `package.json` and no lockfile, an old v1 lockfile, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
+- **Not investigated** with a `package.json` and no lockfile, or another ecosystem's manifest ([other ecosystems](#other-ecosystems)); and, when nothing is found, with a lockfile it cannot read or an old v1 one, naming it. A finding in one lockfile stands whatever another holds, and a lockfile in an example location is left out
 - **What the books call it:** license compliance
 - **The fix:** For each dependency listed, check its license in its own repository. Replace a strong copyleft dependency, or relicense the project to match it; ask the author of one with no license to add one, or replace it.
 
@@ -207,6 +208,7 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Reads:** `.github/workflows/*.yml`
 - **Finds:** no workflow that runs on `push` or `pull_request`
 - **Needs:** nothing
+- **Not investigated** when none is found and a workflow doesn't parse as YAML, naming it: it may be the one
 - **What the books call it:** continuous integration
 - **May not apply:** to a repository with nothing to build or test, such as notes or a sample.
 - **The fix:** Add a workflow in .github/workflows/ that runs on push and pull_request, checks out the code, installs, and runs the build.
@@ -216,6 +218,8 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Reads:** the workflows' `run:` steps and `package.json` `scripts.test`
 - **Finds:** no step that runs the tests (`npm test`, `pytest`, `go test`, the test script itself, ...)
 - **Needs:** nothing
+- **Not investigated** when none is found and a workflow doesn't parse as YAML, naming it, or when
+  `package.json` can't be read
 - **What the books call it:** automated testing
 - **The fix:** Add a step to the CI workflow that runs the project's tests (npm test, pytest, or whatever runs them here), so a pull request that breaks them shows red.
 
@@ -231,7 +235,8 @@ A check that reads a `package.json` reads **not investigated** when that file is
 ### `workflows.prtarget`: pull_request_target with the pull request's code
 
 - **Reads:** each workflow
-- **Finds:** `pull_request_target` together with a checkout of the pull request's head
+- **Finds:** `pull_request_target` together with a checkout of the pull request's head or its merge commit
+  (`head.sha`, `head.ref`, `merge_commit_sha`, `refs/pull/`)
 - **Needs:** nothing
 - **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
 - **What the books call it:** pwn request
@@ -240,7 +245,7 @@ A check that reads a `package.json` reads **not investigated** when that file is
 ### `workflows.injection`: Untrusted input in a workflow's shell
 
 - **Reads:** each workflow's `run:` lines
-- **Finds:** a `${{ github.event.* }}` field a stranger writes (titles, bodies, branch names, commit messages) placed straight in a shell line
+- **Finds:** a `${{ github.event.* }}` field a stranger writes (titles, bodies, branch names, commit messages) placed straight in a shell line, in dotted or index syntax (`github.event['issue']['title']`)
 - **Needs:** nothing
 - **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
 - **What the books call it:** script injection
@@ -271,8 +276,10 @@ A check that reads a `package.json` reads **not investigated** when that file is
   `package.json` and the lockfile in Code Sleuth's own folder, so the repository's `.npmrc` is never read; your
   own npm settings, your auth among them, still apply. `--offline` turns it off, and the run's header names it before it
   runs
-- **Reads clean** with no `package.json` at the root, or none with dependencies, and no other ecosystem's manifest, and makes
-  no call (with `--offline`, it reads not investigated even then). **Not investigated** with no npm lockfile, with another package manager's lockfile, with `--offline`,
+- **Reads clean** with no `package.json` at the root, or none with dependencies, and no other ecosystem's manifest and
+  no npm project below the root, and makes
+  no call (with `--offline`, it reads not investigated even then). **Not investigated** with an npm project
+  below the root (it reads the root's alone so far, and names the other), with no npm lockfile, with another package manager's lockfile, with `--offline`,
   with neither tool, or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** known vulnerable component
 - **The fix:** Update each package listed to a version with the fix (`npm audit fix` does what it safely can), or replace it. A package deep in the tree is fixed by updating the dependency that pulls it in.
@@ -300,8 +307,10 @@ A check that reads a `package.json` reads **not investigated** when that file is
   lockfile, on the machine. A dependency from anywhere else -- git (`git+ssh:`, `github:`, `user/repo`), a path
   (`file:`, `link:`, `workspace:`, a tarball), a URL, or an `npm:` alias -- is never looked up, and is named. It leaves your own npm
   registry settings (your `.npmrc`, a scoped or private registry) alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
-- **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest, and
-  makes no call, when npm is found and the run is not `--offline`; **not investigated** with no lockfile, a lockfile from another package manager, no npm,
+- **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest
+  and no npm project below the root, and
+  makes no call, when npm is found and the run is not `--offline`; **not investigated** with an npm project
+  below the root, named, when `npm outdated` exits 1 with nothing printed, with no lockfile, a lockfile from another package manager, no npm,
   a dependency from a source other than npm's registry and none of the others behind (each one named),
   `--offline`, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** outdated dependency

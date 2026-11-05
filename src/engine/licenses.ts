@@ -91,11 +91,36 @@ function strongCopyleftId(id: string): boolean {
  * when every `OR` choice holds one, through any `AND`. A choice of any other license is a way out.
  */
 export function isStrongCopyleft(expression: string): boolean {
-  const choices = expression.replace(/[()]/g, " ").split(/\s+OR\s+/i);
-  return choices.every((choice) =>
-    choice
-      .split(/\s+AND\s+/i)
-      .map((part) => part.trim().split(/\s+WITH\s+/i)[0]!)
-      .some(strongCopyleftId),
-  );
+  const tokens = expression.match(/\(|\)|[^\s()]+/g) ?? [];
+  let at = 0;
+  // SPDX: OR binds loosest, then AND, then WITH; parentheses group. A choice binds when every OR side does, a
+  // combination when any AND side does.
+  const either = (): boolean => {
+    let bound = both();
+    while (tokens[at]?.toUpperCase() === "OR") {
+      at++;
+      bound = both() && bound;
+    }
+    return bound;
+  };
+  const both = (): boolean => {
+    let bound = one();
+    while (tokens[at]?.toUpperCase() === "AND") {
+      at++;
+      bound = one() || bound;
+    }
+    return bound;
+  };
+  const one = (): boolean => {
+    const token = tokens[at++];
+    if (token === undefined) return false;
+    let bound: boolean;
+    if (token === "(") {
+      bound = either();
+      if (tokens[at] === ")") at++;
+    } else bound = strongCopyleftId(token);
+    if (tokens[at]?.toUpperCase() === "WITH") at += 2;
+    return bound;
+  };
+  return either();
 }

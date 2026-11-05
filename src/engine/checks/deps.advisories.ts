@@ -1,7 +1,7 @@
 import type { Check, Evidence, Need, Result } from "../check.js";
 import { advisoriesReasons, cards, unreadableReasons, voices } from "../copy.js";
 import { cleanOrUnread } from "../ecosystems.js";
-import { lineContaining, manifestOf, readManifest } from "../manifest.js";
+import { lineContaining, manifestOf, readManifest, lockedOf } from "../manifest.js";
 import type { RepoReader } from "../repo.js";
 
 /** The lockfiles npm writes, which hold every installed package's name and version. */
@@ -251,7 +251,7 @@ export const depsAdvisories: Check = {
   run(repo, context): Result {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can carry an advisory, and no call is made.
-    if (state === "nothing") return cleanOrUnread(repo, false);
+    if (state === "nothing") return cleanOrUnread(repo, false, true);
     if (state === "unreadable")
       return { verdict: "not-investigated", reason: unreadableReasons.manifest("package.json") };
     if (state === "no-lockfile") return { verdict: "not-investigated", reason: advisoriesReasons.noLockfile };
@@ -262,7 +262,7 @@ export const depsAdvisories: Check = {
     const lockText = repo.readText(lockfile) ?? "";
     let locked: Locked;
     try {
-      locked = (JSON.parse(lockText) as { packages?: Locked }).packages ?? {};
+      locked = lockedOf(JSON.parse(lockText)) as Locked;
     } catch {
       return { verdict: "not-investigated", reason: advisoriesReasons.unreadableLockfile(lockfile) };
     }
@@ -313,6 +313,6 @@ export const depsAdvisories: Check = {
     }
 
     const evidence = evidenceFor(found, lockfile, lockText);
-    return evidence.length === 0 ? cleanOrUnread(repo, true) : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnread(repo, true, true) : { verdict: "found", evidence };
   },
 };

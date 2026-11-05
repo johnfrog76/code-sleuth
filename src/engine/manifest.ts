@@ -33,3 +33,29 @@ export function lineContaining(text: string, needle: string): number | undefined
   const index = text.split(/\r?\n/).findIndex((line) => line.includes(needle));
   return index < 0 ? undefined : index + 1;
 }
+
+/** Each locked package, by its node path (`node_modules/a`, `node_modules/a/node_modules/b`), and its version. */
+export type LockedPackages = Record<string, { version?: string; [key: string]: unknown }>;
+
+/**
+ * The packages a parsed npm lockfile locks: `packages` in a v2 or v3 lockfile, or, in a v1 lockfile, its
+ * `dependencies` tree laid out the same way. A v1 lockfile is not "nothing locked".
+ */
+export function lockedOf(lock: unknown): LockedPackages {
+  if (typeof lock !== "object" || lock === null) return {};
+  const { packages, dependencies } = lock as { packages?: unknown; dependencies?: unknown };
+  if (typeof packages === "object" && packages !== null) return packages as LockedPackages;
+  const locked: LockedPackages = {};
+  const walk = (tree: unknown, prefix: string) => {
+    if (typeof tree !== "object" || tree === null) return;
+    for (const [name, entry] of Object.entries(tree)) {
+      if (typeof entry !== "object" || entry === null) continue;
+      const node = `${prefix}node_modules/${name}`;
+      const { version, dependencies: nested } = entry as { version?: unknown; dependencies?: unknown };
+      locked[node] = typeof version === "string" ? { version } : {};
+      walk(nested, `${node}/`);
+    }
+  };
+  walk(dependencies, "");
+  return locked;
+}

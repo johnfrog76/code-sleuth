@@ -4,6 +4,9 @@ import { baseLicense, identifyLicense, licenseIds } from "../licenses.js";
 import { lineContaining, manifestOf, readManifest } from "../manifest.js";
 
 const LICENSE_FILE = /^(?:licen[cs]e|copying)(?:[-._].*)?$/i;
+/** A name that starts like a license but is code or data: `license-checker.json`, `license.ts`. */
+const NOT_A_LICENSE_TEXT =
+  /\.(?:json|jsonc|js|mjs|cjs|ts|mts|cts|tsx|jsx|py|rb|go|rs|java|kt|cs|php|sh|ps1|ya?ml|toml|lock|xml|ini|cfg)$/i;
 
 export const licenseFile: Check = {
   id: "license.file",
@@ -13,7 +16,9 @@ export const licenseFile: Check = {
   voice: voices["license.file"],
   card: cards["license.file"],
   run(repo): Result {
-    const files = repo.files.filter((path) => !path.includes("/") && LICENSE_FILE.test(path));
+    const files = repo.files.filter(
+      (path) => !path.includes("/") && LICENSE_FILE.test(path) && !NOT_A_LICENSE_TEXT.test(path),
+    );
     if (files.length === 0) return { verdict: "found", evidence: [] };
 
     const read = readManifest(repo);

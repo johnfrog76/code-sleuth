@@ -20,6 +20,11 @@ const STRANGER = new RegExp(
 );
 const EXPRESSION = /\$\{\{([^}]*)\}\}/g;
 
+/** `github.event['issue']["title"]` read as `github.event.issue.title`: the same field, in index syntax. */
+function dotted(expression: string): string {
+  return expression.replace(/\[\s*(['"])([\w-]+)\1\s*\]/g, ".$2");
+}
+
 export const workflowsInjection: Check = {
   id: "workflows.injection",
   title: "Untrusted input in a workflow's shell",
@@ -32,7 +37,7 @@ export const workflowsInjection: Check = {
     for (const workflow of readWorkflows(repo)) {
       for (const step of workflow.steps) {
         (step.run ?? "").split("\n").forEach((text, i) => {
-          if ([...text.matchAll(EXPRESSION)].some((m) => STRANGER.test(m[1]!))) {
+          if ([...text.matchAll(EXPRESSION)].some((m) => STRANGER.test(dotted(m[1]!)))) {
             evidence.push({
               path: workflow.path,
               line: lineInRun(step, i),

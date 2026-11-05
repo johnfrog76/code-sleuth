@@ -2,6 +2,7 @@ import type { Check, Result } from "../check.js";
 import { cards, unreadableReasons, voices } from "../copy.js";
 import { manifestOf, readManifest } from "../manifest.js";
 import { readWorkflows } from "../workflows.js";
+import { workflowReasons } from "../copy.js";
 
 /** The commands that run a project's tests, whatever the script inside them is. */
 const TEST_COMMAND =
@@ -33,6 +34,10 @@ export const ciTests: Check = {
     // No step runs a known test command, and the test script that one might run is in a package.json nobody read.
     if (read.state === "unreadable")
       return { verdict: "not-investigated", reason: unreadableReasons.manifest(read.path) };
+    // Nor in a workflow nobody could read: it may hold the test step.
+    const unreadable = workflows.find(({ readable }) => !readable);
+    if (unreadable !== undefined)
+      return { verdict: "not-investigated", reason: workflowReasons.unreadable(unreadable.path) };
     return { verdict: "found", evidence: workflows.map(({ path }) => ({ path, rule: "no-test-step" })) };
   },
 };

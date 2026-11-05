@@ -251,7 +251,8 @@ describe("ci.present", () => {
     ['"on": push', "clean"],
     ["on: schedule", ["no-push-or-pull-request"]],
     ["on:\n  workflow_dispatch:", ["no-push-or-pull-request"]],
-    ["on: [push", ["not-yaml"]],
+    // A workflow that does not parse may be the one that runs on push: not read, so not investigated.
+    ["on: [push", "not-investigated"],
   ])("%j", (on, expected) => expect(rules(check("ci.present", wf(on)))).toEqual(expected));
 
   it("is found with no workflows, and does not read a workflow outside .github/workflows/", () => {

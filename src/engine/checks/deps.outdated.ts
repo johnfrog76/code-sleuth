@@ -1,7 +1,7 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
 import { cards, outdatedReasons, unreadableReasons, voices } from "../copy.js";
-import { lineContaining, manifestOf, readManifest } from "../manifest.js";
+import { lineContaining, manifestOf, readManifest, lockedOf } from "../manifest.js";
 
 /** The lockfiles npm writes, which hold each direct dependency's installed version. */
 const NPM_LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json"];
@@ -124,7 +124,7 @@ export const depsOutdated: Check = {
   run(repo, context): Result {
     const state = lookup(repo);
     // No package.json, or no dependencies in it: nothing can be behind, and no call is made.
-    if (state === "nothing") return cleanOrUnread(repo, false);
+    if (state === "nothing") return cleanOrUnread(repo, false, true);
     if (state === "unreadable")
       return { verdict: "not-investigated", reason: unreadableReasons.manifest("package.json") };
     if (state === "no-lockfile") return { verdict: "not-investigated", reason: outdatedReasons.noLockfile };
@@ -144,6 +144,9 @@ export const depsOutdated: Check = {
     }
     let outdated: Record<string, Outdated>;
     try {
+      // Nothing printed is "nothing behind" only with exit 0: npm exits 1 for a failure too.
+      if (answer.stdout.trim() === "" && answer.status !== 0)
+        return { verdict: "not-investigated", reason: outdatedReasons.failed };
       outdated = answer.stdout.trim() === "" ? {} : (JSON.parse(answer.stdout) as Record<string, Outdated>);
     } catch {
       return { verdict: "not-investigated", reason: outdatedReasons.failed };
@@ -151,9 +154,9 @@ export const depsOutdated: Check = {
     if ("error" in outdated) return { verdict: "not-investigated", reason: outdatedReasons.failed };
 
     const lockfile = NPM_LOCKFILES.find((file) => repo.has(file))!;
-    let locked: Record<string, { version?: string }> = {};
+    let locked: Record<string, { version?: string }>;
     try {
-      locked = (JSON.parse(repo.readText(lockfile) ?? "{}") as { packages?: typeof locked }).packages ?? {};
+      locked = lockedOf(JSON.parse(repo.readText(lockfile) ?? "{}"));
     } catch {
       return { verdict: "not-investigated", reason: outdatedReasons.unreadableLockfile(lockfile) };
     }
@@ -175,7 +178,7 @@ export const depsOutdated: Check = {
     if (evidence.length > 0) return { verdict: "found", evidence };
     // Clean on what was asked; with a dependency from another source unread, it is not a clean bill.
     return leftOut.length === 0
-      ? cleanOrUnread(repo, true)
+      ? cleanOrUnread(repo, true, true)
       : { verdict: "not-investigated", reason: outdatedReasons.leftOut(leftOut) };
   },
 };

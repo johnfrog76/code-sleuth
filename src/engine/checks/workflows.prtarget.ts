@@ -4,7 +4,8 @@ import { excerptOf } from "../files.js";
 import { readWorkflows, cleanOrUnreadable } from "../workflows.js";
 
 /** An expression or ref that names the pull request's own code, which a stranger wrote. */
-const HEAD = /github\.event\.pull_request\.head\.(?:sha|ref|repo\.full_name)|github\.head_ref|refs\/pull\//;
+const HEAD =
+  /github\.event\.pull_request\.(?:head\.(?:sha|ref|repo\.full_name)|merge_commit_sha)|github\.head_ref|refs\/pull\//;
 const RUN_CHECKOUT =
   /\bgh\s+pr\s+checkout\b|\bgit\s+(?:fetch|checkout|switch)\b.*(?:github\.event\.pull_request\.head|github\.head_ref|refs\/pull\/)/;
 

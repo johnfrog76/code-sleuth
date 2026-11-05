@@ -231,6 +231,8 @@ export const ecosystemReasons = {
     `Code Sleuth reads npm projects so far; this is a ${ecosystem} project (${path}).`,
   npmCleanOtherUnread: (path: string, ecosystem: string) =>
     `The npm side is clean, but Code Sleuth reads npm projects so far, and ${path} (${ecosystem}) was not read.`,
+  nestedNpm: (path: string) =>
+    `${path} is an npm project below the root, and this check reads the root's alone so far: its dependencies were not looked up.`,
 };
 
 /** Why license.deps could not read the dependencies' licenses, and what would let it. */
