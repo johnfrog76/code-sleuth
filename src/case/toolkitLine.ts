@@ -1,3 +1,4 @@
+import { inlineText } from "./card.js";
 import { copy } from "./copy.js";
 import type { ToolkitRecord } from "./record.js";
 
@@ -20,7 +21,8 @@ export function toolkitLine(toolkit: ToolkitRecord, goal: string, space?: string
       ),
     );
   if (filing.skipped.length > 0) parts.push(copy.toolkit.skipped(filing.skipped.length));
-  if (filing.stopped) parts.push(copy.toolkit.stopped(filing.stopped.check, filing.stopped.sentence));
+  if (filing.stopped)
+    parts.push(copy.toolkit.stopped(filing.stopped.check, inlineText(filing.stopped.sentence)));
   if (filing.notFiled) parts.push(copy.toolkit.notFiled(filing.notFiled));
   return `ToolKit: ${found}; ${parts.join("; ")}.`;
 }

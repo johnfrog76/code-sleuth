@@ -58,7 +58,8 @@ export function whereOf(evidence: Evidence): string {
 
 /** The whole markdown card: its own heading, then the body. */
 export function cardFile(card: Card): string {
-  return `# ${card.type}: ${card.title}\n\n${card.body}\n`;
+  // The title is one line whatever it holds: a polished one comes back from a model.
+  return `# ${card.type}: ${oneLine(card.title)}\n\n${card.body}\n`;
 }
 
 function cardBody(
@@ -101,13 +102,28 @@ export function evidenceLine(evidence: Evidence): string {
   return line;
 }
 
-/** A markdown code span that holds any text, backticks included, on one line. */
+/** A markdown code span that holds any text, backticks included, on one line: a lone CR is a line break too. */
 export function codeSpan(text: string): string {
-  const flat = text.replace(/\r?\n/g, " ");
+  const flat = oneLine(text);
   const longest = Math.max(0, ...(flat.match(/`+/g) ?? []).map((run) => run.length));
   const fence = "`".repeat(longest + 1);
   const pad = longest > 0 || flat.startsWith(" ") || flat.endsWith(" ") ? " " : "";
   return `${fence}${pad}${flat}${pad}${fence}`;
+}
+
+/** Text on one line: every line break, CRLF, LF or a lone CR (which lf() would turn into an LF), a space. */
+export function oneLine(text: string): string {
+  return text.replace(/\r\n|\r|\n|\u2028|\u2029/g, " ");
+}
+
+/**
+ * Text from the repository, written into markdown prose as text and nothing else: on one line, so it cannot
+ * start a heading or a checklist line of its own, and with every character markdown or HTML would read as
+ * markup escaped, so it cannot open a link, a tag, an image or emphasis. A file's name, a branch, a reason
+ * that quotes one.
+ */
+export function inlineText(text: string): string {
+  return oneLine(text).replace(/[\\`*_[\]<>~!|#]/g, (ch) => `\\${ch}`);
 }
 
 /** Lower case, every run of anything but a-z and 0-9 one hyphen, at most 60 characters. */

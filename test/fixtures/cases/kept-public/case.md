@@ -37,7 +37,7 @@ Nothing on my checklist stands in the way. Every case is different: the call is 
 ## Not investigated
 
 - [ ] **Secrets in the history** (`secrets.history`): Not investigated. This needs git: install git and point me at a git repository.
-- [ ] **Names on the deny list** (`names.deny`): Not investigated. This needs a deny list: give one with --deny <file>.
+- [ ] **Names on the deny list** (`names.deny`): Not investigated. This needs a deny list: give one with --deny \<file\>.
 - [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This makes a call off the machine, and --offline is set.
 - [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This needs npm on the PATH.
 
