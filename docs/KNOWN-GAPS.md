@@ -25,6 +25,12 @@ to read wrong, and what has not been proven, with what you see when you hit each
 
 ## Known to read wrong
 
+- **One finding in Code Sleuth's own history is accepted, on purpose.** An early commit's test holds a made-up
+  value, `secret-value-456`, assigned to a secret-sounding name, and Code Sleuth's run on its own repository
+  shows it under `secrets.history`. It is test data, not a secret, and it stays in the history rather than have
+  the history rewritten. A test holds that finding to that one commit, so any other secret still fails it. A way
+  to mark a finding as accepted, so a case counts it apart, is planned.
+
 - **CI other than GitHub's.** `ci.present` reads only `.github/workflows/`, so a repository on Azure Pipelines,
   GitLab CI, CircleCI or another reads `No CI` and `ci.tests` finds no test step. Tracked for a later release.
 - **A clean secret check is not a promise.** The secret rules are a short list of well-known shapes

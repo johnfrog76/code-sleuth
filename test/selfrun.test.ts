@@ -12,7 +12,7 @@ const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const MAIN = join(ROOT, "dist", "cli", "main.js");
 
 describe("Code Sleuth on its own repository", () => {
-  it("finds no secret, machine path or note-to-self in the tree that is not marked as an example", () =>
+  it("finds no secret, machine path or note-to-self that is not marked as an example, and no history secret but the one accepted", () =>
     withScratch((scratch) => {
       const out = join(scratch, "cases");
       const env: NodeJS.ProcessEnv = { ...process.env };
@@ -30,11 +30,28 @@ describe("Code Sleuth on its own repository", () => {
         name.endsWith("case.json"),
       )!;
       const record = JSON.parse(readFileSync(join(out, file), "utf8")) as {
-        checks: { id: string; verdict: string; evidence?: { path: string; line?: number }[] }[];
+        checks: {
+          id: string;
+          verdict: string;
+          evidence?: { path: string; line?: number; rule?: string; commit?: string }[];
+        }[];
       };
       for (const id of ["secrets.tree", "paths.machine", "quality.markers", "files.sensitive"]) {
         const check = record.checks.find((c) => c.id === id)!;
         expect(check.verdict, `${id}: ${JSON.stringify(check.evidence)}`).toBe("clean");
       }
+      // One finding is accepted, and only that one: made-up test data in #44's commit, kept in the history on
+      // purpose (docs/KNOWN-GAPS.md). Any other secret in the history, a new one in the same file included, fails.
+      const history = record.checks.find((c) => c.id === "secrets.history")!;
+      expect(
+        history.evidence?.map(({ path, rule, commit }) => ({ path, rule, commit })),
+        JSON.stringify(history.evidence),
+      ).toEqual([
+        {
+          path: "test/engine/npmcopy.test.ts",
+          rule: "assigned-secret",
+          commit: "cf90958c7df7c84c8cfa3c4deb885adc23ffaed3",
+        },
+      ]);
     }));
 });
