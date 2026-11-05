@@ -8,3 +8,11 @@ export class Refusal extends Error {
     this.name = "Refusal";
   }
 }
+
+/** Ctrl-C at a prompt: the run stops, says nothing more, and exits as a shell reports an interrupt. */
+export class Interrupted extends Error {
+  constructor() {
+    super("interrupted");
+    this.name = "Interrupted";
+  }
+}

@@ -4,7 +4,17 @@ import { version } from "../version.js";
 import { checksTable } from "./checks.js";
 import { copy } from "./copy.js";
 import { investigate } from "./investigate.js";
-import { EXIT_OK, type Io, Refusal, refuse } from "./refusal.js";
+import {
+  EXIT_INTERRUPTED,
+  EXIT_OK,
+  EXIT_UNEXPECTED,
+  Interrupted,
+  type Io,
+  oneLine,
+  Refusal,
+  refuse,
+} from "./refusal.js";
+import { maskSecrets } from "../engine/secrets/scan.js";
 
 /** Every flag the CLI takes: the one list, which docs/CLI.md is held to. */
 export const OPTIONS = {
@@ -69,8 +79,26 @@ export async function run(argv: readonly string[], io: Io): Promise<number> {
     );
   } catch (error) {
     if (error instanceof Refusal) return refuse(error, io);
-    throw error;
+    if (error instanceof Interrupted) {
+      io.stdout("\n");
+      return EXIT_INTERRUPTED;
+    }
+    return unexpected(error, io);
   }
+}
+
+/**
+ * Anything that is not a stated refusal: one Error: line with its message, masked and printable, one Hint:
+ * line saying where to report it, and exit 3, never 1 (which only --fail-on gives) nor a stack trace, unless
+ * CODE_SLEUTH_DEBUG is set.
+ */
+export function unexpected(error: unknown, io: Io): number {
+  const message = error instanceof Error ? error.message : String(error);
+  io.stderr(`Error: ${oneLine(copy.unexpected(maskSecrets(message, "")))}\n`);
+  io.stderr(`Hint: ${copy.unexpectedHint}\n`);
+  if ((io.env ?? {}).CODE_SLEUTH_DEBUG && error instanceof Error && error.stack)
+    io.stderr(`${error.stack}\n`);
+  return EXIT_UNEXPECTED;
 }
 
 function parse(argv: readonly string[]) {
@@ -98,7 +126,12 @@ function toRefusal(error: unknown): unknown {
     return new Refusal(copy.unexpectedArgument(arg), copy.seeHelp);
   }
   if (error.code === "ERR_PARSE_ARGS_INVALID_OPTION_VALUE") {
-    return new Refusal(message, copy.seeHelp);
+    // Node's own words run to three lines; the refusal says it in one, in the copy's.
+    const flag = /'(--?[\w-]+)/.exec(message)?.[1] ?? "That flag";
+    return new Refusal(
+      /does not take an argument/.test(message) ? copy.flagTakesNoValue(flag) : copy.flagNeedsValue(flag),
+      copy.seeHelp,
+    );
   }
   return error;
 }

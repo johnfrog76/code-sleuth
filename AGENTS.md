@@ -42,7 +42,8 @@ a fact lives in the one that owns it, and the others link to it.
    telemetry.
 9. **Check ids are goal-free** (`secrets.tree`); a goal is a list of ids with weights.
 10. **A refusal is one `Error:` line and one `Hint:` line, exit 2**, printed by `src/cli/refusal.ts`. Exit 1
-    from `--fail-on`, or an unexpected error until #25 gives it a code of its own (amended 2026-11-04).
+    only from `--fail-on`. An unexpected error is one `Error:` line and one `Hint:` line too, exit 3, with no
+    stack trace unless `CODE_SLEUTH_DEBUG` is set (amended 2026-11-05).
 11. **Words live in copy files** (`src/cli/copy.ts`, `src/engine/copy.ts`, `src/case/copy.ts`), not in
     the rules. The detective's voice outside, plain facts inside. Card titles carry no detective words.
 

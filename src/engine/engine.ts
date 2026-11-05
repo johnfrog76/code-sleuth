@@ -2,7 +2,7 @@ import { maskSecrets } from "./secrets/scan.js";
 import { createHmac, randomBytes } from "node:crypto";
 import type { Check, CheckContext, Evidence, Need, Result } from "./check.js";
 import { CHECKS } from "./checks/index.js";
-import { needReasons } from "./copy.js";
+import { checkFailed, needReasons } from "./copy.js";
 import { type ExampleLocations, exampleLocations, isExampleEvidence } from "./examples.js";
 import { WEIGHTS, type Goal, type Weight } from "./goals.js";
 import type { RepoReader } from "./repo.js";
@@ -137,7 +137,18 @@ export function runCheck(
 ): Result {
   const missing = check.needs.find((need) => !capabilities.has(need));
   if (missing !== undefined) return { verdict: "not-investigated", reason: needReasons[missing] };
-  return masked(check.run(repo, context));
+  // A check that throws (a file it cannot open, a shape it did not expect) read nothing: not investigated, with
+  // what went wrong, and the run goes on with the next check.
+  let result: Result;
+  try {
+    result = check.run(repo, context);
+  } catch (error) {
+    result = {
+      verdict: "not-investigated",
+      reason: checkFailed(error instanceof Error ? error.message : String(error)),
+    };
+  }
+  return masked(result);
 }
 
 /**

@@ -45,8 +45,14 @@ two are listed by `checks` and refused for a case until their checks are built
 | Code | Means |
 | --- | --- |
 | 0 | the case is closed, whatever it found; also `--help`, `--version` and `checks` |
-| 1 | with `--fail-on`: a finding at or above the weight it names. An unexpected error also exits 1 for now |
+| 1 | only with `--fail-on`: a finding at or above the weight it names |
 | 2 | a stated refusal: one `Error:` line and one `Hint:` line on stderr |
+| 3 | something Code Sleuth did not expect: one `Error:` line with the message, masked, and one `Hint:` line saying where to report it. No stack trace, unless `CODE_SLEUTH_DEBUG` is set |
+| 130 | Ctrl-C at the goal prompt (Ctrl-D, closing it with no answer, is a refusal) |
+
+A check that stops part-way, on a file it cannot open or a shape it did not expect, is not an error of the run:
+it reads *not investigated*, saying what went wrong, and the run goes on. A reader that closes the pipe early
+(`| head`) ends what is printed, not the run: the case is still written, and the exit code is the run's own.
 
 A failed polish request is not a refusal: the card stays as written, and the exit code is what it would have been without `--polish`.
 

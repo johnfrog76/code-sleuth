@@ -30,11 +30,18 @@ ToolKit
   --toolkit-prefix <p>      ToolKit's command prefix, if it is not tk
   --toolkit-space <slug>    file in this Space, without changing ToolKit's own setting
 
-Exit codes: 0 the case is closed, whatever it found; 1 with --fail-on, or an unexpected error; 2 a stated refusal.
+Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a stated refusal; 3 an error I did not expect.
 `,
   unknownFlag: (flag: string) => `I don't know the flag ${flag}.`,
   unexpectedArgument: (arg: string) => `I don't take ${arg} yet.`,
   seeHelp: "Run code-sleuth --help to see what I take.",
+  flagNeedsValue: (flag: string) => `${flag} needs a value.`,
+  flagTakesNoValue: (flag: string) => `${flag} doesn't take a value.`,
+  unexpected: (message: string) => `I hit a problem I didn't expect: ${message}`,
+  unexpectedHint:
+    "Please report it at https://github.com/johnfrog76/code-sleuth/issues, leaving out any secret. CODE_SLEUTH_DEBUG=1 shows where it happened.",
+  noGoalPicked: "No goal picked: the prompt was closed before an answer.",
+
   unknownGoal: (goal: string) => `I don't know the goal ${goal}.`,
   goalHint: "The goals are public, security and quality.",
   goalNotYet: (goal: string) =>
@@ -70,6 +77,9 @@ Exit codes: 0 the case is closed, whatever it found; 1 with --fail-on, or an une
       `Warning: ${path} can be read by other people on this machine. Make it yours alone: chmod 600 '${path.replace(/'/g, "'\\''")}'\n`,
   },
   toolkit: {
+    ledgerUnreadable: (path: string) => `The record of what was filed, ${path}, isn't one I can read.`,
+    ledgerUnreadableHint:
+      "Move it aside and run me again: without it I can't tell what was filed before, so check ToolKit for cards filed twice.",
     onlyWithToolkit: (flag: string) => `${flag} only goes with --toolkit.`,
     onlyWithToolkitHint: "Add --toolkit to file the cards in ToolKit, or leave the flag off.",
     notInstalled: (reason: string) => `ToolKit isn't here to file the cards: ${reason}.`,

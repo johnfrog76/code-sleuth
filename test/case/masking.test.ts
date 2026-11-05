@@ -168,8 +168,9 @@ describe("the masking test", () => {
       .filter((name) => name.endsWith(".ts"))
       .filter((name) => /\bcheck\.run\(|\.run\(repo\b/.test(readFileSync(join(src, name), "utf8")));
     expect(callers).toEqual(["engine/engine.ts"]);
+    // The run is caught there, so a check that throws reads not investigated; its result still leaves through masked.
     expect(readFileSync(join(src, "engine/engine.ts"), "utf8")).toMatch(
-      /return masked\(check\.run\(repo, context\)\)/,
+      /result = check\.run\(repo, context\);[\s\S]*?return masked\(result\);/,
     );
   });
 

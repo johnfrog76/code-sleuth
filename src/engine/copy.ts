@@ -310,6 +310,10 @@ export const historyPartial =
 export const historyShallow =
   "This is a shallow clone: the history stops where it was cut, and what came before isn't here. Run me on a full clone (git fetch --unshallow) to read it.";
 
+/** Why a check that threw read nothing. */
+export const checkFailed = (message: string) =>
+  `This check stopped before it could read everything: ${message}. Nothing it found is counted.`;
+
 export const historyUnreadable =
   "git could not read the history: check that git log works in this repository.";
 

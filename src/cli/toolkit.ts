@@ -132,7 +132,14 @@ export async function fileCards(
   now: () => Date = () => new Date(),
 ): Promise<Filing> {
   const ledger = ledgerPath(dirname(draft.path));
-  const known = new Map(readLedger(ledger).map((entry) => [entry.check, entry]));
+  // A ledger that cannot be read is refused before anything is filed: filing blind would file twice.
+  let entries: ReturnType<typeof readLedger>;
+  try {
+    entries = readLedger(ledger);
+  } catch {
+    throw new Refusal(copy.toolkit.ledgerUnreadable(ledger), copy.toolkit.ledgerUnreadableHint);
+  }
+  const known = new Map(entries.map((entry) => [entry.check, entry]));
   const filing: Filing = { filed: [], skipped: [] };
 
   const pending: { check: string; card: CaseDraft["cards"][number] }[] = [];

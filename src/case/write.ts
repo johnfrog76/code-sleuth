@@ -10,7 +10,7 @@ import type { RepoReader } from "../engine/repo.js";
 import { version } from "../version.js";
 import type { PolishRecord } from "../polish/pass.js";
 import { type Card, cardFile } from "./card.js";
-import { guardWrites, machineKey, newCaseFolder, repoKey, type WriteFolder } from "./folder.js";
+import { guardWrites, machineKey, newCaseFolder, repoKey, type WriteFolder, writing } from "./folder.js";
 import { renderCaseMd } from "./markdown.js";
 import { buildCase, type CaseRecord, type Enhancements, withEnhancements } from "./record.js";
 import { readRepoInfo, type RepoInfo } from "./repoInfo.js";
@@ -88,14 +88,18 @@ export function openCase(options: TakeCaseOptions): CaseDraft {
   // Against the repository the root is in, not only the folder given: a subfolder's --out could land beside it.
   guardWrites(repo.top, [{ kind: "cases", path: casesFolder, chosen }, ...(options.alsoWrites ?? [])]);
 
+  // The key first: one that is not Code Sleuth's is refused before anything is printed or made.
+  const key = writing(casesFolder, () => machineKey(casesFolder));
   const opened = now();
   const info = readRepoInfo(repo);
-  const folder = newCaseFolder(join(casesFolder, repoKey(repo.root)), localDate(opened), goal.id);
+  const folder = writing(casesFolder, () =>
+    newCaseFolder(join(casesFolder, repoKey(repo.root)), localDate(opened), goal.id),
+  );
   const discard = () => rmSync(folder.path, { recursive: true, force: true });
   try {
     options.onOpen?.({ id: folder.id, path: folder.path, repo: info });
     const context = {
-      ...secretHasher(machineKey(casesFolder)),
+      ...secretHasher(key),
       ...(options.denyList === undefined ? {} : { denyList: options.denyList }),
       ...(options.npm === undefined ? {} : { npm: options.npm }),
       ...(options.gh === undefined ? {} : { gh: options.gh }),
@@ -138,7 +142,7 @@ export function openCase(options: TakeCaseOptions): CaseDraft {
             })
           : record.checks;
         const final = withEnhancements({ ...record, checks }, enhancements);
-        writeCase(folder.path, final, outcomes, polished?.cards ?? cards);
+        writing(casesFolder, () => writeCase(folder.path, final, outcomes, polished?.cards ?? cards));
         return final;
       },
       discard,

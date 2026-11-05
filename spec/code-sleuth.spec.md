@@ -38,6 +38,11 @@ for review.
 > **Amended 2026-11-04:** D-CS23's exit 1. It comes from `--fail-on`, or from an unexpected error until #25
 > gives an unexpected error a line and an exit code of its own. A stated refusal is still exit 2.
 
+> **Amended 2026-11-05:** D-CS23, after #25. Exit 1 comes from `--fail-on` alone. An unexpected error is one
+> `Error:` line with its message, masked, and one `Hint:` line naming the issue tracker, exit 3; its stack trace
+> is printed only with `CODE_SLEUTH_DEBUG` set. Ctrl-C at the goal prompt exits 130; Ctrl-D there is a refusal.
+> A check that throws reads not investigated with what went wrong, and the run goes on.
+
 > **Amended 2026-11-04:** the key's variable is named in `.env.example` and in the rules (`AGENTS.md`,
 > `SECURITY.md` and this spec), and nowhere else people read: the docs say "API key". A key set in the
 > environment never reaches a child either: every child process starts through `src/spawn.ts`, which takes the

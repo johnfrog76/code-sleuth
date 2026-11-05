@@ -11,7 +11,8 @@ export const UNKNOWN_CARD = "unknown";
 
 const CREATED =
   /\[\+\]\s+Created\s+\S+\s+in\s+(\S+?)\/?\s+--\s+([A-Za-z][\w-]*)\s+([A-Za-z0-9]+),\s+offline\b/;
-const PROMPT = /^\s*Prompt:\s*(file:\S+)\s*$/m;
+// To the end of its line: a path can hold a space (`/Users/A Person/hub/...`).
+const PROMPT = /^\s*Prompt:\s*(file:.*?)\s*$/m;
 
 /**
  * Reads ToolKit's two success lines, each with a tolerant pattern:
@@ -32,7 +33,14 @@ export function readCreated(output: string): { card: string; folder?: string; pa
 
 /** `file:///C:/hub/x.md` is `C:/hub/x.md`; `file:////Users/x.md` and `file:///Users/x.md` are `/Users/x.md`. */
 function fromFileUrl(url: string): string {
-  const rest = decodeURI(url.replace(/^file:\/\/\//, ""));
+  const raw = url.replace(/^file:\/\/\//, "");
+  // A path ToolKit did not encode can hold a bare %: read it as written, rather than throw mid-batch.
+  let rest: string;
+  try {
+    rest = decodeURI(raw);
+  } catch {
+    rest = raw;
+  }
   return /^[A-Za-z]:/.test(rest) || rest.startsWith("/") ? rest : `/${rest}`;
 }
 

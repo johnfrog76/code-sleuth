@@ -25,6 +25,22 @@ export const copy = {
   repoHoldsCasesHint: "Point me at the repository itself, not at a folder above it.",
   npmFolderInRepo: (repo: string) =>
     `${repo} holds my own folder, where npm keeps its cache and logs for me.`,
+  cannotWrite: (path: string, why: string) => `I can't write the case under ${path}: ${why}.`,
+  cannotWriteHint: "Point --out at a folder you can write to.",
+  writeWhy: {
+    ENOTDIR: "a file is in the way of a folder",
+    EACCES: "permission denied",
+    EPERM: "permission denied",
+    ENOENT: "a folder on the way is missing",
+    ENAMETOOLONG: "a name in the path is too long",
+    EROFS: "the disk is read-only",
+    ENOSPC: "the disk is full",
+    EEXIST: "a file is in the way of a folder",
+  } as Record<string, string>,
+  machineKeyBad: (path: string) =>
+    `The machine key at ${path} isn't one I made: it should be 64 hex characters.`,
+  machineKeyBadHint:
+    "Remove it and run me again; I make a new one, and earlier cases' secret hashes then stop matching new ones.",
   npmFolderInRepoHint: "Point me at the repository itself, not at a folder above it, or run with --offline.",
 
   stamp: { ready: "READY", nearly: "NEARLY", "not-ready": "NOT READY" } satisfies Record<CaseVerdict, string>,

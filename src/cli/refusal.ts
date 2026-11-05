@@ -1,13 +1,17 @@
 import { printable } from "./printable.js";
 import type { PolishClient } from "../polish/client.js";
-import { Refusal } from "../refusal.js";
+import { Interrupted, Refusal } from "../refusal.js";
 
-export { Refusal };
+export { Interrupted, Refusal };
 
 export const EXIT_OK = 0;
 /** Only with `--fail-on`: a finding at or above the weight it names. */
 export const EXIT_FOUND = 1;
 export const EXIT_REFUSED = 2;
+/** Something Code Sleuth did not expect: one line saying so, never a stack trace unless asked for. */
+export const EXIT_UNEXPECTED = 3;
+/** Ctrl-C at the goal prompt, as a shell reports one. */
+export const EXIT_INTERRUPTED = 130;
 
 export interface Io {
   stdout: (text: string) => void;
@@ -33,7 +37,7 @@ export interface Io {
   toolkitModuleRoot?: string;
 }
 
-const oneLine = (text: string) => printable(text.replace(/\r?\n|\r/g, " "));
+export const oneLine = (text: string) => printable(text.replace(/\r?\n|\r/g, " "));
 
 /** Prints a refusal the one way every refusal is printed, and returns its exit code. */
 export function refuse(refusal: Refusal, io: Io): number {

@@ -64,7 +64,8 @@ export function guardCasesFolder(repoRoot: string, casesFolder: string, chosen: 
 export function repoKey(repoRoot: string): string {
   const absolute = canonical(repoRoot);
   const hash = createHash("sha256").update(absolute).digest("hex").slice(0, 8);
-  return `${basename(absolute) || "root"}-${hash}`;
+  // A folder name can be as long as a file system takes; with the hash after it, it would no longer fit.
+  return `${(basename(absolute) || "root").slice(0, 80)}-${hash}`;
 }
 
 /**
@@ -130,6 +131,20 @@ export function machineKey(casesFolder: string): Buffer {
     if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
   }
   const key = Buffer.from(readFileSync(path, "utf8").trim(), "hex");
-  if (key.length !== 32) throw new Error(`The machine key in ${path} is not 32 bytes of hex.`);
+  if (key.length !== 32) throw new Refusal(copy.machineKeyBad(path), copy.machineKeyBadHint);
   return key;
+}
+
+/**
+ * Runs a write to the cases folder, turning the file system's ordinary refusals (a file in the way, permission
+ * denied, a full or read-only disk) into Code Sleuth's own: one Error: line and one Hint: line, exit 2.
+ */
+export function writing<T>(where: string, write: () => T): T {
+  try {
+    return write();
+  } catch (error) {
+    const why = copy.writeWhy[(error as NodeJS.ErrnoException).code ?? ""];
+    if (why === undefined) throw error;
+    throw new Refusal(copy.cannotWrite(where, why), copy.cannotWriteHint);
+  }
 }

@@ -67,15 +67,27 @@ export function messagesClient(key: string, model: string, fetcher: typeof fetch
     }
     if (!response.ok) return { ok: false, reason: failureFor(response.status) };
 
-    let message: { stop_reason?: string; content?: { type: string; text?: string }[] };
+    let message: { stop_reason?: string; content?: unknown };
     try {
       message = (await response.json()) as typeof message;
-    } catch {
-      return { ok: false, reason: "unreadable" };
+    } catch (error) {
+      const name = (error as { name?: string }).name;
+      // A timeout can land while the body is still coming: that is a timeout, not an answer it cannot read.
+      return {
+        ok: false,
+        reason: name === "TimeoutError" || name === "AbortError" ? "timeout" : "unreadable",
+      };
     }
+    // A 200 can still hold anything: null, content that is not a list, a block that is not an object.
+    if (typeof message !== "object" || message === null || !Array.isArray(message.content))
+      return { ok: false, reason: "unreadable" };
     if (message.stop_reason === "refusal") return { ok: false, reason: "refused" };
     // The answer is the text block; a response can begin with thinking blocks, so read by type, not position.
-    const text = message.content?.find((block) => block.type === "text")?.text;
+    const block = (message.content as unknown[]).find(
+      (b): b is { type: string; text?: unknown } =>
+        typeof b === "object" && b !== null && (b as { type?: unknown }).type === "text",
+    );
+    const text = typeof block?.text === "string" ? block.text : undefined;
     if (message.stop_reason !== "end_turn" || text === undefined) return { ok: false, reason: "unreadable" };
     try {
       const parsed = JSON.parse(text) as Partial<CardText>;
