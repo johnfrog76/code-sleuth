@@ -15,7 +15,9 @@ export type GuardReason =
   | "path-added"
   | "masked-value-changed"
   | "number-changed"
-  | "checkbox-count-changed";
+  | "checkbox-count-changed"
+  | "code-changed"
+  | "markup-added";
 
 export type GuardResult = { kept: true } | { kept: false; reason: GuardReason };
 
@@ -28,7 +30,14 @@ export interface CardFacts {
   maskedValues: Set<string>;
   /** Every number, as many times as it appears. */
   numbers: string[];
-  checkboxes: number;
+  /** Every checkbox, wherever it stands and whatever starts its line: `- [ ]`, `* [x]`, `[ ]` mid-line. */
+  checkboxes: { open: number; ticked: number };
+  /** The text of every code span, an excerpt's included: a rewrite keeps each word for word and adds none. */
+  codeSpans: Set<string>;
+  /** Every path written in prose, outside a code span, that reads as one. */
+  prosePaths: Set<string>;
+  /** Links, URLs and HTML tags: a rewrite adds none of them. */
+  markup: string[];
 }
 
 const CODE_SPAN = /(`+)\s?([^`]+?)\s?\1/g;
@@ -40,22 +49,45 @@ const PATH =
   /^(?:[\w.@-]+\/)+[\w.@-]*(?::\d+)?$|^\.?[\w@-]+(?:\.[\w-]+)+(?::\d+)?$|^\.[\w@.-]+(?::\d+)?$|^[\w@.-]+:\d+$/;
 const MASKED = /\S{4}\*{4}\S{2}|\*{4}/g;
 const NUMBER = /\d+(?:\.\d+)?/g;
-const CHECKBOX = /^\s*- \[[ xX]\]/gm;
+/** Any decimal digit, in any script: a rewrite that writes ４８ for 48 adds a number the ASCII pattern misses. */
+const ANY_DIGIT = /\p{Nd}/gu;
+/** Numbers in words, each a fact as much as the digits are. */
+const NUMBER_WORD =
+  /\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|dozen|once|twice|half|first|second|third)\b/gi;
+const OPEN_BOX = /\[ \]/g;
+const TICKED_BOX = /\[[xX]\]/g;
+/** A markdown link or image, an autolink, a URL, or an HTML tag. */
+const MARKUP = /\]\(|<\/?[A-Za-z!][^>]*>|<https?:|https?:\/\/\S+|\bwww\.\S+/gi;
 
 export function factsOf(card: CardText): CardFacts {
   const text = `${card.title}\n${card.body}`;
   const paths = new Set<string>();
+  const codeSpans = new Set<string>();
   for (const span of text.matchAll(CODE_SPAN)) {
     const inner = span[2]!.trim();
+    codeSpans.add(inner);
     // An evidence span is `path:line` or `path`; a span with words in it (a command, an excerpt) is not a path.
     if (PATH.test(inner) && !/\s/.test(inner)) paths.add(inner);
   }
+  const prose = text.replace(CODE_SPAN, " ");
+  const prosePaths = new Set(
+    prose
+      .split(/[\s,;()"']+/)
+      .map((word) => word.replace(/[.:!?]+$/, ""))
+      // A path from home or the root reads as one too: `~/.ssh/id_ed`, `/etc/hosts`.
+      .filter((word) => /[/.]/.test(word) && PATH.test(word.replace(/^~?\//, ""))),
+  );
+  const digits = (text.match(ANY_DIGIT) ?? []).filter((d) => !/[0-9]/.test(d));
+  const words = (text.match(NUMBER_WORD) ?? []).map((w) => w.toLowerCase());
   return {
     fingerprint: lastLine(card.body),
     paths,
     maskedValues: new Set(text.match(MASKED) ?? []),
-    numbers: (text.match(NUMBER) ?? []).sort(),
-    checkboxes: (card.body.match(CHECKBOX) ?? []).length,
+    numbers: [...(text.match(NUMBER) ?? []), ...digits, ...words].sort(),
+    checkboxes: { open: (text.match(OPEN_BOX) ?? []).length, ticked: (text.match(TICKED_BOX) ?? []).length },
+    codeSpans,
+    prosePaths,
+    markup: (prose.match(MARKUP) ?? []).sort(),
   };
 }
 
@@ -71,9 +103,9 @@ export function guardPolish(
   if (polished.title.trim() === "" || polished.body.trim() === "") return { kept: false, reason: "empty" };
   if (
     polished.title.length > CARD_TITLE_LIMIT ||
-    polished.title.includes("\n") ||
+    /[\r\n\u2028\u2029]/.test(polished.title) ||
     polished.body.length > CARD_BODY_LIMIT ||
-    /^#{1,6}\s/m.test(polished.body)
+    hasHeading(polished.body)
   ) {
     return { kept: false, reason: "shape-changed" };
   }
@@ -93,8 +125,44 @@ export function guardPolish(
     return { kept: false, reason: "masked-value-changed" };
   if (before.numbers.join("\n") !== after.numbers.join("\n"))
     return { kept: false, reason: "number-changed" };
-  if (before.checkboxes !== after.checkboxes) return { kept: false, reason: "checkbox-count-changed" };
+  if (
+    before.checkboxes.open !== after.checkboxes.open ||
+    before.checkboxes.ticked !== after.checkboxes.ticked
+  )
+    return { kept: false, reason: "checkbox-count-changed" };
+  // Every code span word for word: an excerpt quotes the file, and a command is run as written.
+  // An original span may lose its backticks, its text standing in the prose; a span the card did not have, or
+  // one that reads differently, is a change.
+  if (
+    [...before.codeSpans].some(
+      (code) => !(PATH.test(code) ? citedIn(polishedText, code) : polishedText.includes(code)),
+    )
+  )
+    return { kept: false, reason: "code-changed" };
+  if ([...after.codeSpans].some((code) => !before.codeSpans.has(code)))
+    return { kept: false, reason: "code-changed" };
+  if ([...before.prosePaths].some((path) => !after.prosePaths.has(path) && !polishedText.includes(path)))
+    return { kept: false, reason: "path-dropped" };
+  if ([...after.prosePaths].some((path) => !before.prosePaths.has(path) && !before.paths.has(path)))
+    return { kept: false, reason: "path-added" };
+  // A link, a URL or an HTML tag the card did not have: a rewrite says the same, and points nowhere new.
+  if (
+    after.markup.some((piece) => !before.markup.includes(piece)) ||
+    after.markup.length > before.markup.length
+  )
+    return { kept: false, reason: "markup-added" };
   return { kept: true };
+}
+
+/** A heading in any form ToolKit or a renderer reads as one: `#`, an underline (`===`, `---`), or `<h1>`. */
+function hasHeading(body: string): boolean {
+  const lines = body.split(/\r\n|\r|\n/);
+  return lines.some(
+    (line, i) =>
+      /^\s{0,3}#{1,6}(?:\s|$)/.test(line) ||
+      /<h[1-6][\s>]/i.test(line) ||
+      (i > 0 && lines[i - 1]!.trim() !== "" && /^\s{0,3}(?:=+|-+)\s*$/.test(line)),
+  );
 }
 
 /**

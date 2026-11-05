@@ -38,7 +38,7 @@ describe("the polish guard", () => {
     // A check id in backticks reads like a file name, so it is kept like one: the check id is a fact too.
     expect([...facts.paths].sort()).toEqual(["config/dev.ts:12", "scripts/deploy.sh:40", "secrets.tree"]);
     expect([...facts.maskedValues].sort()).toEqual(["****", "ghp_****9f"]);
-    expect(facts.checkboxes).toBe(2);
+    expect(facts.checkboxes).toEqual({ open: 2, ticked: 0 });
     expect(facts.fingerprint).toMatch(/^Found by Code Sleuth: secrets\.tree, /);
   });
 });

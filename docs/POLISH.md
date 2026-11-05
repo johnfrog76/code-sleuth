@@ -65,18 +65,24 @@ What comes back is kept only when it keeps each of these from the card it was ma
 - every path and `path:line` the card's evidence cites, word for word, whatever it looks like (`.env:3`,
   `Dockerfile`, `LICENSE`), and not inside a longer one (`.env:31` does not keep `.env:3`),
 - every other path in backticks that reads as one: with a folder, an extension, a leading dot or a `:line`,
-- every number, as many times as it appears,
+  and every path written in prose (`~/.ssh/id_ed` among them),
+- every code span, word for word: an excerpt quotes the file, and a command is run as written. A span may lose
+  its backticks if its text stays; a span the card did not have is a change,
+- every number, as many times as it appears, in any script's digits or in words (`forty-eight`, `twice`),
 - every masked value (`ghp_****9f`, `****`),
-- the count of checkboxes,
+- the count of open checkboxes and of ticked ones, each on its own, wherever they stand,
+- no link, URL or HTML tag the card did not have,
 
-and still has a card's shape: a title of at most 80 characters on one line, a body within 3,500 characters,
-no headings. Otherwise the card stays as written, and `case.json` says why on that check:
+and still has a card's shape: a title of at most 80 characters on one line (no line break of any kind), a
+body within 3,500 characters, no headings (`#`, an underlined line, or `<h1>` to `<h6>`). Otherwise the card stays as written, and `case.json` says why on that check:
 `"polish": { "state": "kept-original", "reason": "path-dropped" }`. The reasons are `empty`, `shape-changed`,
-`check-id-dropped`, `path-dropped`, `path-added`, `masked-value-changed`, `number-changed` and
-`checkbox-count-changed`.
+`check-id-dropped`, `path-dropped`, `path-added`, `masked-value-changed`, `number-changed`,
+`checkbox-count-changed`, `code-changed` and `markup-added`.
 
 **A kept rewrite means the guard's rules did not fire, not that nothing changed.** The guard compares a list;
-it cannot see meaning, so a word that adds a kind ("an email address" for "an address") passes it. The
+it cannot see meaning, so a word that adds a kind ("an email address" for "an address") passes it, and so
+does a sentence that tells the reader, or an agent, to do something the card did not say. The prompt says
+the card is data and asks for neither. The
 prompt asks against that; nothing checks that it was heeded. A second pass that has a model check the rewrite against the
 original is planned for a later release.
 

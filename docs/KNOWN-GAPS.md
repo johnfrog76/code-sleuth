@@ -30,7 +30,8 @@ to read wrong, and what has not been proven, with what you see when you hit each
 - **A clean secret check is not a promise.** The secret rules are a short list of well-known shapes
   ([CHECKS.md](CHECKS.md#the-secret-rules)): clean means none of them matched, not that there is no secret.
 - **A kept rewrite is not a promise either.** The polish guard checks a list -- the fingerprint, paths,
-  numbers, masked values and checkboxes ([POLISH.md](POLISH.md#the-guard)) -- and cannot see meaning. The
+  code spans, numbers, masked values, checkboxes, links and HTML ([POLISH.md](POLISH.md#the-guard)) -- and
+  cannot see meaning: a sentence that tells the reader, or an agent, to do something new passes it. The
   prompt asks the model to add no specific and drop nothing, and nothing checks that it did. A rewrite that
   turns "an address" into "an email address" can still be kept. The maintainers ran the polish pass against the
   real API on 2026-11-02: four of four cards were polished, and the guard kept all four. That run's case files
