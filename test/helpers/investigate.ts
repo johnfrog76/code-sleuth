@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  readlinkSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -160,7 +161,10 @@ function snapshot(root: string, prefix = ""): Record<string, string> {
   const entries: Record<string, string> = {};
   for (const entry of readdirSync(join(root, prefix), { withFileTypes: true })) {
     const path = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
-    if (entry.isDirectory()) {
+    // A link is held as where it points, never followed: a test can put one in the tree to see it is not read.
+    if (entry.isSymbolicLink()) {
+      entries[path] = `link:${readlinkSync(join(root, path))}`;
+    } else if (entry.isDirectory()) {
       if (path === ".git") continue;
       entries[`${path}/`] = "folder";
       Object.assign(entries, snapshot(root, path));

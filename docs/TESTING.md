@@ -27,7 +27,7 @@ npm run lint     # type check, ESLint and Prettier
 
 - **Read-only.** Every engine test runs through `test/helpers/investigate.ts`. It copies a fixture to a scratch
   folder outside any repository (committing it when the test needs history), runs the test, and fails if the
-  tree changed by a byte or its `git status` changed. A test fails any engine test that does not use it.
+  tree changed by a byte, a link that points elsewhere, or its `git status` changed. A test fails any engine test that does not use it.
 - **No real cases folder.** The CLI helper (`test/helpers/cli.ts`) demands a scratch cases folder.
 - **No real `.env`.** A run in a test reads Code Sleuth's `.env` only when the test names a scratch one; the
   command's own default is set by `src/cli/main.ts`, and its one test runs it with a scratch home.

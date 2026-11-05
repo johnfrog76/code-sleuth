@@ -57,7 +57,10 @@ export interface AddedLine {
 export function openRepo(root: string): RepoReader {
   const absolute = resolve(root);
   const tracked = gitTrackedFiles(absolute);
-  const files = (tracked ?? walk(absolute)).filter((path) => isFile(join(absolute, path))).sort(byBytes);
+  const folders = new Map<string, boolean>();
+  const files = (tracked ?? walk(absolute))
+    .filter((path) => isFileHere(absolute, path, folders))
+    .sort(byBytes);
   const known = new Set(files);
   const cache = new Map<string, string>();
   let history: readonly AddedLine[] | undefined | null = null;
@@ -422,6 +425,29 @@ function walk(root: string, prefix = ""): string[] {
     }
   }
   return found;
+}
+
+/**
+ * A regular file reached through real folders only. git lists a tracked path even when a folder on its way has
+ * been replaced in the work tree by a link, and reading through that link would read outside the repository.
+ * Each folder is asked once.
+ */
+function isFileHere(root: string, path: string, folders: Map<string, boolean>): boolean {
+  const parts = path.split("/");
+  for (let i = 1; i < parts.length; i++) {
+    const folder = parts.slice(0, i).join("/");
+    let real = folders.get(folder);
+    if (real === undefined) {
+      try {
+        real = lstatSync(join(root, folder)).isDirectory();
+      } catch {
+        real = false;
+      }
+      folders.set(folder, real);
+    }
+    if (!real) return false;
+  }
+  return isFile(join(root, path));
 }
 
 /** A regular file, not a link, a folder or a submodule. A tracked file deleted from the tree is not one. */
