@@ -73,7 +73,7 @@ export function repoKey(repoRoot: string): string {
  * from 1. A case folder is never reused: each one is made with a create that fails if it exists.
  */
 export function newCaseFolder(repoFolder: string, date: string, goal: string): { id: string; path: string } {
-  mkdirSync(repoFolder, { recursive: true });
+  mkdirSync(repoFolder, { recursive: true, mode: 0o700 });
   const prefix = `${date}-${goal}-`;
   const taken = readdirSync(repoFolder)
     .filter((name) => name.startsWith(prefix))
@@ -83,7 +83,7 @@ export function newCaseFolder(repoFolder: string, date: string, goal: string): {
     const id = `${prefix}${n}`;
     const path = join(repoFolder, id);
     try {
-      mkdirSync(path);
+      mkdirSync(path, { mode: 0o700 });
       return { id, path };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
@@ -123,7 +123,7 @@ export const MACHINE_KEY_FILE = "machine-key";
  * by its owner only. A keyed hash lets two runs tell it is the same secret without the hash being guessable.
  */
 export function machineKey(casesFolder: string): Buffer {
-  mkdirSync(casesFolder, { recursive: true });
+  mkdirSync(casesFolder, { recursive: true, mode: 0o700 });
   const path = join(casesFolder, MACHINE_KEY_FILE);
   try {
     writeFileSync(path, randomBytes(32).toString("hex") + "\n", { flag: "wx", mode: 0o600 });

@@ -161,7 +161,8 @@ function readHistory(root: string): AddedLine[] | undefined {
       path = null;
       inHeader = true;
     } else if (inHeader && raw.startsWith("+++ ")) {
-      const target = raw.slice(4);
+      // git C-quotes a path holding a quote, a backslash, a tab or a control character: "b/a\tb.txt".
+      const target = unquoted(raw.slice(4));
       path = target === "/dev/null" ? null : target.startsWith("b/") ? target.slice(2) : target;
     } else if (raw.startsWith("@@ ")) {
       inHeader = false;
@@ -466,4 +467,28 @@ function byBytes(a: string, b: string): number {
 /** Turns a platform path into the `/` form every path in a case uses. */
 export function toPosix(path: string): string {
   return sep === "/" ? path : path.split(sep).join("/");
+}
+
+/** A path as git C-quotes it, read back: `"b/a\\tb.txt"` is `b/a<tab>b.txt`. A path not in quotes is as written. */
+export function unquoted(path: string): string {
+  if (!(path.startsWith('"') && path.endsWith('"') && path.length >= 2)) return path;
+  const bytes: number[] = [];
+  const body = path.slice(1, -1);
+  const SIMPLE: Record<string, number> = { a: 7, b: 8, t: 9, n: 10, v: 11, f: 12, r: 13, '"': 34, "\\": 92 };
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i]!;
+    if (ch !== "\\") {
+      bytes.push(...Buffer.from(ch, "utf8"));
+      continue;
+    }
+    const next = body[i + 1] ?? "";
+    if (/[0-7]/.test(next)) {
+      bytes.push(parseInt(body.slice(i + 1, i + 4), 8));
+      i += 3;
+    } else {
+      bytes.push(SIMPLE[next] ?? next.charCodeAt(0));
+      i += 1;
+    }
+  }
+  return Buffer.from(bytes).toString("utf8");
 }

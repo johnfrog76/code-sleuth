@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { posix, relative, sep, win32 } from "node:path";
+import defaultPaths, { type PlatformPath, posix, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import { KEY_VARIABLE } from "../polish/client.js";
@@ -40,9 +40,15 @@ export function readKeyFile(path: string, platform: NodeJS.Platform = process.pl
 }
 
 /** A path as a person reads it: under the home folder, it starts `~`. */
-export function shownPath(path: string, home: string = homedir()): string {
-  const rest = relative(home, path);
-  return rest !== "" && !rest.startsWith("..") && !rest.startsWith(sep) ? `~${sep}${rest}` : path;
+export function shownPath(
+  path: string,
+  home: string = homedir(),
+  paths: PlatformPath = defaultPaths,
+): string {
+  const rest = paths.relative(home, path);
+  // On Windows a path on another drive is not under home, though relative() gives it whole, not with a `..`.
+  const under = rest !== "" && rest !== ".." && !rest.startsWith(`..${paths.sep}`) && !paths.isAbsolute(rest);
+  return under ? `~${paths.sep}${rest}` : path;
 }
 
 /**
@@ -64,7 +70,9 @@ export function copyCommand(
   platform: NodeJS.Platform = process.platform,
 ): string {
   if (platform === "win32") {
-    const q = (text: string) => `'${text.replace(/'/g, "''")}'`;
+    // PowerShell takes the curly quotes for a straight one too: each is doubled, or a folder like O’Brien
+    // ends the string early.
+    const q = (text: string) => `'${text.replace(/['\u2018\u2019\u201a\u201b]/g, (quote) => quote + quote)}'`;
     return `New-Item -ItemType Directory -Force ${q(win32.dirname(keyFile))} | Out-Null; Copy-Item ${q(example)} ${q(keyFile)}`;
   }
   const q = (text: string) => `'${text.replace(/'/g, "'\\''")}'`;

@@ -58,7 +58,7 @@ describe("a whole run writes nothing into the repository", () => {
             },
           );
           expect(result.stdout).toContain("npm");
-          expect(toolkit.calls().some((call) => call.argv.includes("-Title"))).toBe(true);
+          expect(toolkit.calls().some((call) => call.argv.some((a) => a.startsWith("-Title")))).toBe(true);
         },
         { git: true },
       );

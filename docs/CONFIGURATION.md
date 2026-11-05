@@ -93,6 +93,6 @@ copy of the project's `package.json` and lockfile, which npm reads in place of t
 makes the first lookup on a machine a little slower than one through your usual npm cache. A
 repository that holds this folder is refused when npm would run, as one that holds the cases folder is.
 
-The cases folder also holds `machine-key`, a random key made on first use (readable by its owner only, on macOS
-and Linux), which
-hashes secrets so two runs can tell it is the same secret.
+The cases folder also holds `machine-key`, a random key made on first use, which hashes secrets so two runs
+can tell it is the same secret. On macOS and Linux every folder and file Code Sleuth makes there is readable by
+its owner only (folders 0700, files 0600): a case holds excerpts and paths from the repository.

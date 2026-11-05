@@ -9,12 +9,17 @@ export function findDoc(repo: RepoReader, prefix: string, folders: readonly stri
   const wanted = prefix.toLowerCase();
   for (const folder of folders) {
     const base = folder === "" ? "" : `${folder}/`;
-    const match = repo.files.find((path) => {
+    const matches = repo.files.filter((path) => {
       if (!path.startsWith(base)) return false;
       const name = path.slice(base.length);
       return !name.includes("/") && name.toLowerCase().startsWith(wanted);
     });
-    if (match !== undefined) return match;
+    // The plain one first: README.md over README-ja.md, which sorts ahead of it by its bytes.
+    const plain = matches.find((path) => {
+      const name = path.slice(base.length).toLowerCase();
+      return name === wanted || name.startsWith(`${wanted}.`);
+    });
+    if (plain !== undefined || matches[0] !== undefined) return plain ?? matches[0];
   }
   return undefined;
 }

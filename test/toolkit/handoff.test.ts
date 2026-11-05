@@ -78,7 +78,7 @@ async function onBare(
 }
 
 const filings = <T extends { argv: string[] }>(calls: T[]) => calls.filter((c) => !c.argv.includes("-Probe"));
-const titleOf = (argv: string[]) => argv[argv.indexOf("-Title") + 1];
+const titleOf = (argv: string[]) => argv.find((a) => a.startsWith("-Title:"))?.slice("-Title:".length);
 const LICENSE = cardCopy["license.file"].title;
 const README = cardCopy["docs.readme"].title;
 
@@ -137,12 +137,10 @@ describe("the call", () => {
       expect(call!.argv.slice(call!.argv.indexOf("-Prefix"))).toEqual([
         "-Prefix",
         "tk",
-        "-Title",
-        title,
-        "-Type",
-        "Bug",
-        "-Description",
-        body,
+        // Each value bound to its name in one token, so one that starts with a dash is never read as a flag.
+        `-Title:${title}`,
+        "-Type:Bug",
+        `-Description:${body}`,
       ]);
       expect(call!.argv).toContain("-NoProfile");
       expect(call!.argv).not.toContain("-Now");
@@ -456,7 +454,7 @@ describe("--toolkit with the hub inside the repository", () => {
       expect(() =>
         prepareToolkit(flags, { env: stub.env, stdout: () => {}, stderr: () => {} }, null, repo),
       ).toThrow(expect.objectContaining({ message: cliCopy.toolkit.hubInsideRepo }));
-      expect(stub.calls().filter((call) => call.argv.includes("-Title"))).toEqual([]);
+      expect(stub.calls().filter((call) => call.argv.some((a) => a.startsWith("-Title")))).toEqual([]);
     }),
   );
 
@@ -496,7 +494,7 @@ describe("--toolkit with the hub inside the repository", () => {
         expect(() =>
           prepareToolkit(flags, { env: stub.env, stdout: () => {}, stderr: () => {} }, null, repo),
         ).toThrow(expect.objectContaining({ message: cliCopy.toolkit.foldersUnknown }));
-        expect(stub.calls().filter((call) => call.argv.includes("-Title"))).toEqual([]);
+        expect(stub.calls().filter((call) => call.argv.some((a) => a.startsWith("-Title")))).toEqual([]);
       }),
   );
 });

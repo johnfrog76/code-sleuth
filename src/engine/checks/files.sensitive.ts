@@ -34,7 +34,8 @@ export const filesSensitive: Check = {
         const found = AUTH_TOKEN.exec(text);
         const value = found?.[1];
         // `_authToken=${NPM_TOKEN}` reads the token from the environment, which is the fix, not the finding.
-        if (found === null || value === undefined || value.startsWith("${")) return;
+        // Quoted or not: `_authToken="${NPM_TOKEN}"` is valid ini, and the same reference.
+        if (found === null || value === undefined || /^["']?\$\{/.test(value)) return;
         // Spliced at the token's own place, never through replace(): a `$&` in the mask would paste the value back.
         const at = found.index + found[0].lastIndexOf(value);
         const excerpt = (text.slice(0, at) + mask(value) + text.slice(at + value.length)).trim();

@@ -160,10 +160,13 @@ function writeCase(
   outcomes: readonly CheckOutcome[],
   cards: readonly Card[],
 ): void {
-  writeFileSync(join(path, "case.json"), lf(JSON.stringify(record, null, 2) + "\n"), "utf8");
-  writeFileSync(join(path, "case.md"), lf(renderCaseMd(record, outcomes)), "utf8");
-  mkdirSync(join(path, "cards"));
-  for (const card of cards) writeFileSync(join(path, card.file), lf(cardFile(card)), "utf8");
+  // A case holds excerpts, paths and deny-list hits from a repository: the person's own to read, on a shared
+  // machine too. Folders 0700, files 0600.
+  const own = { encoding: "utf8", mode: 0o600 } as const;
+  writeFileSync(join(path, "case.json"), lf(JSON.stringify(record, null, 2) + "\n"), own);
+  writeFileSync(join(path, "case.md"), lf(renderCaseMd(record, outcomes)), own);
+  mkdirSync(join(path, "cards"), { mode: 0o700 });
+  for (const card of cards) writeFileSync(join(path, card.file), lf(cardFile(card)), own);
 }
 
 /** `2026-10-31`, in the person's own time zone: the day they ran it. */

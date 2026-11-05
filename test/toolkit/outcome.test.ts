@@ -132,6 +132,13 @@ describe.skipIf(shell === undefined || !hasGit)("what handoff.ps1 reports is Too
       expect(file(scratch, "a-native-program-warns")).toMatchObject({ status: "filed", card: "Task K7M2" }),
     ));
 
+  // The code review's low finding TK-4: a value that is itself a parameter token could not be filed.
+  it.each(["-Probe", "--", "-x: y", "-ModuleRoot", "-Title:inner"])("files a card titled %j", (title) =>
+    withScratch((scratch) =>
+      expect(file(scratch, title)).toMatchObject({ status: "filed", card: "Task K7M2" }),
+    ),
+  );
+
   it("files a card when ToolKit caught an error of its own on the way", () =>
     withScratch((scratch) =>
       expect(file(scratch, "handles-its-own-error")).toMatchObject({ status: "filed", card: "Task K7M2" }),

@@ -41,7 +41,8 @@ const argv = process.argv.slice(2);
 const log = process.env.STUB_LOG;
 const scenario = JSON.parse(fs.readFileSync(process.env.STUB_SCENARIO, "utf8"));
 fs.appendFileSync(log, JSON.stringify({ shell: path.basename(process.argv[1]), argv, space: process.env.P20_ACTIVE_SPACE ?? null, key: process.env.ANTHROPIC_API_KEY ?? null }) + "\n");
-const arg = (name) => { const i = argv.indexOf(name); return i < 0 ? undefined : argv[i + 1]; };
+// As PowerShell binds them: -Name value, or -Name:value in one token.
+const arg = (name) => { const joined = argv.find((a) => a.startsWith(name + ":")); if (joined !== undefined) return joined.slice(name.length + 1); const i = argv.indexOf(name); return i < 0 ? undefined : argv[i + 1]; };
 const probe = scenario.probe ?? { prefix: "tk", space: "widget", spaces: ["widget", "other"] };
 if (probe === "absent") { process.stderr.write("ToolKit's tkNewPrompt is not available in this shell.\n"); process.exit(3); }
 if (argv.includes("-Probe")) {

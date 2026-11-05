@@ -54,6 +54,15 @@ function sentenceOf(stdout: string, stderr: string): string {
   return (error ?? lines.at(-1) ?? "").replace(/^Error:\s*/, "");
 }
 
+/**
+ * A value bound to its parameter as one token, `-Title:<value>`: given as the next token instead, a value that
+ * is itself `-Probe`, `--` or `-x: y` is read by PowerShell as a parameter, and the card cannot be filed. An empty
+ * value goes as its own token, since `-Title:` alone would take the next token as its value.
+ */
+function named(name: string, value: string): string[] {
+  return value === "" ? [`-${name}`, ""] : [`-${name}:${value}`];
+}
+
 /** Files one card through ToolKit's NewPrompt: a title, a type and a description, and nothing else. */
 export function fileCard(
   detection: Extract<Detection, { state: "detected" }>,
@@ -62,12 +71,9 @@ export function fileCard(
 ): FileResult {
   const args = [
     ...commonArgs(detection.prefix, options.moduleRoot),
-    "-Title",
-    card.title,
-    "-Type",
-    card.type,
-    "-Description",
-    card.body,
+    ...named("Title", card.title),
+    ...named("Type", card.type),
+    ...named("Description", card.body),
   ];
   const result = runHandoff(detection.shell, args, childEnv(options));
   if (result.error) return { status: "failed", sentence: result.error.message };
