@@ -40,16 +40,22 @@ export function readRemote(repo: RepoReader): string | null {
   return url === "" ? null : cleanRemote(url);
 }
 
-/** `https://user:token@github.com/o/r.git` and `git@github.com:o/r.git` both become `github.com/o/r`. */
+/**
+ * `https://user:token@github.com/o/r.git` and `git@github.com:o/r.git` both become `github.com/o/r`. The
+ * credentials run to the LAST `@` before the host, as git and curl read them, so a password holding an `@`
+ * goes whole; a query or a fragment, where a token can ride (`?access_token=`), goes too.
+ */
 export function cleanRemote(url: string): string {
-  let rest = url.trim();
+  let rest = url.trim().replace(/[?#].*$/s, "");
   const scheme = /^[a-z][a-z0-9+.-]*:\/\//i.exec(rest);
   if (scheme) {
     rest = rest.slice(scheme[0].length);
-    rest = rest.replace(/^[^@/]*@/, "");
+    const slash = rest.indexOf("/");
+    const authority = slash < 0 ? rest : rest.slice(0, slash);
+    rest = authority.slice(authority.lastIndexOf("@") + 1) + (slash < 0 ? "" : rest.slice(slash));
   } else {
-    const scp = /^(?:[^@/]+@)?([^:/]+):(.*)$/.exec(rest);
-    if (scp) rest = `${scp[1]}/${scp[2]}`;
+    const scp = /^([^/]+?):(.*)$/.exec(rest);
+    if (scp && !/^[A-Za-z]$/.test(scp[1]!)) rest = `${scp[1]!.slice(scp[1]!.lastIndexOf("@") + 1)}/${scp[2]}`;
   }
   return rest.replace(/\.git\/?$/, "").replace(/\/+$/, "");
 }

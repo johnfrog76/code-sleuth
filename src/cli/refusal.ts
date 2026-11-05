@@ -1,3 +1,4 @@
+import { printable } from "./printable.js";
 import type { PolishClient } from "../polish/client.js";
 import { Refusal } from "../refusal.js";
 
@@ -32,9 +33,12 @@ export interface Io {
   toolkitModuleRoot?: string;
 }
 
+const oneLine = (text: string) => printable(text.replace(/\r?\n|\r/g, " "));
+
 /** Prints a refusal the one way every refusal is printed, and returns its exit code. */
 export function refuse(refusal: Refusal, io: Io): number {
-  io.stderr(`Error: ${refusal.message}\n`);
-  io.stderr(`Hint: ${refusal.hint}\n`);
+  // A refusal can name a path the person or the repository gave; one line each, whatever it holds.
+  io.stderr(`Error: ${oneLine(refusal.message)}\n`);
+  io.stderr(`Hint: ${oneLine(refusal.hint)}\n`);
   return EXIT_REFUSED;
 }

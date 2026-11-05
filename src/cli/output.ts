@@ -5,6 +5,7 @@ import type { CaseRecord } from "../case/record.js";
 import type { RepoInfo } from "../case/repoInfo.js";
 import type { CheckOutcome } from "../engine/engine.js";
 import { copy } from "./copy.js";
+import { printable } from "./printable.js";
 
 type Group = "smoking-gun" | "loose-end" | "hunch" | "clean" | "not-investigated";
 const GROUPS: readonly Group[] = ["smoking-gun", "loose-end", "hunch", "clean", "not-investigated"];
@@ -19,6 +20,9 @@ const STYLE: Record<Group | "stamp", string> = {
   stamp: "\x1b[1m",
 };
 const RESET = "\x1b[0m";
+
+/** Every escape sequence Code Sleuth itself prints: the one kind terminalSafe lets through. */
+export const OWN_STYLES: readonly string[] = [...Object.values(STYLE), RESET];
 
 export interface Painter {
   (style: keyof typeof STYLE, text: string): string;
@@ -45,7 +49,7 @@ export function header(
   const lines = [copy.run.title(id), ""];
   if (!asked) lines.push(copy.run.question, "");
   lines.push(
-    `  ${copy.run.repo}  ${caseCopy.repoLine(repo.name, repo.branch, repo.head, repo.dirty, repo.partialClone === true)}`,
+    `  ${copy.run.repo}  ${printable(caseCopy.repoLine(repo.name, repo.branch, repo.head, repo.dirty, repo.partialClone === true))}`,
     `  ${copy.run.goal}  ${caseCopy.goal[goal] ?? goal}`,
     ...(outgoing.length === 0
       ? [`  ${copy.run.out}   ${copy.run.nothingLeaves}`]
@@ -87,7 +91,7 @@ export function report(
   const hunches = record.counts.hunch > 0 && !where.all;
   lines.push(
     "",
-    `${copy.run.caseFile}  ${tilde(`${where.casePath}${sep}case.md`)}`,
+    `${copy.run.caseFile}  ${printable(tilde(`${where.casePath}${sep}case.md`))}`,
     `${copy.run.cards}      ${cards === 0 ? copy.run.noCards : copy.run.cardsIn(cards)}${hunches ? copy.run.hunchCards : ""}`,
   );
   return lines.join("\n") + "\n";
@@ -100,10 +104,10 @@ function groupOf(outcome: CheckOutcome): Group {
 function finding({ check, result, examples }: CheckOutcome): string {
   if (result.verdict === "clean")
     return examples.length === 0 ? check.voice.clean : caseCopy.examples.clean(examples.length);
-  if (result.verdict === "not-investigated") return result.reason;
+  if (result.verdict === "not-investigated") return printable(result.reason);
   const also = examples.length === 0 ? "" : caseCopy.examples.alsoFound(examples.length);
   const [first] = result.evidence;
   if (first === undefined) return check.voice.found + also;
-  const at = first.line === undefined ? first.path : `${first.path}:${first.line}`;
+  const at = printable(first.line === undefined ? first.path : `${first.path}:${first.line}`);
   return `${check.voice.found} ${copy.run.at(at, result.evidence.length - 1)}${also}`;
 }

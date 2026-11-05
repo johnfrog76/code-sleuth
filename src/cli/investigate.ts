@@ -11,8 +11,9 @@ import { detectCapabilities, outgoingCalls } from "../engine/engine.js";
 import { findGh, findNpm } from "../engine/npm.js";
 import { findGoal, type Goal, WEIGHTS, type Weight } from "../engine/goals.js";
 import { openRepo } from "../engine/repo.js";
+import { terminalSafe } from "./printable.js";
 import { copy } from "./copy.js";
-import { header, painter, report } from "./output.js";
+import { header, OWN_STYLES, painter, report } from "./output.js";
 import { EXIT_FOUND, EXIT_OK, type Io, Refusal } from "./refusal.js";
 import { polishAll, preparePolish } from "./polish.js";
 import { fileCards, prepareToolkit, type ToolkitFlags, toolkitRecord } from "./toolkit.js";
@@ -52,7 +53,9 @@ export async function investigate(
   } = prepareToolkit(flags, io, readRemote(repo), repo.top);
 
   // With --json, stdout carries the record alone and the person reads the rest on stderr.
-  const human = flags.json ? io.stderr : io.stdout;
+  // Everything a person reads goes through terminalSafe, last of all: only Code Sleuth's own styles stay.
+  const write = flags.json ? io.stderr : io.stdout;
+  const human = (text: string) => write(terminalSafe(text, OWN_STYLES));
   const env = io.env ?? {};
   const colour = (flags.json ? terminal.stderr : terminal.stdout) && !env.NO_COLOR;
   const casesFolder = flags.out === undefined ? (io.casesFolder ?? defaultCasesFolder()) : resolve(flags.out);
