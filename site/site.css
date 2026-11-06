@@ -1,86 +1,466 @@
+/* The project's page. Its layout is copied from ToolKit's landing page (web/src/landing/landing.css in the
+   ToolKit repository, MIT): the banner, the bullets, the call to action, the alternating bands, the quick start
+   and the footer. The words and the colours are Code Sleuth's own. No script and no web font. */
+
 :root {
-  --paper: #fbf6ec;
-  --ink: #2a1d14;
-  --soft: #5a4330;
+  --lp-bg: #fbf6ec;
+  --lp-text: #2a1d14;
+  --lp-muted: #5a4330;
+  --lp-panel: #fffdf8;
+  --lp-line: rgba(42, 29, 20, 0.16);
+  --lp-accent: #8a4b1e;
+  --lp-dot: #b8955a;
+  --lp-glow: rgba(217, 185, 122, 0.28);
+  --lp-cta: #5a4330;
+  --lp-cta-hover: #2a1d14;
+  --lp-cta-text: #fbf6ec;
+  --lp-mono: "Cascadia Code", "Fira Code", Consolas, ui-monospace, monospace;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #15100b;
-    --ink: #ece0c8;
-    --soft: #d4c3a3;
+    --lp-bg: #15100b;
+    --lp-text: #ece0c8;
+    --lp-muted: #c9b89a;
+    --lp-panel: #1f1912;
+    --lp-line: rgba(236, 224, 200, 0.16);
+    --lp-accent: #e4c48f;
+    --lp-dot: #c9a26a;
+    --lp-glow: rgba(217, 185, 122, 0.12);
+    --lp-cta: #d9b97a;
+    --lp-cta-hover: #e4c48f;
+    --lp-cta-text: #2a1d14;
   }
-}
-
-* {
-  box-sizing: border-box;
 }
 
 html,
 body {
   margin: 0;
-  min-height: 100%;
+  padding: 0;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  line-height: 1.55;
 }
 
-body {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: Georgia, "Times New Roman", serif;
-  line-height: 1.5;
+html {
+  scroll-behavior: smooth;
 }
 
-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.25rem;
-  text-align: center;
-}
-
-picture {
-  display: block;
-  width: 100%;
-  max-width: 381px;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 img {
   display: block;
-  width: 100%;
+  max-width: 100%;
   height: auto;
 }
 
-h1 {
-  margin: 1.5rem 0 0.25rem;
-  font-size: clamp(1.75rem, 6vw, 2.75rem);
-  font-weight: normal;
-  letter-spacing: 0.01em;
+.lp {
+  box-sizing: border-box;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px 24px;
 }
 
-p {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--soft);
-  font-style: italic;
+@media (min-width: 600px) {
+  .lp {
+    padding: 0 24px 24px;
+  }
 }
 
-footer {
-  padding: 1.25rem;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-a {
-  color: var(--ink);
+.lp a {
+  color: var(--lp-accent);
   text-underline-offset: 0.2em;
 }
 
-a:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
+.lp :focus-visible {
+  outline: 3px solid var(--lp-accent);
+  outline-offset: 2px;
+}
+
+.lp code,
+.lp pre {
+  font-family: var(--lp-mono);
+}
+
+.lp p code {
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+}
+
+/* The banner: a bordered panel, the words beside the sloth. */
+
+.lp-banner {
+  display: grid;
+  gap: 24px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 24px 20px;
+  border: 1px solid var(--lp-line);
+  border-radius: 16px;
+  background: radial-gradient(1200px 420px at 85% 20%, var(--lp-glow), transparent 60%), var(--lp-panel);
+}
+
+@media (min-width: 900px) {
+  .lp-banner {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    margin-top: 32px;
+    padding: 48px 44px 48px 48px;
+  }
+}
+
+.lp-banner-figure {
+  display: flex;
+  justify-content: center;
+}
+
+.lp-banner-figure img {
+  width: min(240px, 60vw);
+}
+
+.lp-title {
+  margin: 0 0 24px;
+  line-height: 0;
+}
+
+.lp-title img {
+  width: min(300px, 100%);
+}
+
+.lp-offer {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.8vw, 2.1rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+}
+
+.lp-lede {
+  margin: 14px 0 0;
+  font-size: 1.1rem;
+  color: var(--lp-muted);
+}
+
+.lp-bullets {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.05rem;
+}
+
+.lp-bullets li {
+  position: relative;
+  padding: 4px 0 4px 22px;
+}
+
+.lp-bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.8em;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lp-dot);
+}
+
+.lp-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin-top: 30px;
+}
+
+.lp .lp-cta-button {
+  padding: 12px 20px;
+  border-radius: 6px;
+  background: var(--lp-cta);
+  color: var(--lp-cta-text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lp .lp-cta-button:hover {
+  background: var(--lp-cta-hover);
+}
+
+/* The bands: each with the sloth in its window, sides alternating. */
+
+.lp-kicker {
+  margin: 0 0 8px;
+  font-family: var(--lp-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+}
+
+.lp-ways {
+  padding-top: 56px;
+}
+
+.lp-way {
+  display: grid;
+  gap: 20px 48px;
+  align-items: center;
+  padding: 24px 0;
+}
+
+@media (min-width: 768px) {
+  .lp-way {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .lp-way--left .lp-window {
+    order: -1;
+  }
+}
+
+.lp-way-copy h3,
+.lp-quick h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  letter-spacing: -0.02em;
+}
+
+.lp-way-copy p {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--lp-muted);
+}
+
+/* The window stays the office's dark wall in both themes. Its bubble sits over the wall, the tail towards him. */
+
+.lp-window {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 280px;
+  margin: 0;
+  padding: 16px 28px 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2e261c 0%, #1c1712 75%, #120e09 100%);
+}
+
+.lp-window img {
+  width: auto;
+  height: 250px;
+  object-fit: contain;
+  object-position: bottom;
+}
+
+@media (max-width: 767px) {
+  .lp-window {
+    height: 310px;
+  }
+  .lp-window img {
+    height: 225px;
+  }
+}
+
+.lp-bubble {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  max-width: 52%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fffdf8;
+  color: #2a1d14;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.lp-bubble::after {
+  content: "";
+  position: absolute;
+  right: 22px;
+  bottom: -7px;
+  width: 16px;
+  height: 16px;
+  rotate: 45deg;
+  border-radius: 3px;
+  background: inherit;
+}
+
+/* What comes back: the verdicts, then the sample side by side. */
+
+.lp-sample {
+  padding-top: 40px;
+}
+
+.lp-stamps {
+  display: grid;
+  gap: 8px 24px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 600px) {
+  .lp-stamps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.lp-stamps li {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+@media (min-width: 600px) {
+  .lp-stamps li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lp-stamps img {
+  width: 160px;
+  height: 78px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.lp-stamps p {
+  margin: 0;
+  color: var(--lp-muted);
+}
+
+.lp-note {
+  margin: 16px 0 0;
+  color: var(--lp-muted);
+}
+
+.lp-samples {
+  display: grid;
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.lp-samples figure {
+  min-width: 0;
+  margin: 0;
+}
+
+.lp-samples figcaption {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.lp-code {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  background: var(--lp-panel);
+  color: var(--lp-text);
+  border: 1px solid var(--lp-line);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* A card is prose, so it wraps; the checklist keeps its columns and scrolls. */
+
+.lp-code:has([data-sample="card"]) {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Quick start: the shell beside the sloth. */
+
+.lp-quick {
+  padding-top: 48px;
+  scroll-margin-top: 16px;
+}
+
+.lp-quick-row {
+  display: grid;
+  gap: 20px 40px;
+  align-items: end;
+}
+
+@media (min-width: 768px) {
+  .lp-quick-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.lp-quick-steps {
+  min-width: 0;
+}
+
+.lp-quick-steps p {
+  margin: 12px 0;
+}
+
+.lp-quick-steps .lp-code {
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lp-quick-figure {
+  display: flex;
+  justify-content: center;
+}
+
+.lp-quick-figure img {
+  width: min(170px, 44vw);
+}
+
+/* The footer. */
+
+.lp-footer {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--lp-line);
+  font-size: 0.9rem;
+  color: var(--lp-muted);
+}
+
+.lp-footer a {
+  color: var(--lp-muted);
+}
+
+.lp-footer a:hover {
+  color: var(--lp-text);
+}
+
+.lp-repo {
+  margin: 0 0 12px;
+  font-family: var(--lp-mono);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.lp-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-license {
+  margin: 0;
 }

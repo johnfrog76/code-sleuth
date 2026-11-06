@@ -11,6 +11,8 @@ D-CS1 to D-CS11 below. D-CS12 to D-CS17 were the open questions; all six are ans
 D-CS9, D-CS12 and D-CS14 as amended there. D-CS18 to D-CS27 are this spec's own engineering calls, proposed
 for review.
 
+> **Amended 2026-11-05:** section 10.3, for a static page. See the note there.
+>
 > **Amended 2026-11-03:** sections 5.2 and 5.4, for dependencies that are current. `deps.outdated` is
 > built and weighed in the going-public goal: a loose end when any direct dependency is a major version or more
 > behind (a `0.x` minor counts), its evidence listing each one; quality keeps it as a hunch. It reads clean
@@ -653,6 +655,11 @@ ToolKit: the banner, the offering, the bullets, the call to action, the bands, t
 components and never its words (D-CS10). Proposed: the components are copied into Code Sleuth's tree once,
 with a header comment naming where they came from, rather than published as a shared package (gap G8). The
 sloth replaces ToolKit's cast. The copy is Code Sleuth's own `copy.ts`; nothing is read from the README.
+
+Amended 2026-11-05: until the web app exists, the page is static HTML and CSS in `site/`, with no build. ToolKit's
+layout is copied once, with a header comment naming where it came from; the atoms are rendered once to still
+SVGs by `scripts/render-atoms.mjs`; the copy lives in the page. The web app that plays the deck can take the page
+over when it is built.
 
 ### 10.4 Docs and the deck
 

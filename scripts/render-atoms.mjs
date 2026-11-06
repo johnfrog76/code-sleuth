@@ -3,6 +3,7 @@
 //
 //   node scripts/render-atoms.mjs preview <folder>   every atom and pose, light and dark, and the mark at 16 px
 //   node scripts/render-atoms.mjs assets             writes the images that ship: assets/*
+//   node scripts/render-atoms.mjs site               writes the still sloths and stamps the project's page uses: site/*
 //
 // It compiles src/atoms to .atoms-build/ (gitignored), renders each atom with react-dom/server, and asks Chrome
 // for a screenshot of a page holding them. It needs Google Chrome or Chromium; CHROME names another binary.
@@ -175,8 +176,29 @@ if (mode === "preview") {
   console.log(
     "Wrote assets/logo.svg, assets/logo-dark.svg, assets/favicon.svg, assets/favicon.png and assets/social-preview.png",
   );
+} else if (mode === "site") {
+  const site = join(ROOT, "site");
+  for (const pose of ["tipping-hat", "reading", "holding-door", "pointing", "holding-page"]) {
+    writeFileSync(
+      join(site, `sloth-${pose}.svg`),
+      svg(h(SleuthAtom, { pose, title: "The sloth private eye", width: 300, still: true })) + "\n",
+    );
+  }
+  for (const word of ["READY", "NEARLY", "NOT READY"]) {
+    const name = word.toLowerCase().replace(" ", "-");
+    for (const [theme, suffix] of [
+      ["light", ""],
+      ["dark", "-dark"],
+    ]) {
+      writeFileSync(
+        join(site, `stamp-${name}${suffix}.svg`),
+        svg(h(StampAtom, { word, title: word, width: 200, still: true, theme })) + "\n",
+      );
+    }
+  }
+  console.log("Wrote the sloths and stamps to site/");
 } else {
-  console.error("Error: say preview <folder> or assets.");
+  console.error("Error: say preview <folder>, assets or site.");
   console.error("Hint: node scripts/render-atoms.mjs preview <folder>");
   process.exit(2);
 }
