@@ -3,6 +3,7 @@
 //
 //   node scripts/render-atoms.mjs preview <folder>   every atom and pose, light and dark, and the mark at 16 px
 //   node scripts/render-atoms.mjs assets             writes the images that ship: assets/*
+//   node scripts/render-atoms.mjs site               writes the still sloths, the stamps and the tokens the project's page uses: site/*
 //
 // It compiles src/atoms to .atoms-build/ (gitignored), renders each atom with react-dom/server, and asks Chrome
 // for a screenshot of a page holding them. It needs Google Chrome or Chromium; CHROME names another binary.
@@ -89,7 +90,7 @@ const page = (body, bg = "#ffffff") =>
 const [mode, folder] = process.argv.slice(2);
 const chrome = findChrome();
 const { h, svg, atoms } = await loadAtoms();
-const { SleuthAtom, StampAtom, LogoMark, LogoLockup, POSES } = atoms;
+const { SleuthAtom, StampAtom, LogoMark, LogoLockup, POSES, verdictCss } = atoms;
 
 if (mode === "preview") {
   if (!folder) throw new Error("preview needs a folder to write into");
@@ -175,8 +176,28 @@ if (mode === "preview") {
   console.log(
     "Wrote assets/logo.svg, assets/logo-dark.svg, assets/favicon.svg, assets/favicon.png and assets/social-preview.png",
   );
+} else if (mode === "site") {
+  const site = join(ROOT, "site");
+  for (const pose of ["tipping-hat", "reading", "holding-door", "pointing", "holding-page"]) {
+    writeFileSync(
+      join(site, `sloth-${pose}.svg`),
+      svg(h(SleuthAtom, { pose, title: "The sloth private eye", width: 300, still: true })) + "\n",
+    );
+  }
+  for (const word of ["READY", "NEARLY", "NOT READY"]) {
+    const name = word.toLowerCase().replace(" ", "-");
+    writeFileSync(
+      join(site, `stamp-${name}.svg`),
+      svg(h(StampAtom, { word, title: word, width: 200, still: true, theme: "auto" })) + "\n",
+    );
+  }
+  writeFileSync(
+    join(site, "tokens.css"),
+    `/* Written by scripts/render-atoms.mjs from the verdict tokens in src/atoms/figures.tsx. */\n\n${verdictCss()}`,
+  );
+  console.log("Wrote the sloths, the stamps and tokens.css to site/");
 } else {
-  console.error("Error: say preview <folder> or assets.");
+  console.error("Error: say preview <folder>, assets or site.");
   console.error("Hint: node scripts/render-atoms.mjs preview <folder>");
   process.exit(2);
 }

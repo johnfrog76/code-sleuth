@@ -15,7 +15,8 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Added
 
-- A placeholder project page, `site/`, for GitHub Pages: the logo, light and dark, and a link to the repository.
+- The project's page, `site/`, for GitHub Pages: what Code Sleuth gives you, what it looks for, a real checklist and card from a sample run, and how to try it. Light and dark, at phone width, with no script and no web font. Its verdict stamps are green, amber and red, from one set of colour tokens in `src/atoms/figures.tsx`, and each keeps its word.
+- `docs/QUICKSTART.md` shows `npx github:johnfrog76/code-sleuth --goal public`, which runs it from GitHub with no clone.
 - The API key can live in a `.env` in Code Sleuth's own folder, beside the cases folder: copy `.env.example` there and fill it in. A key in your environment still wins. No other `.env` is read, the key never reaches a process Code Sleuth starts, the run says where the key came from and never what it is, and it warns when others can read the file. With no key, the run prints the one line that copies the `.env.example` beside the command into place, both paths in full; the case file keeps it with both paths in their `~` form.
 - A project contact, `codesleuth.project (at) outlook.com`, for conduct reports (`CODE_OF_CONDUCT.md`) and security reports (`SECURITY.md`, beside GitHub's private vulnerability reporting). It is written out, not linked, to slow down address scrapers.
 

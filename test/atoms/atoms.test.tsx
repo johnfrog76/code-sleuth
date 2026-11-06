@@ -7,23 +7,12 @@ import {
   LogoMark,
   POSES,
   SleuthAtom,
-  STAMP_INK,
+  stampInk,
   StampAtom,
   THEMES,
 } from "../../src/atoms/atoms.js";
-import { P } from "../../src/atoms/figures.js";
-
-/** WCAG relative luminance and contrast ratio, from #rrggbb. */
-function luminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5]
-    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
-    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
-}
-const contrast = (a: string, b: string) => {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi! + 0.05) / (lo! + 0.05);
-};
+import { P, VERDICT_TOKENS, type Verdict } from "../../src/atoms/figures.js";
+import { contrast, stamped } from "../helpers/contrast.js";
 
 /** Renders an atom, failing on any warning React prints while it does. */
 function render(element: React.ReactElement): string {
@@ -97,8 +86,26 @@ describe("contrast, on both themes", () => {
     expect(parts.filter((c) => contrast(c, THEMES[theme]) >= 3).length).toBeGreaterThanOrEqual(2);
   });
 
-  it.each(themes)("the stamp's word reads on %s, at 4.5 : 1 or more", (theme) => {
-    expect(contrast(STAMP_INK[theme], THEMES[theme])).toBeGreaterThanOrEqual(4.5);
+  const verdicts = Object.keys(VERDICT_TOKENS) as Verdict[];
+
+  it.each(themes)("each stamp's word reads on %s, at 4.5 : 1 or more as stamped", (theme) => {
+    for (const word of verdicts) {
+      expect(contrast(stamped(stampInk(word, theme), THEMES[theme]), THEMES[theme])).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  });
+
+  it.each(themes)("the three stamps wear three colours on %s", (theme) => {
+    expect(new Set(verdicts.map((word) => stampInk(word, theme))).size).toBe(3);
+  });
+
+  it("draws a stamp in its verdict's ink, and an auto stamp carries its tokens", () => {
+    expect(render(<StampAtom word="READY" title="T" still />)).toContain(VERDICT_TOKENS.READY.light);
+    const auto = render(<StampAtom word="READY" title="T" still theme="auto" />);
+    expect(auto).toContain("var(--verdict-ready)");
+    expect(auto).toContain(VERDICT_TOKENS.READY.dark);
+    expect(auto).toContain("prefers-color-scheme: dark");
   });
 
   it.each(themes)("the lockup's name reads on %s, at 4.5 : 1 or more", (theme) => {

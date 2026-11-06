@@ -30,7 +30,11 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
 - CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test`, `npm run lint` and `npm run build` on Node 24
   for every pull request and every push to main. It runs on the public repository; a private copy skips it.
 - The project's page is `site/`, plain HTML and CSS. `.github/workflows/pages.yml` publishes it to GitHub Pages
-  when a change to it reaches main.
+  when a change to it reaches main. A test holds its sample to a real run, so a change to the checklist's
+  words may change the page too.
+- Publishing the page the first time takes three steps, in order, since the workflow runs only on a public
+  repository and a push that touches `site/`: make the repository public; set Settings, Pages, Build and
+  deployment to "GitHub Actions"; then run the Pages workflow by hand (Actions, Pages, Run workflow).
 
 ## Code of conduct
 

@@ -37,10 +37,10 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
   [POLISH.md](POLISH.md).
 - **The atoms** (`src/atoms/`). The sloth private eye, the verdict stamp and the logo as SVG React components,
   for the office and the landing page; the command does not use them, and they are not in the published build.
-  `figures.tsx` is the character as drawn for the deck, one source for the deck and the product, with its
+  `figures.tsx` holds the palette, with the verdict tokens: each verdict's colour, named once, with its light and dark value. It is the character as drawn for the deck, one source for the deck and the product, with its
   changes named in its header; `atoms.tsx` frames each as a standalone SVG with a title and no words in the
   art. `scripts/render-atoms.mjs` renders them to images with headless Chrome, a dev tool only, and wrote
-  `assets/`.
+  `assets/` and the art in `site/`.
 - **Child processes** (`src/spawn.ts`). Every child -- git, npm, gh and ToolKit's shell -- starts through
   `spawnChild`: an argument array, never a command string, and an environment with the model key taken out. A
   test holds every other file in `src/` away from `node:child_process`.
@@ -57,7 +57,7 @@ folder is ever rewritten.
 | `src/` | the package, by the parts above |
 | `toolkit/` | `handoff.ps1`, the one PowerShell file, shipped with the package |
 | `assets/` | the logo (light and dark), the favicon and the social preview, made by `scripts/render-atoms.mjs` |
-| `site/` | the project's page on GitHub Pages: plain HTML and CSS, with copies of the logo and favicon. `.github/workflows/pages.yml` publishes it on every push to main that changes it. Not shipped |
+| `site/` | the project's page on GitHub Pages: plain HTML and CSS, with no script. It holds copies of the logo, favicon and social preview, and still sloths, stamps and `tokens.css`, all from `scripts/render-atoms.mjs`. A stamp is one SVG that follows the viewer's appearance. Its layout is copied from ToolKit's landing page; its words are its own. `.github/workflows/pages.yml` publishes it. Not shipped |
 | `agentic/` | prompts for agents that work on the project, such as the claims review of a doc. Not shipped |
 | `scripts/` | development tools, not shipped |
 | `test/` | the tests ([TESTING.md](TESTING.md)) |

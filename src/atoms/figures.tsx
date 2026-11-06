@@ -3,7 +3,8 @@
 // Changed here, and nothing else: these comments; Scene's <defs> lifted into an exported SleuthDefs (which Scene
 // renders), so a standalone atom paints with the same gradients and filters; Hat, Face and Head exported, so
 // the logo is drawn from them; and VerdictStamp's red taken as an optional `ink` prop (the same red by
-// default), so the stamp atom can read on a dark background. The file imports nothing but React's types.
+// default), so the stamp atom can read on a dark background; and the verdict tokens added beside the palette.
+// The file imports nothing but React's types.
 //
 import type { CSSProperties, ReactNode } from "react";
 
@@ -93,6 +94,30 @@ export const P = {
   clean: "#3fbf5a",
   dim: "#8a8078",
 } as const;
+
+// ── The verdict tokens: each verdict's colour, named once, with its light and dark value ─────────────────
+export const VERDICT_TOKENS = {
+  READY: { name: "--verdict-ready", light: "#1b6e30", dark: "#5cb877" },
+  NEARLY: { name: "--verdict-nearly", light: "#7f5900", dark: "#e0a92e" },
+  "NOT READY": { name: "--verdict-not-ready", light: P.stamp, dark: "#d9727a" },
+} as const;
+
+/** The tokens as CSS custom properties that follow the viewer's appearance. Formatted as Prettier would. */
+export function verdictCss(): string {
+  const tokens = Object.values(VERDICT_TOKENS);
+  return [
+    ":root {",
+    ...tokens.map((token) => `  ${token.name}: ${token.light};`),
+    "}",
+    "",
+    "@media (prefers-color-scheme: dark) {",
+    "  :root {",
+    ...tokens.map((token) => `    ${token.name}: ${token.dark};`),
+    "  }",
+    "}",
+    "",
+  ].join("\n");
+}
 
 export const STAGE_BG_OFFICE = `linear-gradient(180deg, ${P.wall} 0%, ${P.floor} 100%)`;
 export const STAGE_BG_JUNGLE = `linear-gradient(180deg, ${P.sky} 0%, ${P.canopy} 55%, ${P.canopyDeep} 100%)`;

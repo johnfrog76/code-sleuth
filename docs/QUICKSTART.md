@@ -1,6 +1,6 @@
 # Quick start
 
-From a clone to your first case: a checklist of what's worth doing before a repository is public facing, and a
+From nothing to your first case: a checklist of what's worth doing before a repository is public facing, and a
 card, ready to file, for each item that needs work (the lightest items, hunches, get one when you ask with
 `--all`). Code Sleuth runs on your machine, reads the repository and
 never writes to it.
@@ -15,9 +15,22 @@ never writes to it.
   that keep a repository from running its own commands. Without git, `secrets.history` reads *not investigated* and says why, and
   `names.deny` reads the files but not the commit messages, and says so when the files are clean.
 
-Code Sleuth is not on npm yet. You run it from a clone.
+Code Sleuth is not on npm yet. You run it straight from GitHub with npx, or from a clone.
+
+## Try it with npx
+
+In the repository you want to know about:
+
+```sh
+npx github:johnfrog76/code-sleuth --goal public
+```
+
+npx fetches and builds it the first time, then keeps it in its own cache. Wherever these docs say
+`code-sleuth`, put `npx github:johnfrog76/code-sleuth` in its place.
 
 ## Install from a clone
+
+To keep it on your PATH, or to work on it:
 
 ```sh
 git clone https://github.com/johnfrog76/code-sleuth.git

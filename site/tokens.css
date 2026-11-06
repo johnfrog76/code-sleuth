@@ -1,0 +1,15 @@
+/* Written by scripts/render-atoms.mjs from the verdict tokens in src/atoms/figures.tsx. */
+
+:root {
+  --verdict-ready: #1b6e30;
+  --verdict-nearly: #7f5900;
+  --verdict-not-ready: #b4232f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --verdict-ready: #5cb877;
+    --verdict-nearly: #e0a92e;
+    --verdict-not-ready: #d9727a;
+  }
+}

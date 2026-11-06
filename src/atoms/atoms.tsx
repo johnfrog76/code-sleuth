@@ -5,14 +5,18 @@ import {
   SleuthDefs,
   SleuthKeyframes,
   type SleuthPose,
+  VERDICT_TOKENS,
   VerdictStamp,
   type Verdict,
+  verdictCss,
 } from "./figures.js";
 
 /**
  * The atoms: each a standalone SVG, drawn from the figures (figures.tsx), with no words in the art. Words a
  * surface wants -- a title for screen readers, a stamp's verdict, a wordmark's name -- are props.
  */
+
+export { verdictCss };
 
 /** The five poses, and `holding-page`, the reading pose with a page in front of him. */
 export const POSES: readonly SleuthPose[] = [
@@ -71,10 +75,14 @@ export const THEMES = { light: "#ffffff", dark: "#0d1117", office: P.wall } as c
 export type Theme = keyof typeof THEMES;
 
 /**
- * The stamp's ink on each theme. On light, the figures' own red. On a dark background that red falls short of
- * a word's 4.5 : 1, so dark takes the same red mixed 28% toward white: the nearest that reads on both darks.
+ * The stamp's ink, from the verdict tokens. A theme takes its value; `auto` takes the token, and the stamp carries
+ * the tokens itself, so one file reads right in either appearance, even as an image, which can't see the page's CSS.
  */
-export const STAMP_INK: Record<Theme, string> = { light: P.stamp, dark: "#c96169", office: "#c96169" };
+export function stampInk(word: Verdict, theme: Theme | "auto"): string {
+  const token = VERDICT_TOKENS[word];
+  if (theme === "auto") return `var(${token.name})`;
+  return theme === "light" ? token.light : token.dark;
+}
 
 /** The verdict stamp. The word is a prop: READY, NEARLY or NOT READY. */
 export function StampAtom({
@@ -83,10 +91,11 @@ export function StampAtom({
   width = 220,
   still = false,
   theme = "light",
-}: AtomProps & { word: Verdict; theme?: Theme }) {
+}: AtomProps & { word: Verdict; theme?: Theme | "auto" }) {
   const w = Math.max(150, word.length * 30 + 48);
   // The stamp lands rotated; the frame leaves room for the turn.
   const fw = w + 60;
+  const ink = stampInk(word, theme);
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -97,16 +106,17 @@ export function StampAtom({
       aria-label={title}
     >
       <title>{title}</title>
+      {theme === "auto" && <style>{verdictCss()}</style>}
       <SleuthDefs />
       {!still && <SleuthKeyframes />}
       {still ? (
         // Still: the landed stamp with no keyframes mounted, so the landing has nothing to play, turned as it
         // rests once it has landed.
         <g transform="rotate(-8)">
-          <VerdictStamp x={0} y={0} word={word} ink={STAMP_INK[theme]} />
+          <VerdictStamp x={0} y={0} word={word} ink={ink} />
         </g>
       ) : (
-        <VerdictStamp x={0} y={0} word={word} ink={STAMP_INK[theme]} />
+        <VerdictStamp x={0} y={0} word={word} ink={ink} />
       )}
     </svg>
   );
