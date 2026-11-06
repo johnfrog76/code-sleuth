@@ -2,6 +2,9 @@
 #
 # Like CI, the job runs only while the repository is public. Pages' source is "GitHub Actions"
 # (Settings, Pages, Build and deployment).
+#
+# Making the repository public does not publish the page: nothing has pushed to site/. The first time, set the
+# source above once the repository is public, then run this workflow by hand (Actions, Pages, Run workflow).
 name: Pages
 
 on:

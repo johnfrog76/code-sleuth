@@ -16,7 +16,7 @@ npm run lint     # type check, ESLint and Prettier
 | `test/case/` | the cases folder and its refusals, the record, the cards, golden case files, determinism, and the masking test (a secret check's finding, and a secret on a line any other check reports) |
 | `test/polish/` | the guard's table, the client over a fake `fetch`, and whole runs with a stubbed client |
 | `test/toolkit/` | detection, the call and the ledger with stub shells, the `handoff.ps1` syntax, and a real ToolKit run |
-| `test/docs/` | `CHECKS.md` against the check table, every relative link, and `CLI.md` against the parser |
+| `test/docs/` | `CHECKS.md` against the check table, every relative link, `CLI.md` against the parser, and the project's page: its sample against a real run, its local files, no script |
 | `test/atoms/` | every atom renders as a standalone SVG with a title and no warning, carries no words in its art, and passes the contrast check on the light, dark and office backgrounds |
 | `test/cli/nowrite.test.ts` | a whole run, with the real npm in its offline mode, gh, git and the ToolKit hand-off, writes nothing into the repository, even with an `.npmrc` that points npm's cache and logs into it |
 | `test/spawn.test.ts` | the model key never reaches a child process, in any letter case, and every child starts through `src/spawn.ts` |
