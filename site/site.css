@@ -3,34 +3,49 @@
    and the footer. The words and the colours are Code Sleuth's own. No script and no web font. */
 
 :root {
-  --lp-bg: #fbf6ec;
-  --lp-text: #2a1d14;
-  --lp-muted: #5a4330;
-  --lp-panel: #fffdf8;
-  --lp-line: rgba(42, 29, 20, 0.16);
-  --lp-accent: #8a4b1e;
-  --lp-dot: #b8955a;
-  --lp-glow: rgba(217, 185, 122, 0.28);
-  --lp-cta: #5a4330;
-  --lp-cta-hover: #2a1d14;
-  --lp-cta-text: #fbf6ec;
+  --lp-bg: #f2f8ef;
+  --lp-text: var(--jungle-canopy-night);
+  --lp-muted: var(--jungle-dusk);
+  --lp-panel: #fbfdf9;
+  --lp-line: rgba(11, 46, 30, 0.16);
+  --lp-accent: var(--jungle-canopy-deep);
+  --lp-dot: var(--jungle-canopy);
+  /* The jungle the page walks through: unkept at the top, lit at the end. The same in both appearances. */
+  --lp-jungle-dark: linear-gradient(
+    180deg,
+    var(--jungle-dusk) 0%,
+    var(--jungle-canopy-deep) 60%,
+    var(--jungle-canopy-night) 100%
+  );
+  --lp-jungle-lit: linear-gradient(
+    180deg,
+    var(--jungle-dusk) 0%,
+    var(--jungle-canopy) 50%,
+    var(--jungle-canopy-lit) 85%,
+    var(--jungle-canopy) 100%
+  );
+  --lp-glow: rgba(143, 212, 94, 0.14);
+  --lp-on-jungle: #eef6ea;
+  --lp-on-jungle-muted: #cfe0d6;
+  --lp-cta: var(--jungle-canopy-lit);
+  --lp-cta-hover: #b5e68f;
+  --lp-cta-text: var(--jungle-canopy-night);
+  --lp-cta-ghost-hover: rgba(143, 212, 94, 0.16);
+  --lp-bubble: #fbfdf9;
+  --lp-bubble-text: var(--jungle-canopy-night);
   --lp-mono: "Cascadia Code", "Fira Code", Consolas, ui-monospace, monospace;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --lp-bg: #15100b;
-    --lp-text: #ece0c8;
-    --lp-muted: #c9b89a;
-    --lp-panel: #1f1912;
-    --lp-line: rgba(236, 224, 200, 0.16);
-    --lp-accent: #e4c48f;
-    --lp-dot: #c9a26a;
-    --lp-glow: rgba(217, 185, 122, 0.12);
-    --lp-cta: #d9b97a;
-    --lp-cta-hover: #e4c48f;
-    --lp-cta-text: #2a1d14;
+    --lp-bg: #071c13;
+    --lp-text: #e6f1e2;
+    --lp-muted: #b4cbc0;
+    --lp-panel: var(--jungle-dusk-deep);
+    --lp-line: rgba(230, 241, 226, 0.16);
+    --lp-accent: var(--jungle-canopy-lit);
+    --lp-dot: var(--jungle-canopy-lit);
   }
 }
 
@@ -108,9 +123,15 @@ img {
   align-items: center;
   margin-top: 16px;
   padding: 24px 20px;
-  border: 1px solid var(--lp-line);
   border-radius: 16px;
-  background: radial-gradient(1200px 420px at 85% 20%, var(--lp-glow), transparent 60%), var(--lp-panel);
+  background:
+    radial-gradient(1200px 420px at 85% 20%, var(--lp-glow), transparent 60%), var(--lp-jungle-dark);
+  color: var(--lp-text);
+  /* The banner is the dark jungle in both appearances, so its words take the jungle's light. */
+  --lp-text: var(--lp-on-jungle);
+  --lp-muted: var(--lp-on-jungle-muted);
+  --lp-accent: var(--jungle-canopy-lit);
+  --lp-dot: var(--jungle-canopy-lit);
 }
 
 @media (min-width: 900px) {
@@ -198,6 +219,16 @@ img {
   background: var(--lp-cta-hover);
 }
 
+.lp .lp-cta-button--secondary {
+  background: transparent;
+  color: var(--lp-text);
+  box-shadow: inset 0 0 0 2px var(--lp-cta);
+}
+
+.lp .lp-cta-button--secondary:hover {
+  background: var(--lp-cta-ghost-hover);
+}
+
 /* The bands: each with the sloth in its window, sides alternating. */
 
 .lp-kicker {
@@ -243,7 +274,7 @@ img {
   color: var(--lp-muted);
 }
 
-/* The window stays the office's dark wall in both themes. Its bubble sits over the wall, the tail towards him. */
+/* The window looks out on the dark jungle in both themes. Its bubble sits over it, the tail towards him. */
 
 .lp-window {
   position: relative;
@@ -255,7 +286,7 @@ img {
   padding: 16px 28px 0;
   overflow: hidden;
   border-radius: 12px;
-  background: linear-gradient(180deg, #2e261c 0%, #1c1712 75%, #120e09 100%);
+  background: var(--lp-jungle-dark);
 }
 
 .lp-window img {
@@ -282,8 +313,8 @@ img {
   margin: 0;
   padding: 10px 14px;
   border-radius: 14px;
-  background: #fffdf8;
-  color: #2a1d14;
+  background: var(--lp-bubble);
+  color: var(--lp-bubble-text);
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -470,4 +501,15 @@ img {
 
 .lp-license {
   margin: 0;
+}
+
+/* The page ends in the lit jungle: a band below the footer's words, so no word sits on the bright canopy. */
+
+.lp-footer::after {
+  content: "";
+  display: block;
+  height: 144px;
+  margin-top: 28px;
+  border-radius: 16px;
+  background: var(--lp-jungle-lit);
 }

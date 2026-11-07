@@ -37,7 +37,7 @@ CLI (src/cli/)  ->  case writer (src/case/)  ->  engine (src/engine/)  ->  repos
   [POLISH.md](POLISH.md).
 - **The atoms** (`src/atoms/`). The sloth private eye, the verdict stamp and the logo as SVG React components,
   for the office and the landing page; the command does not use them, and they are not in the published build.
-  `figures.tsx` holds the palette, with the verdict tokens: each verdict's colour, named once, with its light and dark value. It is the character as drawn for the deck, one source for the deck and the product, with its
+  `figures.tsx` holds the palette, with the verdict tokens (each verdict's colour, named once, with its light and dark value) and the jungle tokens (the deck's canopy and dusk sky, for the project's page). It is the character as drawn for the deck, one source for the deck and the product, with its
   changes named in its header; `atoms.tsx` frames each as a standalone SVG with a title and no words in the
   art. `scripts/render-atoms.mjs` renders them to images with headless Chrome, a dev tool only, and wrote
   `assets/` and the art in `site/`.

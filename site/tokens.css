@@ -1,4 +1,4 @@
-/* Written by scripts/render-atoms.mjs from the verdict tokens in src/atoms/figures.tsx. */
+/* Written by scripts/render-atoms.mjs from the verdict and jungle tokens in src/atoms/figures.tsx. */
 
 :root {
   --verdict-ready: #1b6e30;
@@ -12,4 +12,13 @@
     --verdict-nearly: #e0a92e;
     --verdict-not-ready: #d9727a;
   }
+}
+
+:root {
+  --jungle-canopy: #2f8a44;
+  --jungle-canopy-lit: #8fd45e;
+  --jungle-canopy-deep: #145232;
+  --jungle-canopy-night: #0b2e1e;
+  --jungle-dusk: #2e4e5c;
+  --jungle-dusk-deep: #0f2a2c;
 }
