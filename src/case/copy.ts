@@ -55,8 +55,8 @@ export const copy = {
     },
     security: {
       ready: "nothing stands out on security",
-      nearly: "nearly clean on security",
-      "not-ready": "not safe yet",
+      nearly: "nearly ready on security",
+      "not-ready": "not ready on security",
     },
     quality: { ready: "in good shape", nearly: "nearly in good shape", "not-ready": "not in good shape yet" },
   } as Record<string, Record<CaseVerdict, string>>,

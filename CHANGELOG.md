@@ -8,6 +8,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Changed
 
+- Code Sleuth's own words claim no state they cannot know. The security goal's verdicts read `nearly ready on security` and `not ready on security`, in the public goal's shape. The page, the quick start and `docs/CHECKS.md` say `READY is a finding by this checklist, not permission to publish`. A test holds the docs, the page, the templates and the copy files to it, with each remaining use of those words listed and its reason given.
 - The docs open with what each one gives you, and claim only what the code and tests back. `docs/CHECKS.md` says what being public facing opens (the files, the history and the tracker) and that the tracker is not read yet. A goal that is not ready says it is planned for a later release, not that it comes in the next one.
 - The verdict says it is the checklist's: `By my checklist: nearly ready to be public facing.` A READY verdict adds one line saying the call is yours. `docs/CHECKS.md` says where the bar comes from, how a project's own context moves it, and what Code Sleuth doesn't judge.
 - The goal's words: the output, the case file, `--help`, the goal prompt, the docs and the project's page call the goal "public facing" wherever a person reads it. The verdict reads `By my checklist: not ready to be public facing.`, the goal prompt asks `Is it ready to be public facing?`, and the run's goal line is `Goal  public facing`. The flag stays `--goal public`.

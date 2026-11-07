@@ -98,5 +98,5 @@ request the API rejects (`rejected`), a model that declines (`refused`) or an an
 The request is one small `fetch`, not the official SDK. Code Sleuth reads other people's dependency trees for
 a living, so its own should be short enough to read: the only runtime dependency stays `yaml`. The polish pass
 is one optional request whose failure changes nothing, so an SDK's retries and typed errors would buy little
-here. Writing the request by hand also keeps two guarantees plain in the code: the address is fixed
+here. Writing the request by hand also keeps two things plain in the code: the address is fixed
 (`ANTHROPIC_BASE_URL` is ignored), and no client exists without an API key.

@@ -90,3 +90,89 @@ describe("the goal's words", () => {
     });
   });
 });
+
+// The rule: you can't be safe, but you can practice smart habits. Code Sleuth's own words never claim that a
+// repository, a verdict or Code Sleuth itself is safe, secure or guaranteed. A practice may be named; new copy
+// says "smart habits", which needs no entry here. Every other use of these words is listed, with its reason.
+const STATE = /\b(?:safe|safely|safer|safest|safety|secure|securely|guarantee|guarantees|guaranteed)\b/i;
+
+const ALLOWED: readonly { phrase: string; in: readonly string[]; why: string }[] = [
+  {
+    phrase: "It asks; it cannot guarantee.",
+    in: ["docs/POLISH.md"],
+    why: "a denial: the prompt asks the model to keep every fact, and the doc says that asking is not a promise",
+  },
+  {
+    phrase: "(`npm audit fix` does what it safely can)",
+    in: ["docs/CHECKS.md", "src/engine/copy.ts"],
+    why: "a practice, npm's own: it applies only the fixes that stay inside the ranges a project allows",
+  },
+  {
+    phrase: "take its safe settings from GIT_CONFIG_KEY_<n>",
+    in: ["src/engine/copy.ts"],
+    why: "a practice: the settings Code Sleuth always hands git, a default it keeps, not a state it claims",
+  },
+];
+
+/** Everything a person reads of Code Sleuth's own words, as files: the docs, the page and the copy. */
+function ownWords(): string[] {
+  const under = (folder: string, keep: (name: string) => boolean) =>
+    readdirSync(new URL(folder, root))
+      .filter(keep)
+      .map((name) => `${folder}${name}`);
+  return [
+    "README.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "CHANGELOG.md",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ...under(".github/ISSUE_TEMPLATE/", (name) => name.endsWith(".yml")),
+    ...under("docs/", (name) => name.endsWith(".md")),
+    ...under("site/", (name) => name.endsWith(".html")),
+    "src/cli/copy.ts",
+    "src/case/copy.ts",
+    "src/engine/copy.ts",
+    "src/polish/prompt.md",
+  ];
+}
+
+describe("no claim that anything is safe", () => {
+  it("never says a repository, a verdict or Code Sleuth is safe, secure or guaranteed", () => {
+    const files = ownWords();
+    expect(files).toEqual(
+      expect.arrayContaining([
+        "docs/CHECKS.md",
+        "site/index.html",
+        "src/case/copy.ts",
+        "src/polish/prompt.md",
+      ]),
+    );
+    const used = new Set<string>();
+    const claims: string[] = [];
+    for (const path of files) {
+      read(path)
+        .split("\n")
+        .forEach((line, i) => {
+          let rest = line;
+          for (const allowed of ALLOWED) {
+            if (!allowed.in.includes(path) || !rest.includes(allowed.phrase)) continue;
+            rest = rest.replaceAll(allowed.phrase, "");
+            used.add(`${allowed.phrase} @ ${path}`);
+          }
+          if (STATE.test(rest)) claims.push(`${path}:${i + 1}: ${line.trim()}`);
+        });
+    }
+    expect(claims).toEqual([]);
+    // An entry that no longer matches is a stale reason: take it out, or the list stops meaning anything.
+    const listed = ALLOWED.flatMap((allowed) => allowed.in.map((path) => `${allowed.phrase} @ ${path}`));
+    expect(listed.filter((entry) => !used.has(entry))).toEqual([]);
+  });
+
+  it("gives the security goal's verdicts the public goal's shape: ready, not safe", () => {
+    expect(caseCopy.copy.verdict.security).toEqual({
+      ready: "nothing stands out on security",
+      nearly: "nearly ready on security",
+      "not-ready": "not ready on security",
+    });
+  });
+});

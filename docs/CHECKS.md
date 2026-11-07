@@ -19,9 +19,8 @@ the files and the history. It does not read the tracker yet ([KNOWN-GAPS.md](KNO
 
 ## What the verdict means and doesn't
 
-The verdict is a finding, not permission. READY means nothing on this checklist stands in the way of the goal;
-NEARLY means only loose ends do; NOT READY means a smoking gun does. None of them means the repository is safe
-to publish.
+READY means nothing on this checklist stands in the way of the goal; NEARLY means only loose ends do; NOT READY
+means a smoking gun does. READY is a finding by this checklist, not permission to publish.
 
 **Where the bar comes from.** The community files follow GitHub's community profile: a README, a license, a
 code of conduct, a contributing guide, a security policy, and issue and pull request templates. The workflow,

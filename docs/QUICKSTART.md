@@ -55,7 +55,7 @@ now there is one goal to pick: **the public-facing goal**. Security and quality 
 
 You get the verdict by Code Sleuth's checklist (READY, NEARLY or NOT READY), the checklist grouped by how
 much each finding weighs, and where the case file went. READY means nothing on the checklist stands in the
-way, not that the repository is safe to publish: see
+way. READY is a finding by this checklist, not permission to publish: see
 [what the verdict means and doesn't](CHECKS.md#what-the-verdict-means-and-doesnt).
 
 ```text
