@@ -84,7 +84,7 @@ before any check runs and before anything is written.
 ## What it prints
 
 The opening line, the repository and the goal, what leaves the machine, the stakeout (a dot per check), the
-stamped verdict (`By my checklist: ...`, and with READY one line saying the call is yours), the checklist
+stamped verdict (`By my checklist: ...`, and with MET one line saying the call is yours), the checklist
 grouped as the case file groups it, where the case went, and lines such as the examples line, `Polishing ...`,
 `Filed` and `Skipped`, then one polish line and one ToolKit line. Colour only on a terminal, and never with a
 non-empty `NO_COLOR`; every line also carries its word, so colour is never the only signal.

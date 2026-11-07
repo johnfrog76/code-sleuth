@@ -98,9 +98,9 @@ export const P = {
 
 // ── The verdict tokens: each verdict's colour, named once, with its light and dark value ─────────────────
 export const VERDICT_TOKENS = {
-  READY: { name: "--verdict-ready", light: "#1b6e30", dark: "#5cb877" },
-  NEARLY: { name: "--verdict-nearly", light: "#7f5900", dark: "#e0a92e" },
-  "NOT READY": { name: "--verdict-not-ready", light: P.stamp, dark: "#d9727a" },
+  MET: { name: "--verdict-met", light: "#1b6e30", dark: "#5cb877" },
+  "NEARLY MET": { name: "--verdict-nearly-met", light: "#7f5900", dark: "#e0a92e" },
+  "NOT MET": { name: "--verdict-not-met", light: P.stamp, dark: "#d9727a" },
 } as const;
 
 /** The tokens as CSS custom properties that follow the viewer's appearance. Formatted as Prettier would. */
@@ -595,7 +595,7 @@ export function Sleuth({
 }
 
 // ── The case folder and the stamp ────────────────────────────────────────────
-export type Verdict = "READY" | "NEARLY" | "NOT READY";
+export type Verdict = "MET" | "NEARLY MET" | "NOT MET";
 
 /** The verdict, stamped: lands once (`landed`), then holds. The word is a prop. */
 export function VerdictStamp({

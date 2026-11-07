@@ -104,7 +104,7 @@ if (mode === "preview") {
     const poses = POSES.map((pose) =>
       cell(pose, svg(h(SleuthAtom, { pose, title: `The sleuth, ${pose}`, width: 220, still: true }))),
     ).join("");
-    const stamps = ["READY", "NEARLY", "NOT READY"]
+    const stamps = ["MET", "NEARLY MET", "NOT MET"]
       .map((word) => cell(word, svg(h(StampAtom, { word, title: word, width: 220, still: true, theme }))))
       .join("");
     const marks = [128, 64, 32, 16]
@@ -184,7 +184,7 @@ if (mode === "preview") {
       svg(h(SleuthAtom, { pose, title: "The sloth private eye", width: 300, still: true })) + "\n",
     );
   }
-  for (const word of ["READY", "NEARLY", "NOT READY"]) {
+  for (const word of ["MET", "NEARLY MET", "NOT MET"]) {
     const name = word.toLowerCase().replace(" ", "-");
     writeFileSync(
       join(site, `stamp-${name}.svg`),

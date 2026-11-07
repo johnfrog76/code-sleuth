@@ -50,7 +50,7 @@ export function detectCapabilities(repo: RepoReader, options: DetectOptions = {}
 
 /**
  * Every call a goal's checks would make off the machine, one line each, said before any of them runs: only the
- * checks whose needs are met, and only those that would call for this repository.
+ * checks that have what they need, and only those that would call for this repository.
  */
 export function outgoingCalls(
   goal: Goal,

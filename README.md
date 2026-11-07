@@ -55,7 +55,8 @@ code-sleuth path/to/your/repo --goal public
 You get the verdict and the checklist, and a case file in your own cases folder, never in the repository.
 [docs/QUICKSTART.md](docs/QUICKSTART.md) walks through it, and
 [what the verdict means and doesn't](docs/CHECKS.md#what-the-verdict-means-and-doesnt) is worth a read
-before you act on one.
+before you act on one. A MET means the list is met; your software may have requirements of its own, and
+[what MET doesn't cover](docs/CHECKS.md#what-met-doesnt-cover) names the ones worth a look.
 
 ## Documentation
 

@@ -1,6 +1,7 @@
 import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { copy as caseCopy } from "../../src/case/copy.js";
 import { defaultCasesFolder } from "../../src/case/folder.js";
 import { type Captured, isRefusal, sleuth } from "../helpers/cli.js";
 import { investigateAsync } from "../helpers/investigate.js";
@@ -50,7 +51,7 @@ describe("investigating", () => {
     expect(stdout).toMatch(/^ {2}Repo {2}bare \(main @ [0-9a-f]{7}, clean\)$/m);
     expect(stdout).toContain("  Goal  public facing\n");
     expect(stdout).toContain(`Taking my time. 24 leads to run down ${".".repeat(24)} done.\n`);
-    expect(stdout).toContain("NOT READY  By my checklist: not ready to be public facing. One smoking gun,");
+    expect(stdout).toContain("NOT MET  By my checklist: not met for public facing. One smoking gun,");
     expect(stdout).toMatch(/^Smoking guns\n {2}\[ \] license\.file {3,}No license/m);
     expect(stdout).toMatch(/^Clean\n {2}\[x\] \S+ +.+ {2}\.\.\. and \d+ more$/m);
     expect(stdout).toMatch(/^Case file {2}.*case\.md$/m);
@@ -82,10 +83,8 @@ describe("investigating", () => {
       ),
     ).toBe(true);
     expect(stdout.match(/So, you want to know/g)).toHaveLength(1);
-    expect(stdout).toContain("READY  By my checklist: ready to be public facing.");
-    expect(stdout).toContain(
-      "Nothing on my checklist stands in the way. Every case is different: the call is yours.",
-    );
+    expect(stdout).toContain("MET  By my checklist: met for public facing.");
+    expect(stdout).toContain(caseCopy.beyondLine("met"));
   });
 
   it("refuses an answer that is not a choice", async () => {

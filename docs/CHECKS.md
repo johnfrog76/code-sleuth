@@ -19,8 +19,8 @@ the files and the history. It does not read the tracker yet ([KNOWN-GAPS.md](KNO
 
 ## What the verdict means and doesn't
 
-READY means nothing on this checklist stands in the way of the goal; NEARLY means only loose ends do; NOT READY
-means a smoking gun does. READY is a finding by this checklist, not permission to publish.
+MET means nothing on this checklist stands in the way of the goal; NEARLY MET means only loose ends do; NOT MET
+means a smoking gun does. MET is a finding by this checklist, not permission to publish.
 
 **Where the bar comes from.** The community files follow GitHub's community profile: a README, a license, a
 code of conduct, a contributing guide, a security policy, and issue and pull request templates. The workflow,
@@ -34,6 +34,29 @@ about. Where a check can reasonably not apply, its entry below says so.
 **What Code Sleuth doesn't judge:** legal and provenance questions (who may publish this code, and where it
 came from), an employer's or a client's rules, trademarks and names beyond your deny list, the text in the
 tracker, and the code itself, which is a review's job. A person decides those.
+
+## What MET doesn't cover
+
+MET tells you nothing on this list stands in your way. Your software may have requirements of its own, and
+these are worth a look of your own before you go:
+
+- **How it runs.** Code Sleuth reads files and history. It never builds, runs or tests the code, so how the
+  software behaves when it runs is outside the list.
+- **Settings on GitHub.** Branch protection, who can push, secret scanning, and the Actions and Pages settings
+  live on GitHub, not in the files. Code Sleuth reads the files.
+- **What the code means.** A rule finds a token, a path or a missing file. It doesn't review logic, so a flaw
+  in what the code does is a review's job.
+- **What dependencies do.** The dependency checks read names, versions, licenses and known advisories, for npm
+  projects. What a dependency does when it installs or runs is not on the list.
+- **Where Code Sleuth doesn't look yet.** The tracker, dependencies outside npm, and some rules in commit
+  messages ([KNOWN-GAPS.md](KNOWN-GAPS.md)). A check that couldn't run says so under Not investigated, with its
+  reason.
+- **What already left the repository.** A secret that was ever pushed may sit in a fork, a clone or a cache.
+  Taking it out of the history doesn't call it back: revoke it where it was issued.
+- **People and content.** Who has access, and what the words, images and data in the repository say about
+  people, are a person's call.
+- **The snapshot.** A case is the repository at one commit, on one day. A new commit, or an advisory published
+  tomorrow, can change it: run it again before you go.
 
 ## Weights
 

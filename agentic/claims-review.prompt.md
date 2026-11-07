@@ -49,7 +49,7 @@ worded that way.
 
 - The checklist is never presented as **the** list. It is a helpful place to start; every project's bar is
   its own.
-- READY is never presented as "safe to publish", or as permission. It means nothing on the checklist stands
+- MET is never presented as "safe to publish", or as permission. It means nothing on the checklist stands
   in the way.
 - No goal, feature or platform is presented as available before it is. Only the public-facing goal can be
   investigated in this release.

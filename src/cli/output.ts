@@ -69,7 +69,8 @@ export function report(
 ): string {
   const verdict = `${paint("stamp", caseCopy.stamp[record.verdict])}  ${caseCopy.verdictLine(record.goal, record.verdict, record.counts)}`;
   const width = Math.max(...outcomes.map((o) => o.check.id.length)) + 3;
-  const lines = ["", verdict, ...(record.verdict === "ready" ? [caseCopy.yourCall] : []), ""];
+  const beyond = caseCopy.beyondLine(record.verdict);
+  const lines = ["", verdict, ...(beyond === undefined ? [] : [beyond]), ""];
   for (const group of GROUPS) {
     const members = outcomes.filter((o) => groupOf(o) === group);
     if (members.length === 0) continue;

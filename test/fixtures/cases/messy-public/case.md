@@ -1,6 +1,6 @@
 # Case 2026-10-31-public-1
 
-**NOT READY** -- By my checklist: not ready to be public facing. One smoking gun, eight loose ends.
+**NOT MET** -- By my checklist: not met for public facing. One smoking gun, eight loose ends.
 
 - Repo: messy (main @ 4999d78, clean)
 - Goal: public facing

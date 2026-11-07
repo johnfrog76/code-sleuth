@@ -168,11 +168,83 @@ describe("no claim that anything is safe", () => {
     expect(listed.filter((entry) => !used.has(entry))).toEqual([]);
   });
 
-  it("gives the security goal's verdicts the public goal's shape: ready, not safe", () => {
-    expect(caseCopy.copy.verdict.security).toEqual({
-      ready: "nothing stands out on security",
-      nearly: "nearly ready on security",
-      "not-ready": "not ready on security",
-    });
+  it("gives every goal's verdict the same three words: met, nearly met or not met, for that goal", () => {
+    expect(caseCopy.copy.stamp).toEqual({ met: "MET", "nearly-met": "NEARLY MET", "not-met": "NOT MET" });
+    for (const [goal, words] of [
+      ["public", "public facing"],
+      ["security", "security"],
+      ["quality", "quality"],
+    ])
+      expect(caseCopy.copy.verdict[goal!]).toEqual({
+        met: `met for ${words}`,
+        "nearly-met": `nearly met for ${words}`,
+        "not-met": `not met for ${words}`,
+      });
   });
+});
+
+// The verdict was READY, NEARLY or NOT READY until 2026-11-07; it is MET, NEARLY MET or NOT MET. The old words
+// don't come back as a verdict. The changelog is left out: it records the change, so it names them.
+const OLD_VERDICT =
+  /\bNOT READY\b|\bREADY\b|\bNEARLY\b(?! MET)|`(?:ready|nearly|not-ready)`|"(?:ready|nearly|not-ready)"/;
+
+describe("the verdict's words", () => {
+  it("never give READY, NEARLY or NOT READY as a verdict in Code Sleuth's own words", () => {
+    const stale = ownWords()
+      .filter((path) => path !== "CHANGELOG.md")
+      .flatMap((path) =>
+        read(path)
+          .split("\n")
+          .flatMap((line, i) => (OLD_VERDICT.test(line) ? [`${path}:${i + 1}: ${line.trim()}`] : [])),
+      );
+    expect(stale).toEqual([]);
+  });
+
+  it("points to a section that is there", () => {
+    const anchor = caseCopy.copy.beyondLink.url.split("#")[1];
+    expect(caseCopy.copy.beyondLink.url).toMatch(/\/docs\/CHECKS\.md#/);
+    const heading = read("docs/CHECKS.md")
+      .split("\n")
+      .find((line) => line === `## ${caseCopy.copy.beyondLink.title}`);
+    expect(heading).toBeDefined();
+    const slug = heading!
+      .slice(3)
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, "")
+      .replaceAll(" ", "-");
+    expect(slug).toBe(anchor);
+  });
+
+  it.each([
+    ["whole/kept", [] as string[], "met"],
+    ["whole/messy", ["--offline"], "nearly-met"],
+    ["whole/bare", [], "not-met"],
+  ] as const)(
+    "says beside %s's verdict what the list doesn't reach, under MET and NEARLY MET only",
+    async (fixture, flags, verdict) => {
+      await withScratch(async (out) => {
+        const run = await investigateAsync(fixture, (repo) =>
+          sleuth([repo, "--goal", "public", ...flags, "--out", out], {
+            casesFolder: join(out, "default"),
+            env: { NO_COLOR: "1" },
+          }),
+        );
+        const stamp = caseCopy.copy.stamp[verdict];
+        const lines = run.stdout.split("\n");
+        const at = lines.findIndex((line) => line.startsWith(`${stamp}  By my checklist:`));
+        expect(at).toBeGreaterThanOrEqual(0);
+        const caseMd = everyFile(out);
+        const beyond = caseCopy.copy.beyondLine(verdict);
+        if (verdict === "not-met") {
+          expect(beyond).toBeUndefined();
+          expect(run.stdout).not.toContain(caseCopy.copy.beyondLink.title);
+          expect(caseMd).not.toContain(caseCopy.copy.beyondLink.title);
+        } else {
+          expect(lines[at + 1]).toBe(beyond);
+          expect(caseMd).toContain(`**${stamp}** -- By my checklist:`);
+          expect(caseMd).toContain(caseCopy.copy.beyondMd(verdict)!);
+        }
+      });
+    },
+  );
 });

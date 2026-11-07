@@ -356,7 +356,7 @@ describe("the run names the advisory lookup, and holds a vulnerable repository b
     expect([...npmCalls, ...ghCalls]).toEqual([]);
   });
 
-  it("does not read READY with a known high advisory, which is a smoking gun with a card", async () => {
+  it("does not read MET with a known high advisory, which is a smoking gun with a card", async () => {
     const { result } = await runCli(
       {
         npm: {
@@ -371,7 +371,7 @@ describe("the run names the advisory lookup, and holds a vulnerable repository b
       ["--json"],
     );
     const record = JSON.parse(result.stdout);
-    expect(record.verdict).not.toBe("ready");
+    expect(record.verdict).not.toBe("met");
     const check = record.checks.find((c: { id: string }) => c.id === "deps.advisories");
     expect(check).toMatchObject({ verdict: "found", weight: "smoking-gun" });
     expect(check.card).toBeDefined();

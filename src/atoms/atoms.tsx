@@ -85,7 +85,7 @@ export function stampInk(word: Verdict, theme: Theme | "auto"): string {
   return theme === "light" ? token.light : token.dark;
 }
 
-/** The verdict stamp. The word is a prop: READY, NEARLY or NOT READY. */
+/** The verdict stamp. The word is a prop: MET, NEARLY MET or NOT MET. */
 export function StampAtom({
   word,
   title,

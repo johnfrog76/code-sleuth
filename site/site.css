@@ -418,8 +418,8 @@ img {
 
 /* A verdict's colour comes from its token (tokens.css), and its word stays beside it. */
 
-.lp-verdict-nearly {
-  color: var(--verdict-nearly);
+.lp-verdict-nearly-met {
+  color: var(--verdict-nearly-met);
   font-weight: 700;
 }
 

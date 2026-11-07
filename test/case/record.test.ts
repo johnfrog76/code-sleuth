@@ -31,7 +31,7 @@ describe("a not-investigated check in a case", () => {
           table: [needsGit],
         });
         expect(record.counts["not-investigated"]).toBe(1);
-        expect(record.verdict).toBe("ready");
+        expect(record.verdict).toBe("met");
         expect(record.checks[0]).toEqual({
           id: needsGit.id,
           title: needsGit.title,

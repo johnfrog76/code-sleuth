@@ -9,7 +9,7 @@ import type { RepoInfo } from "./repoInfo.js";
 /** The case file format's version. A reader refuses a version it does not know. */
 export const CASE_FILE_VERSION = 1;
 
-export type CaseVerdict = "ready" | "nearly" | "not-ready";
+export type CaseVerdict = "met" | "nearly-met" | "not-met";
 
 export type Counts = Record<Weight | "clean" | "not-investigated", number>;
 
@@ -154,7 +154,7 @@ export function buildCase(input: CaseInput): { record: CaseRecord; cards: Card[]
   });
 
   const verdict: CaseVerdict =
-    counts["smoking-gun"] > 0 ? "not-ready" : counts["loose-end"] > 0 ? "nearly" : "ready";
+    counts["smoking-gun"] > 0 ? "not-met" : counts["loose-end"] > 0 ? "nearly-met" : "met";
 
   return {
     record: {

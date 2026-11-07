@@ -43,25 +43,33 @@ export const copy = {
     "Remove it and run me again; I make a new one, and earlier cases' secret hashes then stop matching new ones.",
   npmFolderInRepoHint: "Point me at the repository itself, not at a folder above it, or run with --offline.",
 
-  stamp: { ready: "READY", nearly: "NEARLY", "not-ready": "NOT READY" } satisfies Record<CaseVerdict, string>,
+  stamp: { met: "MET", "nearly-met": "NEARLY MET", "not-met": "NOT MET" } satisfies Record<
+    CaseVerdict,
+    string
+  >,
 
   goal: { public: "public facing", security: "security", quality: "quality" } as Record<string, string>,
 
+  /** Every goal's verdict reads the same three ways: met, nearly met or not met, for that goal. */
   verdict: {
     public: {
-      ready: "ready to be public facing",
-      nearly: "nearly ready to be public facing",
-      "not-ready": "not ready to be public facing",
+      met: "met for public facing",
+      "nearly-met": "nearly met for public facing",
+      "not-met": "not met for public facing",
     },
     security: {
-      ready: "nothing stands out on security",
-      nearly: "nearly ready on security",
-      "not-ready": "not ready on security",
+      met: "met for security",
+      "nearly-met": "nearly met for security",
+      "not-met": "not met for security",
     },
-    quality: { ready: "in good shape", nearly: "nearly in good shape", "not-ready": "not in good shape yet" },
+    quality: {
+      met: "met for quality",
+      "nearly-met": "nearly met for quality",
+      "not-met": "not met for quality",
+    },
   } as Record<string, Record<CaseVerdict, string>>,
 
-  /** `By my checklist: not ready to be public facing. Two smoking guns, three loose ends.` */
+  /** `By my checklist: not met for public facing. Two smoking guns, three loose ends.` */
   verdictLine(goal: string, verdict: CaseVerdict, counts: Counts): string {
     const found = [
       count(counts["smoking-gun"], "smoking gun", "smoking guns"),
@@ -70,8 +78,32 @@ export const copy = {
     return `By my checklist: ${copy.verdict[goal]![verdict]}. ${capitalise(found.join(", "))}.`;
   },
 
-  /** Under a READY verdict: the checklist found nothing in the way, which is not permission. */
-  yourCall: "Nothing on my checklist stands in the way. Every case is different: the call is yours.",
+  /**
+   * Under a MET or a NEARLY MET verdict: the list is the list, and the software may need more. The section it
+   * points to says what the list doesn't reach.
+   */
+  beyond: {
+    met: "Case closed: the list is met. Your software may have requirements of its own, and the call is yours.",
+    "nearly-met": "Past these loose ends, your software may have requirements of its own.",
+  } as Partial<Record<CaseVerdict, string>>,
+  beyondLink: {
+    title: "What MET doesn't cover",
+    url: "https://github.com/johnfrog76/code-sleuth/blob/main/docs/CHECKS.md#what-met-doesnt-cover",
+  },
+
+  /** The terminal's line under the verdict: the words, then where to read on. */
+  beyondLine(verdict: CaseVerdict): string | undefined {
+    const words = copy.beyond[verdict];
+    return words === undefined ? undefined : `${words} See ${copy.beyondLink.title}: ${copy.beyondLink.url}`;
+  },
+
+  /** case.md's line under the verdict, with the section as a link. */
+  beyondMd(verdict: CaseVerdict): string | undefined {
+    const words = copy.beyond[verdict];
+    return words === undefined
+      ? undefined
+      : `${words} See [${copy.beyondLink.title}](${copy.beyondLink.url}).`;
+  },
 
   countsLine: (counts: Counts) =>
     [

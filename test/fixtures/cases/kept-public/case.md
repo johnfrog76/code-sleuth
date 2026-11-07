@@ -1,8 +1,8 @@
 # Case 2026-10-31-public-1
 
-**READY** -- By my checklist: ready to be public facing. No smoking guns, no loose ends.
+**MET** -- By my checklist: met for public facing. No smoking guns, no loose ends.
 
-Nothing on my checklist stands in the way. Every case is different: the call is yours.
+Case closed: the list is met. Your software may have requirements of its own, and the call is yours. See [What MET doesn't cover](https://github.com/johnfrog76/code-sleuth/blob/main/docs/CHECKS.md#what-met-doesnt-cover).
 
 - Repo: kept (not a git repository)
 - Goal: public facing

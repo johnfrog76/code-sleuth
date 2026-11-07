@@ -32,7 +32,7 @@ const atoms: [string, React.ReactElement][] = [
     `the sleuth, ${pose}, still`,
     <SleuthAtom pose={pose} title={`The sleuth, ${pose}`} still />,
   ]),
-  ...(["READY", "NEARLY", "NOT READY"] as const).flatMap((word): [string, React.ReactElement][] => [
+  ...(["MET", "NEARLY MET", "NOT MET"] as const).flatMap((word): [string, React.ReactElement][] => [
     [`the stamp, ${word}`, <StampAtom word={word} title={word} />],
     [`the stamp, ${word}, dark and still`, <StampAtom word={word} title={word} theme="dark" still />],
   ]),
@@ -65,7 +65,7 @@ describe("the atoms", () => {
   });
 
   it("take every word a surface shows as a prop", () => {
-    expect(render(<StampAtom word="NEARLY" title="T" />)).toContain(">NEARLY<");
+    expect(render(<StampAtom word="NEARLY MET" title="T" />)).toContain(">NEARLY MET<");
     expect(render(<LogoLockup title="T" name="Some Name" />)).toContain(">Some Name<");
   });
 
@@ -101,10 +101,10 @@ describe("contrast, on both themes", () => {
   });
 
   it("draws a stamp in its verdict's ink, and an auto stamp carries its tokens", () => {
-    expect(render(<StampAtom word="READY" title="T" still />)).toContain(VERDICT_TOKENS.READY.light);
-    const auto = render(<StampAtom word="READY" title="T" still theme="auto" />);
-    expect(auto).toContain("var(--verdict-ready)");
-    expect(auto).toContain(VERDICT_TOKENS.READY.dark);
+    expect(render(<StampAtom word="MET" title="T" still />)).toContain(VERDICT_TOKENS.MET.light);
+    const auto = render(<StampAtom word="MET" title="T" still theme="auto" />);
+    expect(auto).toContain("var(--verdict-met)");
+    expect(auto).toContain(VERDICT_TOKENS.MET.dark);
     expect(auto).toContain("prefers-color-scheme: dark");
   });
 

@@ -1,7 +1,7 @@
 import type { NpmRunner, ToolRunner } from "./npm.js";
 import type { RepoReader } from "./repo.js";
 
-/** What a check needs to run. A need that is not met makes the check `not-investigated`, never `clean`. */
+/** What a check needs to run. A need that is missing makes the check `not-investigated`, never `clean`. */
 export type Need = "git" | "npm" | "gh" | "pip-audit" | "network" | "denyList";
 
 /** The path a finding in a commit message carries, in place of a file's. */

@@ -1,8 +1,8 @@
 # Case 2026-10-31-quality-1
 
-**READY** -- By my checklist: in good shape. No smoking guns, no loose ends.
+**MET** -- By my checklist: met for quality. No smoking guns, no loose ends.
 
-Nothing on my checklist stands in the way. Every case is different: the call is yours.
+Case closed: the list is met. Your software may have requirements of its own, and the call is yours. See [What MET doesn't cover](https://github.com/johnfrog76/code-sleuth/blob/main/docs/CHECKS.md#what-met-doesnt-cover).
 
 - Repo: bare (main @ cf617d7, clean)
 - Goal: quality

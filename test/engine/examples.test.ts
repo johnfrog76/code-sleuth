@@ -63,7 +63,7 @@ describe("splitting a result", () => {
   });
 });
 
-/** The `kept` fixture's files (a READY repository), to build on in code. */
+/** The `kept` fixture's files (a MET repository), to build on in code. */
 function keptFiles(): Record<string, string> {
   const root = new URL("../fixtures/repos/whole/kept/", import.meta.url);
   const files: Record<string, string> = {};
@@ -110,9 +110,9 @@ describe("a case with matches in example locations", () => {
     "src/__fixtures__/more.sh": `cd ${mac}bob/x/\n`,
   };
 
-  it("is still READY, makes no card even with --all, and shows every match", async () => {
+  it("is still MET, makes no card even with --all, and shows every match", async () => {
     const { result, record, cards } = await runKept([], bait);
-    expect(record.verdict).toBe("ready");
+    expect(record.verdict).toBe("met");
     // kept's one card is its deps.updates hunch (--all); the checks that found only examples make none.
     expect(cards).toEqual(["01-turn-on-automated-dependency-updates.md"]);
     for (const id of ["paths.machine", "quality.markers"]) {
@@ -151,7 +151,7 @@ describe("a case with matches in example locations", () => {
 
   it("still counts a real match outside the examples, beside them", async () => {
     const { record, result } = await runKept([], { ...bait, "scripts/deploy.sh": `cp out ${mac}erin/x/\n` });
-    expect(record.verdict).toBe("nearly");
+    expect(record.verdict).toBe("nearly-met");
     const paths = record.checks.find((c: { id: string }) => c.id === "paths.machine");
     expect(paths.verdict).toBe("found");
     expect(paths.evidence.map((e: { path: string }) => e.path)).toEqual(["scripts/deploy.sh"]);
@@ -165,7 +165,7 @@ describe("a case with matches in example locations", () => {
     const { result, record } = await runKept(["--examples", "spec/data/**", "--examples", "**/*.sample"], {
       "spec/data/home.txt": `${mac}carol/notes/\n`,
     });
-    expect(record.verdict).toBe("ready");
+    expect(record.verdict).toBe("met");
     expect(record.exampleLocations.added).toEqual(["spec/data/**", "**/*.sample"]);
     expect(record.exampleLocations.globs).toEqual([
       "**/test/fixtures/**",

@@ -15,7 +15,7 @@ export function renderCaseMd(record: CaseRecord, outcomes: readonly CheckOutcome
     `# Case ${record.case}`,
     "",
     `**${copy.stamp[record.verdict]}** -- ${copy.verdictLine(record.goal, record.verdict, record.counts)}`,
-    ...(record.verdict === "ready" ? ["", copy.yourCall] : []),
+    ...(copy.beyondMd(record.verdict) === undefined ? [] : ["", copy.beyondMd(record.verdict)!]),
     "",
     `- Repo: ${copy.repoLine(inlineText(record.repo.name), record.repo.branch === null ? null : inlineText(record.repo.branch), record.repo.head, record.repo.dirty, record.repo.partialClone === true)}`,
     `- Goal: ${copy.goal[record.goal] ?? record.goal}`,

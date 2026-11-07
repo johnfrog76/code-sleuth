@@ -34,7 +34,7 @@ The record, for scripts. `--json` prints the same object.
 | `case`, `goal` | the case's id (`2026-10-31-public-1`) and its goal |
 | `repo` | `name`, `head`, `branch`, `dirty`, and `remote`, the `origin` remote with no scheme, credentials (everything up to the last `@` before the host), query or fragment; null past the name outside git. `partialClone: true` on a partial clone |
 | `openedAt`, `closedAt` | UTC, to the second |
-| `verdict` | by the checklist: `ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` |
+| `verdict` | by the checklist: `met` (no smoking gun and no loose end), `nearly-met` (loose ends only) or `not-met` |
 | `counts` | `smoking-gun`, `loose-end`, `hunch`, `clean`, `not-investigated` |
 | `enhancements` | `polish` (on with its model, or off and why, with `keyFrom`: where the API key came from, `the environment` or the `.env`'s path, never the key; or with no key, `keyFile`: the `.env` it would be read from, and `keyExample`: the `.env.example` to copy there, when the one that came with it is found -- a record, not a line to run, both in their `~` form) and `toolkit` (detected or not, the Space and how it was chosen -- `spaceFrom`: `flag`, `origin` or `active` -- and what was filed) |
 | `exampleLocations` | the example locations in force: `globs` (the built-in `**/test/fixtures/**` and `**/__fixtures__/**`, then every `--examples` glob), `added` (the `--examples` globs alone) and `marker` (`code-sleuth:example`) |
@@ -54,7 +54,7 @@ first run can change the second.
 
 ## `case.md`
 
-The verdict, with one line saying the call is yours when it is READY, the counts, then the checklist: Smoking
+The verdict, with one line saying the call is yours when it is MET, the counts, then the checklist: Smoking
 guns, Loose ends, Hunches, Clean, Not investigated, one checkbox line per check, with a link to its card when it has one. Then
 the examples line when there were matches in example locations, one polish line and one ToolKit line. Without
 ToolKit, that last line, and the same line at the end of the terminal's output, say what ToolKit would add.

@@ -79,6 +79,17 @@ for review.
 > `public`. The decisions and examples below keep their words as written; where they differ, this note
 > decides. A test holds the output and the docs to it.
 
+> **Amended 2026-11-07:** the verdict's words. The verdict is `met`, `nearly-met` or `not-met` in `case.json`
+> (it was `ready`, `nearly` and `not-ready`), decided as before: a smoking gun gives `not-met`, else a loose end
+> gives `nearly-met`, else `met`. The stamps read MET, NEARLY MET and NOT MET. Every goal's sentence reads
+> `met for <goal>`, `nearly met for <goal>` or `not met for <goal>`: `By my checklist: nearly met for public
+> facing.` In place of the line saying the call is yours, MET adds `Case closed: the list is met. Your
+> software may have requirements of its own, and the call is yours.`, and NEARLY MET adds `Past these loose
+> ends, your software may have requirements of its own.`; each points to "What MET doesn't cover" in
+> `docs/CHECKS.md`. `caseFile` stays 1: the repository is not public and nobody reads the old values. The notes
+> above keep their words as written; where they differ, this note decides. A test refuses the old verdict
+> words.
+
 > The buildable contract of the design note `design/code-sleuth.md` (titled "Repo Detective"; the
 > product is now named Code Sleuth). The note keeps the idea in its first words; this spec holds the
 > contract. It pairs with the note by the note's id, which it carries, per ToolKit's `docs/hub/design.md`.
@@ -344,7 +355,7 @@ ever overwritten: a second run is a new case.
   "goal": "public",
   "repo": { "name": "widget", "head": "3f2a9c1e...", "branch": "main", "dirty": false, "remote": "github.com/<owner>/widget" },
   "openedAt": "2026-10-31T14:02:11Z", "closedAt": "2026-10-31T14:02:58Z",
-  "verdict": "not-ready",
+  "verdict": "not-met",
   "counts": { "smoking-gun": 2, "loose-end": 3, "hunch": 1, "clean": 16, "not-investigated": 1 },
   "enhancements": { "polish": { "state": "off", "reason": "no --polish" },
                     "toolkit": { "state": "detected", "via": "cli", "prefix": "tk", "space": "widget" } },
@@ -359,7 +370,7 @@ ever overwritten: a second run is a new case.
 ```
 
 `caseFile` is the format's version; a reader refuses a version it does not know, naming it. `verdict` is
-`ready` (no smoking gun and no loose end), `nearly` (loose ends only) or `not-ready` (a smoking gun). The
+`met` (no smoking gun and no loose end), `nearly-met` (loose ends only) or `not-met` (a smoking gun). The
 remote is written without credentials or a scheme. With `--json` the same object goes to stdout, and the
 determinism test (section 12) compares two runs of it with `openedAt`, `closedAt` and `case` removed.
 
@@ -644,7 +655,7 @@ serious or critical findings.
   pose set is open (G7).
 - **The office**: the desk, the slat blinds, the door with the name.
 - **The case folder**: a goal on the desk, and the case file once it is open.
-- **The stamp**: the verdict, stamped on the folder -- `READY`, `NEARLY`, `NOT READY`.
+- **The stamp**: the verdict, stamped on the folder -- `MET`, `NEARLY MET`, `NOT MET`.
 
 The atoms carry no words: a label is a prop, so the copy stays in each surface's copy file.
 
