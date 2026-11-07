@@ -1,9 +1,18 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf } from "../files.js";
-import { lineInRun, readWorkflows, cleanOrUnreadable } from "../workflows.js";
+import {
+  cleanOrUnreadable,
+  lineInRun,
+  MAX_WORKFLOW_LINE,
+  readWorkflows,
+  type Skipped,
+} from "../workflows.js";
 
-/** The `github` fields a stranger writes: titles, bodies, comments, branch names, commit messages and authors. */
+/**
+ * The `github` fields a stranger writes: titles, bodies, comments, branch names, commit messages and authors. An
+ * index is bounded, so an unclosed `[` is not retried to the end of the line from every `pages[` in it.
+ */
 const STRANGER = new RegExp(
   "github\\.(?:head_ref|event\\.(?:" +
     [
@@ -11,14 +20,32 @@ const STRANGER = new RegExp(
       "pull_request\\.(?:title|body|head\\.(?:ref|label|repo\\.default_branch))",
       "(?:comment|review|review_comment)\\.body",
       "discussion\\.(?:title|body)",
-      "pages(?:\\[[^\\]]*\\]|\\.\\*)\\.page_name",
-      "commits(?:\\[[^\\]]*\\]|\\.\\*)\\.(?:message|author\\.(?:email|name))",
+      "pages(?:\\[[^\\]]{0,200}\\]|\\.\\*)\\.page_name",
+      "commits(?:\\[[^\\]]{0,200}\\]|\\.\\*)\\.(?:message|author\\.(?:email|name))",
       "head_commit\\.(?:message|author\\.(?:email|name))",
       "workflow_run\\.(?:head_branch|head_commit\\.(?:message|author\\.(?:email|name)))",
     ].join("|") +
     "))\\b",
 );
-const EXPRESSION = /\$\{\{([^}]*)\}\}/g;
+/**
+ * The text of each `${{ ... }}` in a line, as `/\$\{\{([^}]*)\}\}/g` reads it: from a `${{` to the first `}`,
+ * which must be the first of `}}`. By hand, and linear: every `${{` before that `}` stops at it too, so when it
+ * is not `}}` the search goes on after it, where the pattern retried it from each one.
+ */
+export function expressions(line: string): string[] {
+  const found: string[] = [];
+  let from = 0;
+  for (;;) {
+    const open = line.indexOf("${{", from);
+    if (open < 0) return found;
+    const close = line.indexOf("}", open + 3);
+    if (close < 0) return found;
+    if (line[close + 1] === "}") {
+      found.push(line.slice(open + 3, close));
+      from = close + 2;
+    } else from = close + 1;
+  }
+}
 
 /** `github.event['issue']["title"]` read as `github.event.issue.title`: the same field, in index syntax. */
 function dotted(expression: string): string {
@@ -34,10 +61,15 @@ export const workflowsInjection: Check = {
   card: cards["workflows.injection"],
   run(repo): Result {
     const evidence: Evidence[] = [];
+    let skipped: Skipped | undefined;
     for (const workflow of readWorkflows(repo)) {
       for (const step of workflow.steps) {
         (step.run ?? "").split("\n").forEach((text, i) => {
-          if ([...text.matchAll(EXPRESSION)].some((m) => STRANGER.test(dotted(m[1]!)))) {
+          if (text.length > MAX_WORKFLOW_LINE) {
+            skipped ??= { path: workflow.path, line: lineInRun(step, i) };
+            return;
+          }
+          if (expressions(text).some((expression) => STRANGER.test(dotted(expression)))) {
             evidence.push({
               path: workflow.path,
               line: lineInRun(step, i),
@@ -47,6 +79,6 @@ export const workflowsInjection: Check = {
         });
       }
     }
-    return evidence.length === 0 ? cleanOrUnreadable(repo) : { verdict: "found", evidence };
+    return evidence.length === 0 ? cleanOrUnreadable(repo, skipped) : { verdict: "found", evidence };
   },
 };

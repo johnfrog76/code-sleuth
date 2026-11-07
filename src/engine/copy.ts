@@ -223,6 +223,8 @@ export const denyReasons = {
 /** Why a workflow check reads not investigated when a workflow would not parse. */
 export const workflowReasons = {
   unreadable: (path: string) => `${path} doesn't parse as YAML, so I couldn't read it.`,
+  longLine: (path: string, line: number) =>
+    `${line > 0 ? `Line ${line} of ${path}` : `A line of ${path}`} is longer than 65,536 characters, so I didn't read it.`,
 };
 
 /** Why a deps check that found another ecosystem's manifest reads not investigated, not clean. */

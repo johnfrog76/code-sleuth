@@ -238,7 +238,8 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Finds:** `pull_request_target` together with a checkout of the pull request's head or its merge commit
   (`head.sha`, `head.ref`, `merge_commit_sha`, `refs/pull/`)
 - **Needs:** nothing
-- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
+- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow; or
+  when a line of a `run:` is longer than 65,536 characters, which it skips, naming the line
 - **What the books call it:** pwn request
 - **The fix:** Use pull_request instead, which runs a fork's code without this repository's secrets. If the workflow must use pull_request_target, never check out or run the pull request's head in it.
 
@@ -247,7 +248,8 @@ A check that reads a `package.json` reads **not investigated** when that file is
 - **Reads:** each workflow's `run:` lines
 - **Finds:** a `${{ github.event.* }}` field a stranger writes (titles, bodies, branch names, commit messages) placed straight in a shell line, in dotted or index syntax (`github.event['issue']['title']`)
 - **Needs:** nothing
-- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow
+- **Not investigated** when a workflow doesn't parse as YAML and nothing else is found, naming the workflow; or
+  when a `run:` line is longer than 65,536 characters, which it skips, naming the line
 - **What the books call it:** script injection
 - **The fix:** Move each expression into an env: entry on the step and use the variable in the shell, quoted ("$TITLE"), so the text is data and never code.
 

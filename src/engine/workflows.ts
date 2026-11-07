@@ -31,21 +31,43 @@ export interface Workflow {
 const WORKFLOW = /^\.github\/workflows\/[^/]+\.ya?ml$/i;
 
 /**
- * A workflow check's clean, held to what it read: with a workflow the parser could not read, clean would claim a
- * file nobody looked into, so the check reads not investigated and names it.
+ * The longest line of a step's `run` that a workflow rule reads. Every rule is linear, so this is a ceiling,
+ * not a speed: a longer line is skipped, and the check says it skipped it rather than reading clean.
  */
-export function cleanOrUnreadable(repo: RepoReader): Result {
-  const unreadable = readWorkflows(repo).find(({ readable }) => !readable);
-  return unreadable === undefined
-    ? { verdict: "clean" }
-    : { verdict: "not-investigated", reason: workflowReasons.unreadable(unreadable.path) };
+export const MAX_WORKFLOW_LINE = 65_536;
+
+/** A line a workflow rule did not read, because it is longer than `MAX_WORKFLOW_LINE`. 0 when not located. */
+export interface Skipped {
+  path: string;
+  line: number;
 }
+
+/**
+ * A workflow check's clean, held to what it read: with a workflow the parser could not read, or a line the
+ * check skipped, clean would claim text nobody looked into, so the check reads not investigated and names it.
+ */
+export function cleanOrUnreadable(repo: RepoReader, skipped?: Skipped): Result {
+  const unreadable = readWorkflows(repo).find(({ readable }) => !readable);
+  if (unreadable !== undefined)
+    return { verdict: "not-investigated", reason: workflowReasons.unreadable(unreadable.path) };
+  if (skipped !== undefined)
+    return { verdict: "not-investigated", reason: workflowReasons.longLine(skipped.path, skipped.line) };
+  return { verdict: "clean" };
+}
+
+/** Each run's workflows, parsed once: every workflow check reads the same ones. */
+const parsed = new WeakMap<RepoReader, Workflow[]>();
 
 /** Every workflow in `.github/workflows/`, in path order. */
 export function readWorkflows(repo: RepoReader): Workflow[] {
-  return repo.files
-    .filter((path) => WORKFLOW.test(path))
-    .map((path) => readWorkflow(path, repo.readText(path) ?? ""));
+  let workflows = parsed.get(repo);
+  if (workflows === undefined) {
+    workflows = repo.files
+      .filter((path) => WORKFLOW.test(path))
+      .map((path) => readWorkflow(path, repo.readText(path) ?? ""));
+    parsed.set(repo, workflows);
+  }
+  return workflows;
 }
 
 export function readWorkflow(path: string, text: string): Workflow {
@@ -84,7 +106,7 @@ function events(on: unknown): string[] {
 
 function readSteps(jobs: unknown, text: string): Step[] {
   if (!isMap(jobs)) return [];
-  const lines = text.split(/\r?\n/);
+  const index = indexKeys(text.split(/\r?\n/));
   const found: Step[] = [];
   // Steps come in file order, so each search starts after the last step found.
   let from = 0;
@@ -92,7 +114,7 @@ function readSteps(jobs: unknown, text: string): Step[] {
     if (!isMap(body) || !Array.isArray(body.steps)) continue;
     for (const step of body.steps) {
       if (!isMap(step)) continue;
-      const located = locate(lines, step, from);
+      const located = locate(index, step, from);
       if (located.line > 0) from = located.line;
       found.push({
         job,
@@ -106,30 +128,76 @@ function readSteps(jobs: unknown, text: string): Step[] {
   return found;
 }
 
+type Key = "run" | "uses";
+const KEYS: readonly Key[] = ["run", "uses"];
+
+/** Where each key's values are written: key, then the value as a step's first line reads, then where, in order. */
+type KeyIndex = Map<Key, Map<string, { at: number; block: boolean }[]>>;
+
 /**
- * Where a step is: the line of its `run:` when it runs something, else of its `uses:`. A step's text is
- * found from the YAML's value, so a line is only a pointer for a person; the rules read the parsed value.
+ * A line's `run:` or `uses:` key and what follows it, read by hand as `^\s*-?\s*key:(.*)$` read it: spaces, an
+ * optional `-`, spaces, the key. By hand because the pattern retried a long run of spaces from every place in it.
+ */
+export function keyOf(line: string): { key: Key; rest: string } | undefined {
+  let i = 0;
+  while (i < line.length && /\s/.test(line[i]!)) i++;
+  if (line[i] === "-") {
+    i++;
+    while (i < line.length && /\s/.test(line[i]!)) i++;
+  }
+  for (const key of KEYS)
+    if (line.startsWith(`${key}:`, i)) return { key, rest: line.slice(i + key.length + 1) };
+  return undefined;
+}
+
+/**
+ * Every line that writes a step's key, read once: by its inline value, and, for a block (`run: |`), by the
+ * block's first line. Each line is read once, start to end, so a long one costs its length and no more.
+ */
+function indexKeys(lines: readonly string[]): KeyIndex {
+  const index: KeyIndex = new Map(KEYS.map((key) => [key, new Map()]));
+  const add = (key: Key, value: string, at: number, block: boolean) => {
+    const values = index.get(key)!;
+    const where = values.get(value);
+    if (where === undefined) values.set(value, [{ at, block }]);
+    else where.push({ at, block });
+  };
+  lines.forEach((line, at) => {
+    const keyed = keyOf(line);
+    if (keyed === undefined) return;
+    const raw = keyed.rest.trim();
+    // A value quoted whole loses its quotes; one that only ends in a quote (`echo "hi"`) keeps them.
+    const inline = /^(["']).*\1$/.test(raw) ? raw.slice(1, -1) : raw;
+    add(keyed.key, inline, at, false);
+    const next = lines[at + 1];
+    if (/^[|>]/.test(inline) && next !== undefined) add(keyed.key, next.trim(), at, true);
+  });
+  return index;
+}
+
+/**
+ * Where a step is: the line of its `run:` when it runs something, else of its `uses:`, at or after `from`. A
+ * step's text is found from the YAML's value, so a line is only a pointer for a person; the rules read the
+ * parsed value.
  */
 function locate(
-  lines: readonly string[],
+  index: KeyIndex,
   step: Record<string, unknown>,
   from: number,
 ): { line: number; block: boolean } {
   const key = typeof step.run === "string" ? "run" : typeof step.uses === "string" ? "uses" : undefined;
   if (key === undefined) return { line: 0, block: false };
-  const value = String(step[key]);
-  const first = value.split("\n")[0]!.trim();
-  const pattern = new RegExp(`^\\s*-?\\s*${key}:\\s*(.*)$`);
-  for (let i = from; i < lines.length; i++) {
-    const match = pattern.exec(lines[i]!);
-    if (match === null) continue;
-    const raw = match[1]!.trim();
-    // A value quoted whole loses its quotes; one that only ends in a quote (`echo "hi"`) keeps them.
-    const inline = /^(["']).*\1$/.test(raw) ? raw.slice(1, -1) : raw;
-    if (inline === first) return { line: i + 1, block: false };
-    if (/^[|>]/.test(inline) && lines[i + 1]?.trim() === first) return { line: i + 1, block: true };
+  const first = String(step[key]).split("\n")[0]!.trim();
+  const where = index.get(key)!.get(first) ?? [];
+  // The first place at or after `from`, by halves: the places are in file order.
+  let [lo, hi] = [0, where.length];
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (where[mid]!.at < from) lo = mid + 1;
+    else hi = mid;
   }
-  return { line: 0, block: false };
+  const hit = where[lo];
+  return hit === undefined ? { line: 0, block: false } : { line: hit.at + 1, block: hit.block };
 }
 
 function isMap(value: unknown): value is Record<string, unknown> {
