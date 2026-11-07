@@ -1,5 +1,6 @@
 import {
   Head,
+  jungleCss,
   P,
   Sleuth,
   SleuthDefs,
@@ -16,7 +17,7 @@ import {
  * surface wants -- a title for screen readers, a stamp's verdict, a wordmark's name -- are props.
  */
 
-export { verdictCss };
+export { jungleCss, verdictCss };
 
 /** The five poses, and `holding-page`, the reading pose with a page in front of him. */
 export const POSES: readonly SleuthPose[] = [

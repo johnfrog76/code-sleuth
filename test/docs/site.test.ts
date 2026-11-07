@@ -74,4 +74,16 @@ describe("the project's page", () => {
   it("carries no label that hedges for it", () => {
     expect(page).not.toMatch(/disclaimer/i);
   });
+
+  it("leads with the video, shown only once it has somewhere to go, and the README beside it", () => {
+    const video = /<a\b[^>]*data-cta="video"[^>]*>/.exec(page)?.[0];
+    expect(video).toBeDefined();
+    // Until the video exists (#4) the button is hidden, with no link to be dead; once shown, it has one.
+    if (/\shidden\b/.test(video!)) expect(video).not.toMatch(/href=/);
+    else expect(video).toMatch(/href="https:\/\//);
+    expect(page).toMatch(/data-cta="video"[^>]*>Watch the video</);
+    const readme = /<a\b[^>]*data-cta="readme"[^>]*>([^<]*)</.exec(page);
+    expect(readme?.[0]).toContain('href="https://github.com/johnfrog76/code-sleuth#readme"');
+    expect(readme?.[1]!.trim()).toBe("Read the README");
+  });
 });

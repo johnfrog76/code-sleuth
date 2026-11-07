@@ -27,10 +27,7 @@
       <header class="lp-banner">
         <div class="lp-banner-words">
           <h1 class="lp-title">
-            <picture>
-              <source media="(prefers-color-scheme: dark)" srcset="logo-dark.svg" />
-              <img src="logo.svg" alt="Code Sleuth" width="381" height="96" />
-            </picture>
+            <img src="logo-dark.svg" alt="Code Sleuth" width="381" height="96" />
           </h1>
           <p class="lp-offer">
             Code Sleuth gives you a helpful list of what's worth doing before your code is public facing.
@@ -44,8 +41,14 @@
             <li>You get a checklist, and cards ready to file for what needs work.</li>
           </ul>
           <div class="lp-cta">
-            <a class="lp-cta-button" href="#try">Try it <span aria-hidden="true">&rarr;</span></a>
-            <a href="#sample">See a sample</a>
+            <!-- Hidden until the video exists (#4): then it gets the video's href and loses hidden. -->
+            <a class="lp-cta-button" data-cta="video" hidden>Watch the video</a>
+            <a
+              class="lp-cta-button lp-cta-button--secondary"
+              data-cta="readme"
+              href="https://github.com/johnfrog76/code-sleuth#readme"
+              >Read the README</a
+            >
           </div>
         </div>
         <div class="lp-banner-figure">

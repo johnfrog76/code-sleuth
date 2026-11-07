@@ -90,7 +90,7 @@ const page = (body, bg = "#ffffff") =>
 const [mode, folder] = process.argv.slice(2);
 const chrome = findChrome();
 const { h, svg, atoms } = await loadAtoms();
-const { SleuthAtom, StampAtom, LogoMark, LogoLockup, POSES, verdictCss } = atoms;
+const { SleuthAtom, StampAtom, LogoMark, LogoLockup, POSES, jungleCss, verdictCss } = atoms;
 
 if (mode === "preview") {
   if (!folder) throw new Error("preview needs a folder to write into");
@@ -193,7 +193,7 @@ if (mode === "preview") {
   }
   writeFileSync(
     join(site, "tokens.css"),
-    `/* Written by scripts/render-atoms.mjs from the verdict tokens in src/atoms/figures.tsx. */\n\n${verdictCss()}`,
+    `/* Written by scripts/render-atoms.mjs from the verdict and jungle tokens in src/atoms/figures.tsx. */\n\n${verdictCss()}\n${jungleCss()}`,
   );
   console.log("Wrote the sloths, the stamps and tokens.css to site/");
 } else {

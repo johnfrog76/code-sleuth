@@ -3,7 +3,8 @@
 // Changed here, and nothing else: these comments; Scene's <defs> lifted into an exported SleuthDefs (which Scene
 // renders), so a standalone atom paints with the same gradients and filters; Hat, Face and Head exported, so
 // the logo is drawn from them; and VerdictStamp's red taken as an optional `ink` prop (the same red by
-// default), so the stamp atom can read on a dark background; and the verdict tokens added beside the palette.
+// default), so the stamp atom can read on a dark background; and the verdict tokens and the jungle tokens added
+// beside the palette.
 // The file imports nothing but React's types.
 //
 import type { CSSProperties, ReactNode } from "react";
@@ -114,6 +115,26 @@ export function verdictCss(): string {
     "  :root {",
     ...tokens.map((token) => `    ${token.name}: ${token.dark};`),
     "  }",
+    "}",
+    "",
+  ].join("\n");
+}
+
+// ── The jungle tokens: the deck's canopy and dusk sky, named once, for the project's page ──────────────────
+export const JUNGLE_TOKENS = {
+  canopy: { name: "--jungle-canopy", value: P.canopy },
+  canopyLit: { name: "--jungle-canopy-lit", value: P.canopyLit },
+  canopyDeep: { name: "--jungle-canopy-deep", value: P.canopyDeep },
+  canopyNight: { name: "--jungle-canopy-night", value: P.canopyNight },
+  dusk: { name: "--jungle-dusk", value: P.skyDusk },
+  duskDeep: { name: "--jungle-dusk-deep", value: P.skyDuskDeep },
+} as const;
+
+/** The jungle tokens as CSS custom properties. The same in both appearances. Formatted as Prettier would. */
+export function jungleCss(): string {
+  return [
+    ":root {",
+    ...Object.values(JUNGLE_TOKENS).map((token) => `  ${token.name}: ${token.value};`),
     "}",
     "",
   ].join("\n");
