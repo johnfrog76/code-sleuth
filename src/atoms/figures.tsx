@@ -869,7 +869,8 @@ export function SlatLight({
 /**
  * The window: a frame, the jungle behind it, slat blinds across it, one bloom
  * showing through. `dark` is the jungle unkept: dusk behind the glass, the
- * greens a stop down, the bloom muted. Bright is the jungle safe.
+ * greens a stop down, the bloom muted. Bright is the jungle tended, never safe:
+ * a kept place, not a promise.
  */
 export function Window({
   x = 600,
@@ -1560,8 +1561,8 @@ export function LightShaft({ x, w = 220, opacity = 0.7 }: { x: number; w?: numbe
 
 /**
  * The jungle from the ground: sky, light shafts, canopy layers, the dark
- * undergrowth. It is the repository's state. Bright is the repo safe:
- * beautiful, lit in shafts, the blooms loud. `dark` is the repo unkept: dusk,
+ * undergrowth. It is the repository's state. Bright is the repo tended, never
+ * safe: beautiful, lit in shafts, the blooms loud. `dark` is the repo unkept: dusk,
  * the greens a stop down, vines hanging, fog low in the undergrowth, no
  * shafts, and the glint the brightest thing in it. A bit scary, on purpose.
  */
@@ -1575,7 +1576,7 @@ export function Jungle({ glint = true, dark = false }: { glint?: boolean; dark?:
   return (
     <g>
       <rect x={-40} y={-40} width={1680} height={980} fill={dark ? "url(#cs-sky-dusk)" : "url(#cs-sky)"} />
-      {/* shafts of light coming down through the leaves: only where the jungle is safe */}
+      {/* shafts of light coming down through the leaves: only where the jungle is tended */}
       {!dark &&
         [260, 620, 1060].map((sx, i) => (
           <polygon

@@ -103,9 +103,19 @@ const ALLOWED: readonly { phrase: string; in: readonly string[]; why: string }[]
     why: "a denial: the prompt asks the model to keep every fact, and the doc says that asking is not a promise",
   },
   {
+    phrase: 'MET is never presented as "safe to publish"',
+    in: ["agentic/claims-review.prompt.md"],
+    why: "a denial: the claims review fails any text that presents MET as a state of the repository",
+  },
+  {
     phrase: "(`npm audit fix` does what it safely can)",
     in: ["docs/CHECKS.md", "src/engine/copy.ts"],
     why: "a practice, npm's own: it applies only the fixes that stay inside the ranges a project allows",
+  },
+  {
+    phrase: "`src/engine/workflows.ts` and its safe defaults only",
+    in: ["AGENTS.md"],
+    why: "a practice: the YAML parser's own defaults, with no custom tags, which the reader keeps",
   },
   {
     phrase: "take its safe settings from GIT_CONFIG_KEY_<n>",
@@ -125,6 +135,11 @@ function ownWords(): string[] {
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
     "CHANGELOG.md",
+    "AGENTS.md",
+    "THIRD-PARTY-NOTICES.md",
+    ".env.example",
+    "toolkit/handoff.ps1",
+    ...under("agentic/", (name) => name.endsWith(".md")),
     ".github/PULL_REQUEST_TEMPLATE.md",
     ...under(".github/ISSUE_TEMPLATE/", (name) => name.endsWith(".yml")),
     ...under("docs/", (name) => name.endsWith(".md")),

@@ -26,7 +26,7 @@ cannot check by reading.
 ### (a) Claims
 
 A claim is any statement of fact about what Code Sleuth does, reads, writes, sends, prints, refuses, or
-guarantees, and any number. For each claim, record:
+promises, and any number. For each claim, record:
 
 - **the claim**, quoted or closely paraphrased;
 - **where**: the document's line number;

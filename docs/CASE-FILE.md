@@ -54,7 +54,8 @@ first run can change the second.
 
 ## `case.md`
 
-The verdict, with one line saying the call is yours when it is MET, the counts, then the checklist: Smoking
+The verdict, under MET and NEARLY MET one line on what the list doesn't cover, with its link, the counts, then
+the checklist: Smoking
 guns, Loose ends, Hunches, Clean, Not investigated, one checkbox line per check, with a link to its card when it has one. Then
 the examples line when there were matches in example locations, one polish line and one ToolKit line. Without
 ToolKit, that last line, and the same line at the end of the terminal's output, say what ToolKit would add.

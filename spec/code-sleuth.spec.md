@@ -103,7 +103,7 @@ for review.
 > So, you want to know what's going on with your repo?
 
 Code Sleuth is a private investigator for a codebase. You point it at a repository on your machine, you
-say what you want to know -- is it ready to go public, is it safe, is it well kept -- and it investigates,
+say what you want to know -- what stands between it and public facing, and security, and quality -- and it investigates,
 slowly and carefully, and hands back a case file: a verdict, a checklist to the goal you picked, and one
 card-ready issue per thing that stands between the repository and that goal.
 
@@ -589,37 +589,53 @@ of a path; an unknown goal; a cases folder inside the repository, or a repositor
 
 ### 9.2 Sample output
 
+A real run of Code Sleuth at 8dad0b9: the `messy` fixture (`test/fixtures/repos/whole/messy`), committed as
+`widget`, run as `code-sleuth widget --goal public --offline` on a machine with no API key and no ToolKit. Where
+the run printed a full path, `<home>` stands for the home folder and `<install>` for Code Sleuth's own folder,
+and the case file is shown where the default cases folder on macOS puts it.
+
 ```text
-Code Sleuth -- case 2026-10-31-public-1
+Code Sleuth -- case 2026-11-07-public-1
 
 So, you want to know what's going on with your repo?
 
-  Repo  widget (main @ 3f2a9c1, clean)
-  Goal  going public
-  Out   npm audit runs against the npm registry (--offline skips it)
+  Repo  widget (main @ db6c128, clean)
+  Goal  public facing
+  Out   nothing: this run makes no network calls
 
-Taking my time. 23 leads to run down ............................. done.
+Taking my time. 24 leads to run down ........................ done.
 
-By my checklist: not ready to go public. Two smoking guns, three loose ends.
+NEARLY MET  By my checklist: nearly met for public facing. No smoking guns, eight loose ends.
+Past these loose ends, your software may have requirements of its own. See What MET doesn't cover: https://github.com/johnfrog76/code-sleuth/blob/main/docs/CHECKS.md#what-met-doesnt-cover
 
-Smoking guns
-  [ ] secrets.tree       A token in plain sight: config/dev.ts:12 (ghp_****9f)
-  [ ] license.file       No license. Nobody can legally reuse this code.
 Loose ends
-  [ ] docs.security      No SECURITY.md: nobody knows where to report a problem.
-  [ ] github.templates   No issue templates.
-  [ ] paths.machine      Three home-folder paths, starting at scripts/build.sh:4
+  [ ] paths.machine           A path from somebody's machine: it works there and nowhere else, and it names them. scripts/build.sh:4
+  [ ] docs.contributing       No CONTRIBUTING: a stranger who wants to help has to guess how.
+  [ ] docs.conduct            No CODE_OF_CONDUCT: nobody knows the house rules.
+  [ ] docs.security           No SECURITY.md: nobody knows where to report a problem quietly.
+  [ ] github.templates        No templates: the first issue a stranger files will be a blank page. .github/ISSUE_TEMPLATE/, and 1 more
+  [ ] ci.present              No CI: nothing runs when someone pushes or opens a pull request. .github/workflows/triage.yml
+  [ ] workflows.prtarget      A pull_request_target workflow checks out the pull request: a stranger's code runs with this repository's secrets. .github/workflows/triage.yml:7
+  [ ] workflows.injection     A stranger's text lands straight in a shell line: a title or a branch name can run commands. .github/workflows/triage.yml:10
 Hunches
-  [ ] quality.markers    14 TODOs. The first: src/app.ts:88
+  [ ] docs.changelog          No CHANGELOG: nobody can tell what changed between versions.
+  [ ] ci.tests                CI never runs the tests: green doesn't mean much yet. .github/workflows/triage.yml
+  [ ] workflows.permissions   A workflow that doesn't say what its token may do, so it gets the repository's default. .github/workflows/triage.yml
+  [ ] deps.lockfile           Dependencies without a lockfile: every install can pull in something different. package.json
+  [ ] deps.updates            Nothing keeps the dependencies up to date: they'll go stale quietly.
+  [ ] quality.markers         Notes-to-self left in the code: a stranger will read them as promises. scripts/build.sh:2
 Clean
-  [x] files.sensitive    No key files or .env in the tree.  ... and 15 more
+  [x] secrets.tree            No secrets in plain sight. None of my rules matched.  ... and 5 more
 Not investigated
-  [ ] names.deny         No deny list given (--deny <file>).
+  [ ] license.deps            There's a package.json and no package-lock.json: run npm install to make one, and commit it.
+  [ ] names.deny              This needs a deny list: give one with --deny <file>.
+  [ ] deps.advisories         This makes a call off the machine, and --offline is set.
+  [ ] deps.outdated           This makes a call off the machine, and --offline is set.
 
-Case file  ~/Library/Application Support/code-sleuth/cases/widget-1a2b3c4d/2026-10-31-public-1/case.md
-Cards      5 in cards/
-Polish     an API key is set (from the environment): add --polish to have the cards polished.
-ToolKit    found (tk, Space 'widget'): add --toolkit to file the cards.
+Case file  <home>/Library/Application Support/code-sleuth/cases/widget-207b2735/2026-11-07-public-1/case.md
+Cards      8 in cards/ (hunches get cards with --all)
+Polish     off. Add an API key and --polish to have the cards reworded. To add one, run `mkdir -p '<home>/Library/Application Support/code-sleuth' && cp '<install>/.env.example' '<home>/Library/Application Support/code-sleuth/.env' && chmod 600 '<home>/Library/Application Support/code-sleuth/.env'` and fill it in.
+Want these as real cards, in your own files, on your own board? That's what ToolKit is for: https://johnfrog76.github.io/toolkit/
 ```
 
 The words are the CLI's own copy file (`src/cli/copy.ts`); the check lines are the checks' `voice`. Colour
