@@ -18,7 +18,11 @@ export type GuardReason =
   | "number-changed"
   | "checkbox-count-changed"
   | "code-changed"
-  | "markup-added";
+  | "markup-added"
+  | "reference-added"
+  | "bracket-added"
+  | "character-added"
+  | "words-added";
 
 export type GuardResult = { kept: true } | { kept: false; reason: GuardReason };
 
@@ -39,9 +43,16 @@ export interface CardFacts {
   prosePaths: Set<string>;
   /** Links, URLs and HTML tags: a rewrite adds none of them. */
   markup: string[];
+  /** Every `[...]` outside a code span, a checkbox aside: link text, an image's, a reference's label. */
+  brackets: string[];
+  /** Every character outside ASCII, so a rewrite can bring in no look-alike letter or full-width dot. */
+  characters: Set<string>;
+  /** How many words: a rewrite says the same, so it is not much longer. */
+  words: number;
 }
 
-const CODE_SPAN = /(`+)\s?([^`]+?)\s?\1/g;
+/** A rewrite may be this much longer than the card, in words: 15%, or 6 words for a short card. */
+export const WORD_GROWTH = { share: 0.15, least: 6 };
 /**
  * A path written in prose, the second net behind the card's own evidence: a folder in it, a file name with an
  * extension, a dotfile (`.env`), or any name with a line (`Dockerfile:4`), each maybe with `:line`.
@@ -59,18 +70,27 @@ const OPEN_BOX = /\[ \]/g;
 const TICKED_BOX = /\[[xX]\]/g;
 /** A markdown link or image, an autolink, a URL, or an HTML tag. */
 const MARKUP = /\]\(|<\/?[A-Za-z!][^>]*>|<https?:|https?:\/\/\S+|\bwww\.\S+/gi;
+/** Text in square brackets on one line; a checkbox is counted on its own. */
+const BRACKETS = /\[[^[\]\r\n]*\]/g;
+const CHECKBOX = /^\[[ xX]\]$/;
+/**
+ * A reference-style link or image definition, `[x]: //host/p.png`: at a line's start, or after a list marker or a
+ * quote's `>`, where markdown reads one too.
+ */
+const REFERENCE = /^\s*(?:(?:[-*+]|\d+[.)])\s+|>\s*)*\[[^\]]*\]:/;
+/** A letter, a mark or punctuation outside ASCII. Digits are numbers, and the number rule reads them. */
+const NON_ASCII = /[\p{L}\p{M}\p{P}]/gu;
 
 export function factsOf(card: CardText): CardFacts {
   const text = `${card.title}\n${card.body}`;
   const paths = new Set<string>();
   const codeSpans = new Set<string>();
-  for (const span of text.matchAll(CODE_SPAN)) {
-    const inner = span[2]!.trim();
+  const { spans, prose } = readCode(text);
+  for (const inner of spans) {
     codeSpans.add(inner);
     // An evidence span is `path:line` or `path`; a span with words in it (a command, an excerpt) is not a path.
     if (PATH.test(inner) && !/\s/.test(inner)) paths.add(inner);
   }
-  const prose = text.replace(CODE_SPAN, " ");
   const prosePaths = new Set(
     prose
       .split(/[\s,;()"']+/)
@@ -89,6 +109,9 @@ export function factsOf(card: CardText): CardFacts {
     codeSpans,
     prosePaths,
     markup: (prose.match(MARKUP) ?? []).sort(),
+    brackets: (prose.match(BRACKETS) ?? []).filter((b) => !CHECKBOX.test(b)).sort(),
+    characters: new Set((text.match(NON_ASCII) ?? []).filter((ch) => ch > "\x7f")),
+    words: text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length,
   };
 }
 
@@ -155,7 +178,71 @@ export function guardPolish(
     after.markup.length > before.markup.length
   )
     return { kept: false, reason: "markup-added" };
+  // A reference definition points a link or an image somewhere, wherever it is used: none the card did not have.
+  const originalLines = new Set(`${original.title}\n${original.body}`.split(/\r\n|\r|\n/));
+  if (polishedText.split(/\r\n|\r|\n/).some((line) => REFERENCE.test(line) && !originalLines.has(line)))
+    return { kept: false, reason: "reference-added" };
+  // Link text with no URL still renders as one with a reference, and reads as one to an agent.
+  if (addsTo(before.brackets, after.brackets)) return { kept: false, reason: "bracket-added" };
+  if ([...after.characters].some((ch) => !before.characters.has(ch)))
+    return { kept: false, reason: "character-added" };
+  const allowed = Math.max(WORD_GROWTH.least, Math.ceil(before.words * WORD_GROWTH.share));
+  if (after.words > before.words + allowed) return { kept: false, reason: "words-added" };
   return { kept: true };
+}
+
+/**
+ * The code spans in markdown text, read as a renderer reads them, and the prose around them with each span a
+ * space. A run of backticks opens a span that the next run of the same length closes; a run with no such close is
+ * text. Outside a span, a backslash escapes the character after it, so an escaped backtick opens nothing.
+ */
+export function readCode(text: string): { spans: string[]; prose: string } {
+  const spans: string[] = [];
+  let prose = "";
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "\\" && /[!-/:-@[-`{-~]/.test(text[i + 1] ?? "")) {
+      prose += text.slice(i, i + 2);
+      i += 2;
+      continue;
+    }
+    if (text[i] !== "`") {
+      prose += text[i];
+      i++;
+      continue;
+    }
+    let open = 0;
+    while (text[i + open] === "`") open++;
+    const close = closingRun(text, i + open, open);
+    if (close === -1) {
+      prose += "`".repeat(open);
+      i += open;
+      continue;
+    }
+    spans.push(text.slice(i + open, close).trim());
+    prose += " ";
+    i = close + open;
+  }
+  return { spans, prose };
+}
+
+/** Where the next run of exactly `length` backticks starts, from `from`, or -1. */
+function closingRun(text: string, from: number, length: number): number {
+  const run = /`+/g;
+  run.lastIndex = from;
+  for (let m = run.exec(text); m !== null; m = run.exec(text)) if (m[0].length === length) return m.index;
+  return -1;
+}
+
+/** The rewrite has a piece, or more of one, than the card had. */
+function addsTo(before: readonly string[], after: readonly string[]): boolean {
+  const left = new Map<string, number>();
+  for (const piece of before) left.set(piece, (left.get(piece) ?? 0) + 1);
+  return after.some((piece) => {
+    const n = left.get(piece) ?? 0;
+    left.set(piece, n - 1);
+    return n <= 0;
+  });
 }
 
 /**

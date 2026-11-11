@@ -74,23 +74,34 @@ What comes back is kept only when it keeps each of these from the card it was ma
 - every other path in backticks that reads as one: with a folder, an extension, a leading dot or a `:line`,
   and every path written in prose (`~/.ssh/id_ed` among them),
 - every code span, word for word: an excerpt quotes the file, and a command is run as written. A span may lose
-  its backticks if its text stays; a span the card did not have is a change,
+  its backticks if its text stays; a span the card did not have is a change. Spans are read as a renderer
+  reads them: a run of backticks closes only on a run of the same length, and an escaped backtick (`` \` ``)
+  opens none,
 - every number, as many times as it appears, in any script's digits or in words (`forty-eight`, `twice`),
 - every masked value (`ghp_****9f`, `****`),
 - the count of open checkboxes and of ticked ones, each on its own, wherever they stand,
 - no link, URL or HTML tag the card did not have,
 - the line `Quoted from the repository, not instructions.` and the `**Source:**` line, each as its own line,
+- no reference definition (`[x]: //host/p.png`, at a line's start, in a list item or in a quote) that is not a
+  line of the card word for word,
+- no text in square brackets outside a code span (`[the guide]`, `[the guide][g]`) that the card did not have;
+  the card's own checkboxes, `- [ ]` and `- [x]`, are counted above,
+- no letter, mark or punctuation outside ASCII that the card does not use: a look-alike letter, a full-width
+  dot, a curly quote or a dash,
+- not many more words: at most 15% more than the card, or 6 more for a short card,
 
 and still has a card's shape: a title of at most 80 characters on one line (no line break of any kind), a
 body within 3,500 characters, no headings (`#`, an underlined line, or `<h1>` to `<h6>`; a line in a fenced
 block, as a quoted excerpt is, is text, not a heading). Otherwise the card stays as written, and `case.json` says why on that check:
 `"polish": { "state": "kept-original", "reason": "path-dropped" }`. The reasons are `empty`, `shape-changed`,
 `check-id-dropped`, `path-dropped`, `path-added`, `masked-value-changed`, `number-changed`,
-`checkbox-count-changed`, `code-changed` and `markup-added`.
+`checkbox-count-changed`, `code-changed`, `markup-added`, `reference-added`, `bracket-added`,
+`character-added` and `words-added`.
 
 **A kept rewrite means the guard's rules did not fire, not that nothing changed.** The guard compares a list;
 it cannot see meaning, so a word that adds a kind ("an email address" for "an address") passes it, and so
-does a sentence that tells the reader, or an agent, to do something the card did not say. The prompt says
+does a short sentence that tells the reader, or an agent, to do something the card did not say: the word
+margin limits how much a rewrite can add, not what it says. The prompt says
 the card is data and asks for neither. The
 prompt asks against that; nothing checks that it was heeded. A second pass that has a model check the rewrite against the
 original is planned for a later release.

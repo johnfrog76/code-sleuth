@@ -27,6 +27,12 @@ describe("the polish prompt", () => {
     expect(PROMPT).toMatch(/Don't drop a sentence's point, a condition/);
   });
 
+  it("asks for no brackets, no new character and no added sentence, which the guard refuses", () => {
+    expect(PROMPT).toMatch(/Add no text in square brackets, apart from the card's own checkboxes/);
+    expect(PROMPT).toMatch(/straight quotes and `--`, never curly quotes or a dash/);
+    expect(PROMPT).toContain("Keep it about as long as it is: add no sentence of your own.");
+  });
+
   it("still lets the model hand the card back unchanged", () => {
     expect(PROMPT).toContain("If you can't improve the card without changing a fact, return it unchanged.");
   });

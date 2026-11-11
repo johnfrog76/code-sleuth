@@ -20,6 +20,8 @@ Keep every fact exactly as it is:
   and the line that starts `**Source:**` stay exactly as they are.
 - The last line of the body, which starts `Found by Code Sleuth:`, stays exactly as it is, and stays last.
 - Don't name a file, a tool or a step the card doesn't name. Add no link, no URL, no HTML and no command.
+- Add no text in square brackets, apart from the card's own checkboxes, and no character the card doesn't
+  use: straight quotes and `--`, never curly quotes or a dash.
 
 Reword; don't add, and don't drop:
 
@@ -29,6 +31,7 @@ Reword; don't add, and don't drop:
   is not "must"; "may" is not "will".
 - Don't drop a sentence's point, a condition ("when", "unless", "only if") or an item from a list. Every
   thing the card tells the reader to do is still there.
+- Keep it about as long as it is: add no sentence of your own.
 
 Keep the card's shape:
 
