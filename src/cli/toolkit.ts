@@ -122,7 +122,7 @@ export function toolkitRecord(detection: Detection, filing?: Filing, spaceFrom?:
  */
 export async function fileCards(
   draft: CaseDraft,
-  /** The cards to file: polished where polish kept a rewrite, else the sleuth's own. */
+  /** The cards to file: the sleuth's own, never a polished one. */
   cards: readonly Card[],
   detection: Extract<Detection, { state: "detected" }>,
   options: DetectOptions,

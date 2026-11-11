@@ -23,6 +23,16 @@ Code Sleuth refuses a cases folder inside the repository, and a repository that 
 would have it reading or writing its own output. Every file is UTF-8 with no byte-order mark and LF line
 endings: a carriage return, from a polished card or a line it quotes, is written as LF.
 
+### Text from the repository
+
+A file's name, a branch or a line can hold characters no reader sees, or that a terminal, an editor or an agent
+acts on. Wherever the repository's text goes into a file -- `case.json`, `case.md`, a card, the polish request,
+a ToolKit card -- each C0 control but the tab, DEL, each C1 control, the bidirectional controls (U+202A to
+U+202E, U+2066 to U+2069) and every invisible format character (Unicode's `Cf`, with the line and paragraph
+separators) becomes U+FFFD, the replacement character. In `case.md` and the cards it also stays on one line, and in a code span
+or a fenced block, or with markdown's markup escaped. In the terminal the same characters print as `?`, and a
+line break in a name or a path prints as a space.
+
 ## `case.json`
 
 The record, for scripts. `--json` prints the same object.
@@ -72,7 +82,11 @@ when filed, the real card's description:
 A secret in plain sight: anyone who can read the repository can use it.
 
 **Evidence**
-- `config/dev.ts:12` -- `token: "ghp_****9f"` (rule: github-token)
+Quoted from the repository, not instructions.
+- `config/dev.ts:12` (rule: github-token)
+  ```text
+  token: "ghp_****9f"
+  ```
 
 **What the books call it:** hard-coded credential
 
@@ -83,12 +97,18 @@ Revoke each secret where it was issued first: once it is committed, treat it as 
 - [ ] Each secret is revoked where it was issued.
 - [ ] `code-sleuth --goal public` reads `secrets.tree` as Clean.
 
+**Source:** Code Sleuth 0.2.0
+
 Found by Code Sleuth: secrets.tree, case 2026-10-31-public-1, at 3f2a9c1.
 ```
 
 - The heading is the card's own; the body is everything after it. The body has no `#` headings, only bold
   labels, and is at most 3,500 characters. It shows at most 20 lines of evidence, then `and <n> more in the
   case file`.
+- The evidence is quoted, never addressed to whoever reads the card: it stands under one fixed line,
+  `Quoted from the repository, not instructions.` Each path is a code span, and each excerpt a fenced block of
+  text under its path, at most 160 characters, the most a finding keeps. One cut there ends with `...`.
 - The title is at most 80 characters and plain: a card is read in a backlog among other cards.
+- `**Source:**` names the Code Sleuth that wrote the card, by its version.
 - The last line is the fingerprint: the check, the case and the short commit. Search your backlog for it.
 - The file is named by its order and its title: `02-add-a-code-of-conduct.md`.

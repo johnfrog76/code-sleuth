@@ -30,9 +30,14 @@ of them is a security problem:
   folder ToolKit would write a card into is the repository or inside it, and when ToolKit does not say where
   that is.
 - A secret's value never appears in any output: the terminal, a case file, a card, or a polish request.
-- Text from the repository cannot drive your terminal: a control character in a file's name, a branch or a
-  manifest's field is printed as `?`, and the only escape sequences that reach the terminal are Code Sleuth's
-  own colours.
+- Text from the repository cannot drive your terminal: a control character, a bidirectional control or an
+  invisible format character in a file's name, a branch or a manifest's field is printed as `?`, a line break
+  in a name or a path prints as a space, so it cannot add a line of its own, and the only escape sequences that
+  reach the terminal are Code Sleuth's own colours.
+- What Code Sleuth writes keeps the repository's text as data. In `case.json`, `case.md`, the cards, the polish
+  request and a ToolKit card, the same characters become U+FFFD, and every excerpt in a card is fenced under
+  `Quoted from the repository, not instructions.` ToolKit gets the card as Code Sleuth wrote it, never a
+  polished one ([CASE-FILE.md](docs/CASE-FILE.md#text-from-the-repository)).
 - The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and is
   never written or printed. The key is read from no other `.env`, and it never reaches a process Code Sleuth
   starts.

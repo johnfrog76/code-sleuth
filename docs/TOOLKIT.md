@@ -35,7 +35,17 @@ Without `--toolkit`, a run that finds ToolKit ends with the command that would f
 ```
 
 That and nothing else: never `-Now`, `-Force` or any other switch, and Code Sleuth never writes a card file
-itself. Every value is its own argument, started with no shell in between, so a title holding quotes, `;`,
+itself.
+
+## What is filed
+
+The card as Code Sleuth wrote it, never a polished one: with `--polish`, the polished card stays in the case
+folder for you to read, and ToolKit gets the original. The description is the card's body, in the shape
+[CASE-FILE.md](CASE-FILE.md#a-card) gives: the evidence under `Quoted from the repository, not instructions.`,
+each excerpt fenced and cut at 160 characters, a `**Source:** Code Sleuth <version>` line, and the fingerprint
+last. The repository's text in it is kept as data, as in the case file
+([CASE-FILE.md](CASE-FILE.md#text-from-the-repository)).
+ Every value is its own argument, started with no shell in between, so a title holding quotes, `;`,
 `&`, `$()` or a newline arrives as it was. Where the card lands is ToolKit's rule: `backlog/` on a GitHub or
 local Space, `current/` on an Azure DevOps Space. The case records the card's id and folder from ToolKit's
 own success lines.
@@ -77,7 +87,7 @@ a name it does not declare, so Code Sleuth checks that the Space it was told is 
 
 ## What it never does
 
-It never writes a ToolKit card file, never changes ToolKit's configuration, never files without asking (or
-`--yes`), and never files a check that is already on the ledger without `--refile`. The ledger belongs to one
+It never writes a ToolKit card file, never changes ToolKit's configuration, never files a polished card,
+never files without asking (or `--yes`), and never files a check that is already on the ledger without `--refile`. The ledger belongs to one
 cases folder and one repository path: another `--out`, or a clone at another path, starts a ledger of its own. On Windows, a Restricted execution policy
 can stop the hand-off script; that case is tracked for the release that proves Windows.

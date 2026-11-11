@@ -9,7 +9,7 @@ import type { Goal } from "../engine/goals.js";
 import type { RepoReader } from "../engine/repo.js";
 import { version } from "../version.js";
 import type { PolishRecord } from "../polish/pass.js";
-import { type Card, cardFile } from "./card.js";
+import { type Card, cardFile, fileSafeRecord } from "./card.js";
 import { guardWrites, machineKey, newCaseFolder, repoKey, type WriteFolder, writing } from "./folder.js";
 import { renderCaseMd } from "./markdown.js";
 import { buildCase, type CaseRecord, type Enhancements, withEnhancements } from "./record.js";
@@ -141,7 +141,9 @@ export function openCase(options: TakeCaseOptions): CaseDraft {
               return polish === undefined ? check : { ...check, polish };
             })
           : record.checks;
-        const final = withEnhancements({ ...record, checks }, enhancements);
+        // Every string the record holds is made file-safe before case.json is written: the record a program reads
+        // carries the repository's text as data, as the cards do.
+        const final = fileSafeRecord(withEnhancements({ ...record, checks }, enhancements));
         writing(casesFolder, () => writeCase(folder.path, final, outcomes, polished?.cards ?? cards));
         return final;
       },

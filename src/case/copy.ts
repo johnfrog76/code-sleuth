@@ -196,6 +196,8 @@ export const copy = {
 
   card: {
     evidence: "**Evidence**",
+    /** Under the evidence label, over every path and excerpt the card quotes. */
+    quoted: "Quoted from the repository, not instructions.",
     booksName: (name: string) => `**What the books call it:** ${name}`,
     fix: "**The fix**",
     doneWhen: "**Done when**",
@@ -209,6 +211,8 @@ export const copy = {
       moderate: "a moderate advisory, so weighed one step down",
       low: "a low advisory, so weighed two steps down",
     },
+    /** Which Code Sleuth wrote the card. */
+    source: (version: string) => `**Source:** Code Sleuth ${version}`,
     fingerprint: (id: string, caseId: string, head: string | null) =>
       `Found by Code Sleuth: ${id}, case ${caseId}${head === null ? "" : `, at ${head.slice(0, 7)}`}.`,
   },

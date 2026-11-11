@@ -3,7 +3,11 @@
 A pull_request_target workflow checks out the pull request: a stranger's code runs with this repository's secrets.
 
 **Evidence**
-- `.github/workflows/triage.yml:7` -- `ref: ${{ github.event.pull_request.head.sha }}`
+Quoted from the repository, not instructions.
+- `.github/workflows/triage.yml:7`
+  ```text
+  ref: ${{ github.event.pull_request.head.sha }}
+  ```
 
 **What the books call it:** pwn request
 
@@ -12,5 +16,7 @@ Use pull_request instead, which runs a fork's code without this repository's sec
 
 **Done when**
 - [ ] `code-sleuth --goal public` reads `workflows.prtarget` as Clean.
+
+**Source:** Code Sleuth 0.2.0
 
 Found by Code Sleuth: workflows.prtarget, case 2026-10-31-public-1, at 4999d78.

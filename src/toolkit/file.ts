@@ -1,3 +1,4 @@
+import { fileSafeLines } from "../case/card.js";
 import { childEnv, commonArgs, type DetectOptions, type Detection } from "./detect.js";
 import { plain, runHandoff } from "./shell.js";
 
@@ -63,7 +64,10 @@ function named(name: string, value: string): string[] {
   return value === "" ? [`-${name}`, ""] : [`-${name}:${value}`];
 }
 
-/** Files one card through ToolKit's NewPrompt: a title, a type and a description, and nothing else. */
+/**
+ * Files one card through ToolKit's NewPrompt: a title, a type and a description, and nothing else. The card's
+ * text is file-safe already; it is made so again here, the last step before it leaves, as case.json is.
+ */
 export function fileCard(
   detection: Extract<Detection, { state: "detected" }>,
   card: { title: string; type: "Bug" | "Task"; body: string },
@@ -71,9 +75,9 @@ export function fileCard(
 ): FileResult {
   const args = [
     ...commonArgs(detection.prefix, options.moduleRoot),
-    ...named("Title", card.title),
+    ...named("Title", fileSafeLines(card.title)),
     ...named("Type", card.type),
-    ...named("Description", card.body),
+    ...named("Description", fileSafeLines(card.body)),
   ];
   const result = runHandoff(detection.shell, args, childEnv(options));
   if (result.error) return { status: "failed", sentence: result.error.message };

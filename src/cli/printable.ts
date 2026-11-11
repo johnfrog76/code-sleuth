@@ -2,10 +2,20 @@
  * Text from the repository, made safe to print to a terminal. A file's name, a branch, a manifest's license
  * field or an excerpt can hold control characters: ESC starts a sequence that can clear the screen, move the
  * cursor over a line already printed, or set the clipboard (OSC 52). C0 and C1 controls but the newline and the
- * tab, DEL, and the bidirectional overrides that reorder what a line shows, each become `?`.
+ * tab, DEL, the bidirectional overrides that reorder what a line shows, every invisible format character
+ * (`\p{Cf}`) and the line and paragraph separators each become `?`.
  */
 export function printable(text: string): string {
   return text.replace(UNPRINTABLE, "?");
+}
+
+/**
+ * Text from the repository that joins a line of Code Sleuth's own, a file's name or a path: printable, with every
+ * line break in it (CRLF, LF, a lone CR, a line or paragraph separator) folded to a space first, so it prints
+ * on the one line it joins.
+ */
+export function printableLine(text: string): string {
+  return printable(text.replace(/\r\n|\r|\n|\u2028|\u2029/g, " "));
 }
 
 // Built from code points, so this file holds no control character itself.
@@ -15,11 +25,12 @@ const UNPRINTABLE = new RegExp(
     [0x0b, 0x1f],
     [0x7f, 0x9f],
     [0x200e, 0x200f],
+    [0x2028, 0x2029],
     [0x202a, 0x202e],
     [0x2066, 0x2069],
   ]
     .map(([from, to]) => `\\u{${from!.toString(16)}}-\\u{${to!.toString(16)}}`)
-    .join("")}]`,
+    .join("")}\\p{Cf}]`,
   "gu",
 );
 

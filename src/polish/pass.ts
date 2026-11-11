@@ -1,4 +1,4 @@
-import type { Card } from "../case/card.js";
+import { type Card, fileSafeLines } from "../case/card.js";
 import type { PolishClient, RequestFailure } from "./client.js";
 import { type GuardReason, guardPolish } from "./guard.js";
 
@@ -23,9 +23,11 @@ export async function polishCards(
       records.set(card.file, { state: "kept-original", reason: answer.reason });
       continue;
     }
-    const verdict = guardPolish({ title: card.title, body: card.body }, answer.card, card.cites ?? []);
+    // The answer is made file-safe as the card was, before it is weighed: the guard compares like with like.
+    const polished = { title: fileSafeLines(answer.card.title), body: fileSafeLines(answer.card.body) };
+    const verdict = guardPolish({ title: card.title, body: card.body }, polished, card.cites ?? []);
     if (verdict.kept) {
-      out.push({ ...card, title: answer.card.title.trim(), body: answer.card.body.trimEnd() });
+      out.push({ ...card, title: polished.title.trim(), body: polished.body.trimEnd() });
       records.set(card.file, { state: "polished" });
     } else {
       out.push(card);

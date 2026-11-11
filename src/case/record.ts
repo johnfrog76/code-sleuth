@@ -130,7 +130,14 @@ export function buildCase(input: CaseInput): { record: CaseRecord; cards: Card[]
     .filter((weight) => weight !== "hunch" || input.all)
     .flatMap((weight) => input.outcomes.filter((o) => o.result.verdict === "found" && o.weight === weight));
   const cards = carded.map((outcome, i) =>
-    renderCard({ outcome, order: i + 1, goal: input.goal.id, caseId: input.caseId, head: input.repo.head }),
+    renderCard({
+      outcome,
+      order: i + 1,
+      goal: input.goal.id,
+      caseId: input.caseId,
+      head: input.repo.head,
+      version: input.tool.version,
+    }),
   );
 
   const checks = input.outcomes.map(({ check, weight, result, examples }): CheckRecord => {

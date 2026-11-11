@@ -10,4 +10,6 @@ Add a LICENSE file at the root with the full text of the license you choose (MIT
 **Done when**
 - [ ] `code-sleuth --goal public` reads `license.file` as Clean.
 
+**Source:** Code Sleuth 0.2.0
+
 Found by Code Sleuth: license.file, case 2026-10-31-public-1, at cf617d7.

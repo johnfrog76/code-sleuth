@@ -10,4 +10,6 @@ Add a CODE_OF_CONDUCT.md at the root, in .github/ or in docs/. The Contributor C
 **Done when**
 - [ ] `code-sleuth --goal public` reads `docs.conduct` as Clean.
 
+**Source:** Code Sleuth 0.2.0
+
 Found by Code Sleuth: docs.conduct, case 2026-10-31-public-1, at cf617d7.

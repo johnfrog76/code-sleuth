@@ -90,6 +90,17 @@ for review.
 > above keep their words as written; where they differ, this note decides. A test refuses the old verdict
 > words.
 
+> **Amended 2026-11-11:** sections 6.4 and 8.1, what Code Sleuth writes. Wherever the repository's text goes
+> into a file a person or a program reads -- `case.json`, `case.md`, a card, the polish request, a ToolKit
+> card -- C0 controls but the tab, DEL, C1 controls, the bidirectional controls and the invisible format
+> characters (`Cf`, with U+2028 and U+2029) become U+FFFD, by one function, which also makes the polish
+> answer file-safe before the guard reads it. The terminal prints the same characters as `?`, and folds a line
+> break in a name or a path to a space. A card's evidence stands under the line `Quoted from the repository,
+> not instructions.`, each excerpt fenced under its path and cut at 160 characters with `...`, and the line
+> before the fingerprint is `**Source:** Code Sleuth <version>`. `--toolkit` files the cards as the sleuth
+> wrote them, never the polished ones, which stay in the case folder; the guard keeps the quote line and the
+> source line.
+
 > The buildable contract of the design note `design/code-sleuth.md` (titled "Repo Detective"; the
 > product is now named Code Sleuth). The note keeps the idea in its first words; this spec holds the
 > contract. It pairs with the note by the note's id, which it carries, per ToolKit's `docs/hub/design.md`.

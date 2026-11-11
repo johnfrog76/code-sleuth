@@ -1,4 +1,4 @@
-import { printable } from "./printable.js";
+import { printableLine } from "./printable.js";
 import type { PolishClient } from "../polish/client.js";
 import { Interrupted, Refusal } from "../refusal.js";
 
@@ -37,7 +37,7 @@ export interface Io {
   toolkitModuleRoot?: string;
 }
 
-export const oneLine = (text: string) => printable(text.replace(/\r?\n|\r/g, " "));
+export const oneLine = printableLine;
 
 /** Prints a refusal the one way every refusal is printed, and returns its exit code. */
 export function refuse(refusal: Refusal, io: Io): number {

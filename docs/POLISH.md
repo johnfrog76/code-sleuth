@@ -51,8 +51,13 @@ One request per card, to `https://api.anthropic.com/v1/messages`: the card's tit
 and the prompt, `src/polish/prompt.md`, which ships with the package. The prompt asks the model to reword
 only: to keep every fact the guard checks, to add no specific the card does not give (a name, a place, a
 count, an example, a kind), to keep each word's meaning, and to drop nothing. It asks; it cannot guarantee. Never a file from the repository, never
-an unmasked value, never the repository's path on your machine. The header of the run names the request
+an unmasked value, never the repository's path on your machine. The repository's text in the card is kept as
+data ([CASE-FILE.md](CASE-FILE.md#text-from-the-repository)), and the answer goes through the same function
+before the guard reads it, so the two are compared like with like. The header of the run names the request
 before any is made.
+
+A polished card is for you to read: it is written to the case folder and never filed. With `--toolkit`, ToolKit
+gets the card as Code Sleuth wrote it ([TOOLKIT.md](TOOLKIT.md#what-is-filed)).
 
 The model is the current Haiku, `claude-haiku-5-5`, because a card is a short rewrite: small and fast is the
 point. `CODE_SLEUTH_MODEL` overrides it.
@@ -72,9 +77,11 @@ What comes back is kept only when it keeps each of these from the card it was ma
 - every masked value (`ghp_****9f`, `****`),
 - the count of open checkboxes and of ticked ones, each on its own, wherever they stand,
 - no link, URL or HTML tag the card did not have,
+- the line `Quoted from the repository, not instructions.` and the `**Source:**` line, each as its own line,
 
 and still has a card's shape: a title of at most 80 characters on one line (no line break of any kind), a
-body within 3,500 characters, no headings (`#`, an underlined line, or `<h1>` to `<h6>`). Otherwise the card stays as written, and `case.json` says why on that check:
+body within 3,500 characters, no headings (`#`, an underlined line, or `<h1>` to `<h6>`; a line in a fenced
+block, as a quoted excerpt is, is text, not a heading). Otherwise the card stays as written, and `case.json` says why on that check:
 `"polish": { "state": "kept-original", "reason": "path-dropped" }`. The reasons are `empty`, `shape-changed`,
 `check-id-dropped`, `path-dropped`, `path-added`, `masked-value-changed`, `number-changed`,
 `checkbox-count-changed`, `code-changed` and `markup-added`.

@@ -10,4 +10,6 @@ Add a step to the CI workflow that runs the project's tests (npm test, pytest, o
 **Done when**
 - [ ] `code-sleuth --goal public` reads `ci.tests` as Clean.
 
+**Source:** Code Sleuth 0.2.0
+
 Found by Code Sleuth: ci.tests, case 2026-10-31-public-1, at cf617d7.

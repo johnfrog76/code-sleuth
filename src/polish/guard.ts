@@ -1,4 +1,5 @@
 import { CARD_BODY_LIMIT, CARD_TITLE_LIMIT } from "../case/card.js";
+import { copy } from "../case/copy.js";
 
 /** A card's words: what is sent to be polished, and what comes back. */
 export interface CardText {
@@ -113,6 +114,9 @@ export function guardPolish(
   const before = factsOf(original);
   const after = factsOf(polished);
   if (after.fingerprint !== before.fingerprint) return { kept: false, reason: "check-id-dropped" };
+  // The line over the quoted evidence, and the source line, are the card's own: each stays, as its own line.
+  if (fixedLines(original.body).some((line) => !linesOf(polished.body).includes(line)))
+    return { kept: false, reason: "shape-changed" };
   const polishedText = `${polished.title}\n${polished.body}`;
   // First, the card's own evidence: every path and path:line it cites, verbatim, whatever it looks like.
   if (cites.some((cite) => !citedIn(polishedText, cite))) return { kept: false, reason: "path-dropped" };
@@ -154,15 +158,50 @@ export function guardPolish(
   return { kept: true };
 }
 
-/** A heading in any form ToolKit or a renderer reads as one: `#`, an underline (`===`, `---`), or `<h1>`. */
+/**
+ * A heading in any form ToolKit or a renderer reads as one: `#`, an underline (`===`, `---`), or `<h1>`. A line in
+ * a fenced block is text, as a quoted excerpt is, and no heading: a fence the card did not have is a code change.
+ * A fence left open would hide every line after it, so it counts as a heading too.
+ */
 function hasHeading(body: string): boolean {
-  const lines = body.split(/\r\n|\r|\n/);
+  const lines = outsideFences(linesOf(body));
+  if (lines.at(-1) === undefined) return true;
   return lines.some(
     (line, i) =>
-      /^\s{0,3}#{1,6}(?:\s|$)/.test(line) ||
-      /<h[1-6][\s>]/i.test(line) ||
-      (i > 0 && lines[i - 1]!.trim() !== "" && /^\s{0,3}(?:=+|-+)\s*$/.test(line)),
+      typeof line === "string" &&
+      (/^\s{0,3}#{1,6}(?:\s|$)/.test(line) ||
+        /<h[1-6][\s>]/i.test(line) ||
+        (i > 0 && (lines[i - 1] ?? "").trim() !== "" && /^\s{0,3}(?:=+|-+)\s*$/.test(line))),
   );
+}
+
+function linesOf(body: string): string[] {
+  return body.split(/\r\n|\r|\n/);
+}
+
+/**
+ * Each line, or null where it is a fence or inside one, as CommonMark reads a backtick or tilde fence. When a
+ * fence is still open at the end, the last entry is undefined.
+ */
+function outsideFences(lines: readonly string[]): (string | null | undefined)[] {
+  let open: string | undefined;
+  const marked: (string | null | undefined)[] = lines.map((line) => {
+    const fence = /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
+    if (open === undefined) {
+      if (fence === undefined) return line;
+      open = fence;
+      return null;
+    }
+    if (fence !== undefined && fence[0] === open[0] && fence.length >= open.length && line.trim() === fence)
+      open = undefined;
+    return null;
+  });
+  return open === undefined ? marked : [...marked, undefined];
+}
+
+/** The card's own fixed lines in a body: the line over its quoted evidence, and its source line. */
+function fixedLines(body: string): string[] {
+  return linesOf(body).filter((line) => line === copy.card.quoted || line.startsWith(copy.card.source("")));
 }
 
 /**

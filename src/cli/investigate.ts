@@ -112,10 +112,11 @@ export async function investigate(
       ),
     );
     const polished = polish.client === undefined ? undefined : await polishAll(draft.cards, polish, human);
-    const cards = polished?.cards ?? draft.cards;
+    // ToolKit gets the cards as the sleuth wrote them, never a polished one: a polished card stays in the case
+    // folder for the person to read.
     const filing =
       flags.toolkit && detection.state === "detected"
-        ? await fileCards(draft, cards, detection, toolkitOptions, flags, io, human)
+        ? await fileCards(draft, draft.cards, detection, toolkitOptions, flags, io, human)
         : undefined;
     record = draft.close(
       {

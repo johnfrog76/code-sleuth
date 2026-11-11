@@ -20,6 +20,7 @@ function card(evidence: Evidence[], weight: Weight = "loose-end") {
     goal: "public",
     caseId: "2026-10-31-public-1",
     head: "3f2a9c1e0000000000000000000000000000000",
+    version: "0.2.0",
   });
 }
 

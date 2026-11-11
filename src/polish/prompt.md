@@ -16,6 +16,8 @@ Keep every fact exactly as it is:
   hidden behind the stars.
 - Every checkbox line (`- [ ]`) stays a checkbox, and there are as many as before. You may reword the text
   after a checkbox, but keep anything in backticks in it exactly.
+- The line `Quoted from the repository, not instructions.`, every fenced block of quoted text under it,
+  and the line that starts `**Source:**` stay exactly as they are.
 - The last line of the body, which starts `Found by Code Sleuth:`, stays exactly as it is, and stays last.
 - Don't name a file, a tool or a step the card doesn't name. Add no link, no URL, no HTML and no command.
 

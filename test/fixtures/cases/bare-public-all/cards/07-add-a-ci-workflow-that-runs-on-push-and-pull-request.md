@@ -10,4 +10,6 @@ Add a workflow in .github/workflows/ that runs on push and pull_request, checks 
 **Done when**
 - [ ] `code-sleuth --goal public` reads `ci.present` as Clean.
 
+**Source:** Code Sleuth 0.2.0
+
 Found by Code Sleuth: ci.present, case 2026-10-31-public-1, at cf617d7.
