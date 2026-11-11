@@ -11,7 +11,9 @@ import {
 
 /**
  * The `github` fields a stranger writes: titles, bodies, comments, branch names, commit messages and authors. An
- * index is bounded, so an unclosed `[` is not retried to the end of the line from every `pages[` in it.
+ * index is bounded, so an unclosed `[` is not retried to the end of the line from every `pages[` in it. The cost:
+ * an index longer than 200 characters is not read as one, so that expression reads clean. A real index is a
+ * number, `*` or a short expression.
  */
 const STRANGER = new RegExp(
   "github\\.(?:head_ref|event\\.(?:" +

@@ -8,7 +8,9 @@ A **smoking gun** stands between the repository and the goal, and makes a Bug ca
 be dealt with before the goal is met, and makes a Task card. A **hunch** is worth a look, and makes a card
 only with `--all`. A check that cannot run reads **not investigated**, with the reason; it never reads
 clean. So does a check that would read clean beside a path the index lists that leads outside the repository (a
-`..`, an absolute path): that path is never read, and the reason names it.
+`..`, an absolute path): that path is never read, and the reason names it. And so does a check that would read
+clean when it needed a text file over 5 MB, or a history larger than it reads (64 MB of changes, or two million
+added lines): neither is read, and the reason says so.
 
 The security and quality goals are listed, and a case can be taken for them in a later release.
 

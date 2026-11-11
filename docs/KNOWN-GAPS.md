@@ -23,6 +23,10 @@ to read wrong, and what has not been proven, with what you see when you hit each
   `workflows.injection`, `workflows.prtarget`, or a `names.deny` match in a commit message: there it still
   counts ([CHECKS.md](CHECKS.md#example-locations)).
 
+- **A very large file or history.** A text file over 5 MB is not read by the text checks, and a history over 64 MB
+  of changes or two million added lines is not read by `secrets.history`: each reads *not investigated*, with
+  the reason, rather than ask more memory than a laptop has. Reading them in pieces is planned.
+
 ## Known to read wrong
 
 - **One finding in Code Sleuth's own history is accepted, on purpose.** An early commit's test holds a made-up

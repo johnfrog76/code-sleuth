@@ -35,7 +35,10 @@ export interface RepoReader {
   /** `files` without anything under a skipped folder. What the text checks read. */
   readonly textFiles: readonly string[];
   has(path: string): boolean;
+  /** The file's text, or undefined for a file not here or over `MAX_TEXT_BYTES`, which is never read. */
   readText(path: string): string | undefined;
+  /** True for a file here that is over `MAX_TEXT_BYTES`: `readText` gives undefined for it, and reads nothing. */
+  tooLarge(path: string): boolean;
   /** The file's size in bytes. */
   size(path: string): number;
   /**
@@ -50,6 +53,8 @@ export interface RepoReader {
    * first use. Undefined outside a repository, or when git cannot read the history.
    */
   addedLines(): readonly AddedLine[] | undefined;
+  /** True once `addedLines` stopped at `MAX_HISTORY_BYTES` or `MAX_ADDED_LINES`: the history is larger than is read. */
+  historyTooLarge(): boolean;
 }
 
 export interface AddedLine {
@@ -83,9 +88,11 @@ export function openRepo(root: string): RepoReader {
   const known = new Set(files);
   const cache = new Map<string, string>();
   let history: readonly AddedLine[] | undefined | null = null;
+  let tooLargeHistory = false;
   let messages: readonly { commit: string; text: string }[] | undefined | null = null;
 
   return {
+    historyTooLarge: () => tooLargeHistory,
     root: absolute,
     refused,
     top: tracked === undefined ? absolute : outermostWorkTree(absolute),
@@ -97,6 +104,7 @@ export function openRepo(root: string): RepoReader {
     has: (path) => known.has(path),
     readText(path) {
       if (!known.has(path)) return undefined;
+      if (lstatSync(join(absolute, path)).size > MAX_TEXT_BYTES) return undefined;
       let text = cache.get(path);
       if (text === undefined) {
         text = readFileSync(join(absolute, path), "utf8");
@@ -105,6 +113,7 @@ export function openRepo(root: string): RepoReader {
       return text;
     },
     size: (path) => (known.has(path) ? lstatSync(join(absolute, path)).size : 0),
+    tooLarge: (path) => known.has(path) && lstatSync(join(absolute, path)).size > MAX_TEXT_BYTES,
     commitMessages() {
       if (messages === null) messages = tracked === undefined ? undefined : readMessages(absolute);
       return messages;
@@ -121,7 +130,11 @@ export function openRepo(root: string): RepoReader {
       }
     },
     addedLines() {
-      if (history === null) history = tracked === undefined ? undefined : readHistory(absolute);
+      if (history === null) {
+        const read = tracked === undefined ? undefined : readHistory(absolute);
+        tooLargeHistory = read === "too-large";
+        history = read === "too-large" ? undefined : read;
+      }
       return history;
     },
   };
@@ -141,7 +154,7 @@ function readMessages(root: string): { commit: string; text: string }[] | undefi
 }
 
 /** Parses `git log -p --all --reverse -U0`: only the `+` lines, each with its commit, path and line number. */
-function readHistory(root: string): AddedLine[] | undefined {
+function readHistory(root: string): AddedLine[] | "too-large" | undefined {
   const log = git(root, [
     "-c",
     "core.quotepath=off",
@@ -166,7 +179,8 @@ function readHistory(root: string): AddedLine[] | undefined {
     "-U0",
     "--format=commit %H",
   ]);
-  if (log.error) return undefined;
+  // Over MAX_HISTORY_BYTES git's output is cut and the call fails: the history is larger than is read.
+  if (log.error) return (log.error as NodeJS.ErrnoException).code === "ENOBUFS" ? "too-large" : undefined;
   if (log.status !== 0) return noHistory(root) ? [] : undefined;
   const lines: AddedLine[] = [];
   let commit = "";
@@ -175,7 +189,12 @@ function readHistory(root: string): AddedLine[] | undefined {
   // `+` line is content -- including one whose own text starts with `++ `.
   let inHeader = false;
   let next = 0;
-  for (const raw of log.stdout.toString("utf8").split("\n")) {
+  // Line by line by index, never split whole: a split makes every line at once, and a long history would not fit.
+  const out = log.stdout.toString("utf8");
+  for (let at = 0; at <= out.length;) {
+    const end = out.indexOf("\n", at);
+    const raw = out.slice(at, end < 0 ? out.length : end);
+    at = end < 0 ? out.length + 1 : end + 1;
     if (raw.startsWith("commit ")) {
       commit = raw.slice("commit ".length);
       path = null;
@@ -193,6 +212,7 @@ function readHistory(root: string): AddedLine[] | undefined {
       next = match ? Number(match[1]) : 0;
     } else if (!inHeader && raw.startsWith("+") && path !== null && !raw.includes("\0")) {
       // A line holding a NUL is a binary file's, shown as text by --text: nothing a rule reads.
+      if (lines.length >= MAX_ADDED_LINES) return "too-large";
       lines.push({ commit, path, line: next++, text: raw.slice(1) });
     }
   }
@@ -313,6 +333,16 @@ export function gitEnv(config: readonly string[] = []): NodeJS.ProcessEnv {
  * cannot hold the run.
  */
 export const GIT_TIMEOUT_MS = 60_000;
+
+/**
+ * The most text a file or the history may hold and still be read whole, so a repository cannot ask more memory
+ * of the machine than a laptop has. A text file over 5 MB (the files.large threshold) is not read, and the
+ * history is read up to 64 MB of git's output or two million added lines; past either, a check that would
+ * read clean reads not investigated instead.
+ */
+export const MAX_TEXT_BYTES = 5 * 1024 * 1024;
+export const MAX_HISTORY_BYTES = 64 * 1024 * 1024;
+export const MAX_ADDED_LINES = 2_000_000;
 export const GIT_HISTORY_TIMEOUT_MS = 600_000;
 
 function spawnGit(root: string, config: readonly string[], args: readonly string[]) {
@@ -320,7 +350,7 @@ function spawnGit(root: string, config: readonly string[], args: readonly string
     cwd: root,
     env: gitEnv(config),
     encoding: "buffer",
-    maxBuffer: 1024 * 1024 * 1024,
+    maxBuffer: args.includes("log") ? MAX_HISTORY_BYTES : 256 * 1024 * 1024,
     timeout: args.includes("log") ? GIT_HISTORY_TIMEOUT_MS : GIT_TIMEOUT_MS,
   });
 }

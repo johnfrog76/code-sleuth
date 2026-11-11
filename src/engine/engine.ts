@@ -2,7 +2,7 @@ import { maskSecrets } from "./secrets/scan.js";
 import { createHmac, randomBytes } from "node:crypto";
 import type { Check, CheckContext, Evidence, Need, Result } from "./check.js";
 import { CHECKS } from "./checks/index.js";
-import { checkFailed, needReasons, refusedReasons } from "./copy.js";
+import { checkFailed, needReasons, refusedReasons, tooLargeReasons } from "./copy.js";
 import { type ExampleLocations, exampleLocations, isExampleEvidence } from "./examples.js";
 import { WEIGHTS, type Goal, type Weight } from "./goals.js";
 import type { RepoReader } from "./repo.js";
@@ -139,15 +139,31 @@ export function runCheck(
   if (missing !== undefined) return { verdict: "not-investigated", reason: needReasons[missing] };
   // A check that throws (a file it cannot open, a shape it did not expect) read nothing: not investigated, with
   // what went wrong, and the run goes on with the next check.
+  // What the check asked to read and was not given: a text file over the size it is read up to.
+  const unread: string[] = [];
+  const watched: RepoReader = {
+    ...repo,
+    readText(path) {
+      const text = repo.readText(path);
+      if (text === undefined && repo.tooLarge(path)) unread.push(path);
+      return text;
+    },
+  };
   let result: Result;
   try {
-    result = check.run(repo, context);
+    result = check.run(watched, context);
   } catch (error) {
     result = {
       verdict: "not-investigated",
       reason: checkFailed(error instanceof Error ? error.message : String(error)),
     };
   }
+  // A file too large to read may hold what this check looks for: clean would claim what nobody read.
+  if (result.verdict === "clean" && unread.length > 0)
+    result = {
+      verdict: "not-investigated",
+      reason: tooLargeReasons.text(unread[0]!, new Set(unread).size - 1),
+    };
   // A path the index lists that leads outside the repository was not read, and may be the file this check
   // would have found something in: clean would claim what nobody looked at.
   if (result.verdict === "clean" && repo.refused.length > 0)
