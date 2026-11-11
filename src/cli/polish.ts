@@ -26,10 +26,13 @@ export interface PreparedPolish {
  * On only with a key and --polish. The key is ANTHROPIC_API_KEY, from the environment, else from Code Sleuth's
  * own .env (never one in the repository or the current folder); the environment wins. It is held here for the
  * polish request alone, never written to the environment, and only where it came from is said. Without a key,
- * --polish is not a refusal: the run goes on and says so.
+ * --polish is not a refusal: the run goes on and says so. --offline wins over --polish: no client is made, so no
+ * request is built or sent, and that is not a refusal either.
  */
-export function preparePolish(asked: boolean, io: Io): PreparedPolish {
+export function preparePolish(asked: boolean, io: Io, offline = false): PreparedPolish {
   const env = io.env ?? {};
+  const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
+  if (asked && offline) return { state: { state: "off", reason: "--offline" }, model };
   const fromEnv = env[KEY_VARIABLE]?.trim() || undefined;
   const file = io.keyFile === undefined ? {} : readKeyFile(io.keyFile);
   if (file.loose && io.keyFile !== undefined) io.stderr(copy.polish.looseKeyFile(io.keyFile));
@@ -62,7 +65,6 @@ export function preparePolish(asked: boolean, io: Io): PreparedPolish {
     io.keyFile === undefined || example === undefined
       ? {}
       : { runnableCopy: copyCommand(example, io.keyFile) };
-  const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
   if (!asked) {
     if (key !== undefined) return { state: { state: "off", reason: "no --polish", ...from }, model };
     return { state: { state: "off", reason: "no --polish, no key", ...where }, model, ...runnable };

@@ -16,11 +16,14 @@ export interface ToolkitFlags {
   refile?: boolean;
   toolkitPrefix?: string;
   toolkitSpace?: string;
+  /** Make no network call: the checks that would read not-investigated, "--offline", and ToolKit is not probed. */
+  offline?: boolean;
 }
 
 /**
  * Looks for ToolKit, and refuses before any case is taken what the flags ask and ToolKit cannot do: --yes or
- * --refile without --toolkit, --toolkit with no ToolKit, a --toolkit-space ToolKit does not declare.
+ * --refile without --toolkit, --toolkit with --offline, --toolkit with no ToolKit, a --toolkit-space ToolKit does
+ * not declare. Under --offline it does not look: the probe starts PowerShell, which can make calls of its own.
  *
  * The Space is --toolkit-space when given; else the one Space whose address is the repository's origin; else
  * ToolKit's active Space, and the case says that no Space matched.
@@ -65,6 +68,15 @@ function chooseSpace(
       copy.toolkit.onlyWithToolkitHint,
     );
   }
+  if (flags.offline) {
+    // Filing needs the probe, and --offline starts no PowerShell: say so before the case is taken.
+    if (flags.toolkit) throw new Refusal(copy.toolkit.offline, copy.toolkit.offlineHint);
+    return {
+      detection: { state: "not-probed", reason: "--offline" },
+      options: { env: io.env ?? {} },
+      spaceFrom: "active",
+    };
+  }
   const options: DetectOptions = {
     env: io.env ?? {},
     ...(flags.toolkitPrefix === undefined ? {} : { prefix: flags.toolkitPrefix }),
@@ -104,6 +116,7 @@ function chooseSpace(
 /** What the case records about ToolKit, before anything is filed. */
 export function toolkitRecord(detection: Detection, filing?: Filing, spaceFrom?: SpaceSource): ToolkitRecord {
   if (detection.state === "not-installed") return { state: "not-installed" };
+  if (detection.state === "not-probed") return { state: "not-probed", reason: detection.reason };
   return {
     state: "detected",
     via: "cli",

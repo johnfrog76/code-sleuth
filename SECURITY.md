@@ -47,8 +47,10 @@ of them is a security problem:
   Code Sleuth's own folder; and Code Sleuth's own folder counts only when its setting names an absolute folder,
   and a key file inside the repository is never read.
 - It sends nothing over the network except the calls the run names on its `Out` line before it makes them:
-  the dependency lookups, which `--offline` turns off, and the polish request you asked for with `--polish`
-  ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)). npm runs on a copy of the project's
+  the dependency lookups and the polish request you asked for with `--polish`
+  ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)). With `--offline` it makes neither, and
+  starts no PowerShell to look for ToolKit; every PowerShell it does start has PowerShell's own telemetry and
+  update check turned off. npm runs on a copy of the project's
   `package.json` and lockfile, so a repository's `.npmrc` cannot redirect those lookups, or have your npm token
   or your environment's variables sent anywhere.
 - Text from the repository never reaches a shell as a command, and nothing in it is run as a program: git, npm,

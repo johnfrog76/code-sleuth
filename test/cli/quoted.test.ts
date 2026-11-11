@@ -72,7 +72,9 @@ async function runOver(
     return investigateAsync(
       { name: "widget", files },
       async (root) => {
-        const result = await sleuth([root, "--goal", "public", "--offline", "--out", out, ...flags], {
+        // No --offline, which starts no PowerShell: the stub's PATH alone holds no npm and no gh, so nothing
+        // leaves the machine all the same.
+        const result = await sleuth([root, "--goal", "public", "--out", out, ...flags], {
           casesFolder: join(scratch, "default"),
           env: { ...stub.env, NO_COLOR: "1", ...(client ? { ANTHROPIC_API_KEY: FAKE_KEY } : {}) },
           // A stand-in: no request ever leaves a test.

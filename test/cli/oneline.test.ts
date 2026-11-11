@@ -166,13 +166,10 @@ describe("the ToolKit hand-off", () => {
       return investigateAsync("whole/bare", async (root) => {
         mkdirSync(join(out, repoKey(root)), { recursive: true });
         writeFileSync(join(out, repoKey(root), "filed.json"), "{ not json");
-        const result = await sleuth(
-          [root, "--goal", "public", "--out", out, "--offline", "--toolkit", "--yes"],
-          {
-            casesFolder: join(scratch, "default"),
-            env: stub.env,
-          },
-        );
+        const result = await sleuth([root, "--goal", "public", "--out", out, "--toolkit", "--yes"], {
+          casesFolder: join(scratch, "default"),
+          env: stub.env,
+        });
         // After the report, as every ToolKit refusal is: one Error: line and one Hint: line, exit 2.
         expect(result.code).toBe(2);
         expect(result.stderr).toMatch(/^Error: [^\n]*filed\.json[^\n]*\nHint: [^\n]+\n$/);

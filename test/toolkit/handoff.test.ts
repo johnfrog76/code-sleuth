@@ -1,11 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { copy as caseCopy } from "../../src/case/copy.js";
 import { copy as cliCopy } from "../../src/cli/copy.js";
 import { prepareToolkit } from "../../src/cli/toolkit.js";
 import { cards as cardCopy } from "../../src/engine/copy.js";
-import { confirmsSpace, detectToolkit } from "../../src/toolkit/detect.js";
+import { childEnv, confirmsSpace, detectToolkit } from "../../src/toolkit/detect.js";
 import { fileCard, readCreated, UNKNOWN_CARD } from "../../src/toolkit/file.js";
 import { findShell } from "../../src/toolkit/shell.js";
 import { type Captured, isRefusal, sleuth } from "../helpers/cli.js";
@@ -332,6 +333,55 @@ describe("without --toolkit", () => {
         /^Want these as real cards, .* That's what ToolKit is for: https:\/\//,
       );
     }
+  });
+});
+
+describe("--offline", () => {
+  it("starts no PowerShell, and the terminal, the case and case.json say ToolKit was not probed", async () => {
+    const { last, calls, caseJson, caseMd } = await onBare(["--offline"]);
+    expect(last.code).toBe(0);
+    expect(calls).toEqual([]);
+    expect(caseJson.enhancements.toolkit).toEqual({ state: "not-probed", reason: "--offline" });
+    expect(last.stdout.trimEnd().split("\n").at(-1)).toBe(`ToolKit    ${caseCopy.toolkit.notProbed}`);
+    expect(caseMd.trimEnd().split("\n").at(-1)).toBe(`ToolKit: ${caseCopy.toolkit.notProbed}`);
+    expect(last.stdout).not.toContain("That's what ToolKit is for");
+  });
+
+  it("with --toolkit is refused before the case is taken, and starts no PowerShell", () =>
+    withScratch(async (scratch) => {
+      const stub = stubToolkit(scratch, ["pwsh"]);
+      const out = join(scratch, "cases");
+      await investigateAsync("whole/bare", async (root) => {
+        const result = await sleuth(
+          [root, "--goal", "public", "--out", out, "--offline", "--toolkit", "--yes"],
+          {
+            casesFolder: join(scratch, "default"),
+            env: stub.env,
+          },
+        );
+        expect(isRefusal(result)).toBe(true);
+        expect(result.stderr).toBe(
+          `Error: ${cliCopy.toolkit.offline}\nHint: ${cliCopy.toolkit.offlineHint}\n`,
+        );
+      });
+      expect(stub.calls()).toEqual([]);
+      expect(existsSync(out)).toBe(false);
+    }));
+});
+
+describe("PowerShell's own calls", () => {
+  it("are turned off for every child, the probe and the filing alike, whatever the person's environment says", async () => {
+    const { calls } = await onBare(["--toolkit", "--yes"]);
+    expect(calls.some((c) => c.argv.includes("-Probe"))).toBe(true);
+    expect(filings(calls).length).toBeGreaterThan(0);
+    for (const call of calls) expect([call.telemetry, call.updateCheck]).toEqual(["1", "Off"]);
+  });
+
+  it("win over a setting of the person's own, in any letter case", () => {
+    const env = childEnv({
+      env: { PATH: "/bin", powershell_telemetry_optout: "0", POWERSHELL_UPDATECHECK: "Default" },
+    });
+    expect(env).toEqual({ PATH: "/bin", POWERSHELL_TELEMETRY_OPTOUT: "1", POWERSHELL_UPDATECHECK: "Off" });
   });
 });
 

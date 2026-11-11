@@ -18,7 +18,7 @@ Options
   --deny <file>        a list of names that must not appear, one per line, kept outside the repository
   --all                hunches get cards too
   --polish             have each card reworded by a model, every cited path and number kept (needs an API key)
-  --offline            no dependency lookups: the checks that would call out read not investigated
+  --offline            nothing leaves the machine: no dependency lookups, no polish, no ToolKit probe
   --examples <glob>    another example location, beside test/fixtures/ and __fixtures__/; repeatable
   --json               print case.json to stdout, and the report to stderr
   --fail-on <weight>   exit 1 when a smoking-gun (or a loose-end and worse) is found
@@ -85,6 +85,10 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
     notInstalled: (reason: string) => `ToolKit isn't here to file the cards: ${reason}.`,
     notInstalledHint:
       "Install ToolKit (https://johnfrog76.github.io/toolkit/) and run its InstallAutoload, or leave --toolkit off: the cards are in the case file either way.",
+    offline:
+      "--toolkit can't go with --offline: filing needs PowerShell to find ToolKit, and under --offline I don't start it.",
+    offlineHint:
+      "Leave out --offline to file the cards in ToolKit, or leave out --toolkit: the cards are in the case file either way.",
     undeclaredSpace: (slug: string) => `ToolKit doesn't confirm the Space '${slug}'.`,
     foldersUnknown: "I can't tell where ToolKit would write the cards, so I won't file them.",
     foldersUnknownHint:

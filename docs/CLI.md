@@ -29,7 +29,7 @@ two are listed by `checks` and refused for a case until their checks are built
 | `--all` | | hunches get cards too |
 | `--json` | | prints `case.json` to stdout, and the report to stderr. A question asked at a terminal (the goal, or ToolKit's consent) still goes to stdout |
 | `--fail-on` | `smoking-gun` or `loose-end` | exits 1 when a finding at or above that weight is found |
-| `--offline` | | makes no dependency lookup: `deps.outdated` and `deps.advisories` read not investigated. The polish request, which only `--polish` turns on, is not affected ([CONFIGURATION.md](CONFIGURATION.md#what-leaves-the-machine)) |
+| `--offline` | | nothing leaves the machine: no dependency lookup (`deps.outdated` and `deps.advisories` read not investigated), no polish request even with `--polish` (polish reads off, because of `--offline`), and no ToolKit probe, so no PowerShell is started (the ToolKit line says it was not probed). With `--toolkit` it is refused ([CONFIGURATION.md](CONFIGURATION.md#what-leaves-the-machine)) |
 | `--examples` | a glob | another example location, beside `test/fixtures/` and `__fixtures__/`; repeatable. A match there is shown and not counted ([CHECKS.md](CHECKS.md#example-locations)) |
 | `--polish` | | rewords each card with a model, every path its evidence cites and every number kept; needs an API key ([POLISH.md](POLISH.md#where-the-api-key-goes)) |
 | `--toolkit` | | files the cards in ToolKit, after asking: in the repository's own Space, else ToolKit's active one ([TOOLKIT.md](TOOLKIT.md#which-space)) |
@@ -75,6 +75,7 @@ before any check runs and before anything is written.
 | a cases folder inside the repository, or a repository that holds the cases folder | `--out` inside it, or anywhere in the repository a folder you point at is in, a submodule's superproject included; `code-sleuth ~` | yes |
 | a repository that holds Code Sleuth's own npm folder | `code-sleuth ~ --out elsewhere`, when npm would run; `--offline` runs no npm | yes |
 | `--yes` or `--refile` without `--toolkit` | | yes |
+| `--toolkit` with `--offline` | filing needs ToolKit's probe, and `--offline` starts no PowerShell | yes |
 | `--toolkit` with no ToolKit | no PowerShell, or ToolKit's `NewPrompt` does not resolve | yes |
 | a `--toolkit-space` ToolKit does not confirm | ToolKit falls back silently for a Space it does not declare | yes |
 | `--toolkit` when a card would land in the repository | the Space's `current/` or `backlog/` folder, as ToolKit reports it, is the repository or inside it | yes |

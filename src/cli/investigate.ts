@@ -25,8 +25,6 @@ export interface InvestigateFlags extends ToolkitFlags {
   goal?: string;
   polish?: boolean;
   examples?: readonly string[];
-  /** Make no network call: the checks that would read not-investigated, "--offline". */
-  offline?: boolean;
   out?: string;
   deny?: string;
   all?: boolean;
@@ -64,9 +62,14 @@ export async function investigate(
   const keyFileOutside = io.keyFile === undefined || !isInside(io.keyFile, repo.top);
   const withoutKeyFile: Io = { ...io };
   delete withoutKeyFile.keyFile;
-  const polish = preparePolish(flags.polish ?? false, keyFileOutside ? io : withoutKeyFile);
+  const polish = preparePolish(
+    flags.polish ?? false,
+    keyFileOutside ? io : withoutKeyFile,
+    flags.offline ?? false,
+  );
 
-  // What may leave the machine is decided, and named, before any check runs; --offline turns it all off.
+  // What may leave the machine is decided, and named, before any check runs; --offline turns it all off, the
+  // polish request and ToolKit's probe included.
   const network = !(flags.offline ?? false);
   // npm's cache and logs go to Code Sleuth's own folder, never where a repository's .npmrc points.
   const npm = network ? findNpm(env, process.platform, process.execPath, io.npmFolder) : undefined;

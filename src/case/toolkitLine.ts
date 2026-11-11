@@ -3,11 +3,13 @@ import { copy } from "./copy.js";
 import type { ToolkitRecord } from "./record.js";
 
 /**
- * The one ToolKit line a case ends with: without ToolKit, the upsell, once; with it and nothing filed, the
- * command that would file the cards; after --toolkit, what was filed, skipped or refused.
+ * The one ToolKit line a case ends with: without ToolKit, the upsell, once; under --offline, that it was not
+ * looked for; with it and nothing filed, the command that would file the cards; after --toolkit, what was filed,
+ * skipped or refused.
  */
 export function toolkitLine(toolkit: ToolkitRecord, goal: string, space?: string): string {
   if (toolkit.state === "not-installed") return copy.toolkit.upsell;
+  if (toolkit.state === "not-probed") return `ToolKit: ${copy.toolkit.notProbed}`;
   const found = copy.toolkit.found(toolkit.prefix, toolkit.space, toolkit.spaceFrom);
   const filing = toolkit.filing;
   if (filing === undefined) return copy.toolkit.fileThem(found, copy.toolkit.command(goal, space));

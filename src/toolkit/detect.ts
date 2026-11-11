@@ -7,6 +7,8 @@ const PROBE_LINE = /^CODE-SLEUTH-PROBE (.*)$/m;
 
 export type Detection =
   | { state: "not-installed"; reason: string }
+  /** Not looked for: under --offline no PowerShell is started, since it can make calls of its own. */
+  | { state: "not-probed"; reason: "--offline" }
   | {
       state: "detected";
       via: "cli";
@@ -34,9 +36,25 @@ export interface DetectOptions {
   platform?: NodeJS.Platform;
 }
 
-/** The environment a ToolKit child gets: the run's own, plus the Space when one was named. */
+/**
+ * PowerShell's own calls off the machine, turned off for every ToolKit child, whatever the flags: its startup
+ * telemetry and its check for a newer version.
+ */
+export const POWERSHELL_QUIET = { POWERSHELL_TELEMETRY_OPTOUT: "1", POWERSHELL_UPDATECHECK: "Off" } as const;
+
+/**
+ * The environment a ToolKit child gets, the probe and the filing alike: the run's own, with PowerShell's own
+ * calls turned off, plus the Space when one was named.
+ */
 export function childEnv(options: DetectOptions): NodeJS.ProcessEnv {
-  return options.space === undefined ? options.env : { ...options.env, P20_ACTIVE_SPACE: options.space };
+  // A value of the person's own, in any letter case, gives way: Windows reads these names without regard to case.
+  const quiet = Object.keys(POWERSHELL_QUIET);
+  const own = Object.entries(options.env).filter(([name]) => !quiet.includes(name.toUpperCase()));
+  return {
+    ...Object.fromEntries(own),
+    ...POWERSHELL_QUIET,
+    ...(options.space === undefined ? {} : { P20_ACTIVE_SPACE: options.space }),
+  };
 }
 
 /** The extra arguments every call to the hand-off carries. */

@@ -41,8 +41,10 @@ with the command that fixes it. An API key already set in your environment wins 
 | an API key, no `--polish` | `Polish     an API key is set (from ~/Library/Application Support/code-sleuth/.env): add --polish to have the cards polished.` |
 | `--polish`, no API key | `Polish     No API key. The cards are as the sleuth wrote them. To add one, run <the copy line> and fill it in.` |
 | an API key and `--polish` | `Polish     5 of 5 cards polished by claude-haiku-5-5, with the API key from the environment.` |
+| `--polish` and `--offline` | `Polish     off, because of --offline: no polish request was made. The cards are as the sleuth wrote them.` |
 
-`--polish` without an API key is not a refusal: the run goes on. It is opt-in each time because it sends text
+`--polish` without an API key is not a refusal: the run goes on. Nor is `--polish` with `--offline`, which
+wins: no request is built or sent, and the case records polish as off, with the reason `--offline`. It is opt-in each time because it sends text
 off the machine; an API key alone never turns it on.
 
 ## What is sent

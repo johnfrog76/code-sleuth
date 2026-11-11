@@ -11,6 +11,15 @@ D-CS1 to D-CS11 below. D-CS12 to D-CS17 were the open questions; all six are ans
 D-CS9, D-CS12 and D-CS14 as amended there. D-CS18 to D-CS27 are this spec's own engineering calls, proposed
 for review.
 
+> **Amended 2026-11-11:** section 5.4, for an offline run. `--offline` means nothing leaves the machine. The
+> dependency lookups make no call, as before. ToolKit is not probed: the probe starts PowerShell, which can make
+> calls of its own, so the case records `toolkit: { "state": "not-probed", "reason": "--offline" }` and its
+> ToolKit line says ToolKit was not probed, because of `--offline`. `--offline --toolkit` is a refusal, since
+> filing needs the probe. `--offline` wins over `--polish`: no polish request is built or sent, and the case
+> records `polish: { "state": "off", "reason": "--offline" }`; that is not a refusal. Every PowerShell child Code
+> Sleuth starts, the probe and the filing alike, gets `POWERSHELL_TELEMETRY_OPTOUT=1` and
+> `POWERSHELL_UPDATECHECK=Off` in its environment, whatever the flags.
+>
 > **Amended 2026-11-05:** section 10.3, for a static page. See the note there.
 >
 > **Amended 2026-11-03:** sections 5.2 and 5.4, for dependencies that are current. `deps.outdated` is
@@ -335,7 +344,12 @@ Only these, and the run's header names the ones it will make before it makes the
 | `pip-audit` | Python manifests present, `pip-audit` present, not `--offline` | what `pip-audit` sends |
 | the polish request | `--polish`, or the office's Polish button | one card's text, already masked (section 7) |
 
-`--offline` turns the first three off; their checks read `not investigated`, reason `--offline`.
+`--offline` means nothing leaves the machine (amended 2026-11-11). It turns the dependency lookups off; their
+checks read `not investigated`, reason `--offline`. It wins over `--polish`: the polish request is not built,
+and polish reads `off`, reason `--offline`. And ToolKit is not probed, since the probe starts PowerShell, which
+can make calls of its own: the ToolKit line says it was not probed, because of `--offline`, and
+`--offline --toolkit` is refused. Without `--offline`, the probe runs on every run (section 8.2), and every PowerShell child
+gets `POWERSHELL_TELEMETRY_OPTOUT=1` and `POWERSHELL_UPDATECHECK=Off`.
 
 ## 6. The case file
 

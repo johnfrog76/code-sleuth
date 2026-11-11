@@ -12,6 +12,17 @@ shell with no profile. The probe resolves ToolKit's `NewPrompt` command, which l
 the command prefix, the active Space, and each Space ToolKit declares with its address. Code Sleuth never
 reads ToolKit's files.
 
+The probe runs on every run without `--offline`, with or without `--toolkit`, before any check: it is how the
+case knows whether to end with the command that files the cards or with what ToolKit would add. Because it
+resolves `NewPrompt`, it loads ToolKit's module in that shell. Every PowerShell Code Sleuth starts, the probe
+and the filing alike, gets `POWERSHELL_TELEMETRY_OPTOUT=1` and `POWERSHELL_UPDATECHECK=Off`, so PowerShell
+sends no startup telemetry and does not look for a newer version.
+
+With `--offline`, nothing leaves the machine, so no PowerShell is started and ToolKit is not probed. The case
+records `toolkit: { "state": "not-probed", "reason": "--offline" }`, and its ToolKit line, like the run's,
+says ToolKit was not probed, because of `--offline`. `--offline --toolkit` is refused before the case is taken
+(exit 2): filing needs the probe.
+
 ## Which Space
 
 The cards go to the repository's own Space:

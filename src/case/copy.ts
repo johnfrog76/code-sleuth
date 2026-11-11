@@ -153,6 +153,7 @@ export const copy = {
   },
 
   polish: {
+    offline: "off, because of --offline: no polish request was made. The cards are as the sleuth wrote them.",
     offBoth: (keyFile?: string, how: AddKey = {}) =>
       keyFile === undefined
         ? "off. Add an API key (see .env.example) and --polish to have the cards reworded."
@@ -192,6 +193,7 @@ export const copy = {
     stopped: (check: string, sentence: string) =>
       `ToolKit refused the card for ${check}: ${sentence} The cards after it were not filed`,
     notFiled: (reason: string) => `nothing filed: ${reason}`,
+    notProbed: "not probed, because of --offline: looking for ToolKit starts PowerShell.",
   },
 
   card: {

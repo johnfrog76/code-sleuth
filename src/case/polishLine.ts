@@ -9,6 +9,7 @@ export function polishLine(record: CaseRecord, runnableCopy?: string): string | 
   const polish = record.enhancements?.polish;
   if (polish === undefined) return undefined;
   if (polish.state === "off") {
+    if (polish.reason === "--offline") return copy.polish.offline;
     if (polish.reason === "no --polish") return copy.polish.keySet(polish.keyFrom);
     const how: AddKey =
       runnableCopy !== undefined

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { copy as caseCopy } from "../../src/case/copy.js";
 import { messagesClient, MESSAGES_URL, type PolishClient } from "../../src/polish/client.js";
 import { sleuth } from "../helpers/cli.js";
 import { investigateAsync } from "../helpers/investigate.js";
@@ -83,6 +84,24 @@ describe("the polish pass", () => {
     expect(asked).toBe(0);
     expect(result.stdout).toContain("Polish     No API key. The cards are as the sleuth wrote them.\n");
     expect(record.enhancements.polish).toEqual({ state: "off", reason: "no key" });
+  });
+
+  it("is off under --offline, even with --polish and a key: no request is made, and the run and the case say why", async () => {
+    let asked = 0;
+    let made = 0;
+    const { result, record, everything } = await polishRun(
+      ["--offline", "--polish"],
+      { ANTHROPIC_API_KEY: FAKE_KEY },
+      () => (made++, async () => (asked++, { ok: false, reason: "unreachable" })),
+    );
+    expect(result.code).toBe(0);
+    expect([made, asked]).toEqual([0, 0]);
+    expect(record.enhancements.polish).toEqual({ state: "off", reason: "--offline" });
+    expect(record.checks.filter((c) => c.polish !== undefined)).toEqual([]);
+    expect(result.stdout).toContain(`Polish     ${caseCopy.polish.offline}\n`);
+    expect(everything).toContain(`Polish: ${caseCopy.polish.offline}\n`);
+    expect(result.stdout).not.toContain("the polish request");
+    expect(result.stdout).not.toMatch(/^Polishing /m);
   });
 
   it("is off without --polish, even with a key, and says how to turn it on", async () => {

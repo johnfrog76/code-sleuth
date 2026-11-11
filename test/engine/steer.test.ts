@@ -1,5 +1,5 @@
 import { realpathSync, writeFileSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { defaultCasesFolder, defaultKeyFile } from "../../src/case/folder.js";
 import { CHECKS } from "../../src/engine/checks/index.js";
@@ -158,11 +158,12 @@ describe("PowerShell and gh", () => {
     await withScratch(async (scratch) => {
       const toolkit = stubToolkit(scratch, ["pwsh"]);
       await investigateAsync({ name: "widget", files: { "a.txt": "a\n" } }, async (root) => {
-        await sleuth([root, "--goal", "public", "--offline", "--out", join(scratch, "cases")], {
+        // No --offline, which starts no PowerShell: the stub alone is on the PATH, so no npm or gh is found.
+        await sleuth([root, "--goal", "public", "--out", join(scratch, "cases")], {
           casesFolder: join(scratch, "default"),
           env: {
             ...toolkit.env,
-            PATH: `${toolkit.env.PATH}${delimiter}${process.env.PATH ?? ""}`,
+            PATH: toolkit.env.PATH,
             NO_COLOR: "1",
           },
         });

@@ -25,6 +25,9 @@ letter case, so git, npm, gh and ToolKit's shell never see the key.
 
 Some are set or cleared by Code Sleuth itself for the processes it starts, never read from you:
 
+- `POWERSHELL_TELEMETRY_OPTOUT=1` and `POWERSHELL_UPDATECHECK=Off` are set for every PowerShell it starts,
+  ToolKit's probe and the filing alike, whatever the flags, so PowerShell sends no telemetry and does not look
+  for a newer version.
 - `P20_ACTIVE_SPACE` is set in ToolKit's child shell only, to the Space `--toolkit-space` names, or else to
   the Space whose address is the repository's origin ([TOOLKIT.md](TOOLKIT.md#which-space)). Your own ToolKit
   setting is never changed.
@@ -52,18 +55,24 @@ not in its usual place. For the tests only: `CODE_SLEUTH_TOOLKIT` (a ToolKit che
 
 Only these calls, and the run's header names each one, on its `Out` line, before any check runs. Code
 Sleuth's own calls go nowhere else: git only reads the local repository, and with `--toolkit`, ToolKit's own
-command files the cards in your ToolKit ([TOOLKIT.md](TOOLKIT.md)), as ToolKit does. `--offline` turns off every
-call but the polish request, which only `--polish` turns on.
+command files the cards in your ToolKit ([TOOLKIT.md](TOOLKIT.md)), as ToolKit does. `--offline` means nothing
+leaves the machine: it turns off every call below, the polish request included, even with `--polish`.
+
+Without `--offline`, every run also probes for ToolKit, before any check, with or without `--toolkit`: it starts
+`pwsh` (else `powershell.exe`) when one is on the PATH, and the probe loads ToolKit's module in that shell
+([TOOLKIT.md](TOOLKIT.md#how-it-is-found)). Code Sleuth sends nothing through it, and turns off PowerShell's own
+telemetry and update check for it. With `--offline`, no PowerShell is started, and ToolKit is not probed.
 
 | Call | Made by | When | What is sent |
 | --- | --- | --- | --- |
 | `npm outdated --json --long` | `deps.outdated` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` or `npm-shrinkwrap.json` | package names, to npm's configured registry. Your own npm configuration decides where that is (your `.npmrc`, a scoped or private registry), and Code Sleuth leaves it alone; the repository's `.npmrc` is never read. Never a file's contents, the repository's path or its URL |
 | `npm audit --json` | `deps.advisories` | npm found, not `--offline`, and a `package.json` with dependencies beside `package-lock.json` or `npm-shrinkwrap.json` | what `npm audit` always sends to npm's configured registry: the lockfile's dependency tree, every locked package's name and version. Never a file's contents, the repository's path or its URL |
 | `gh api /advisories` | `deps.advisories` | no npm, `gh` found, not `--offline`, and the same lockfile | the ecosystem (`npm`) and every locked package's name and version, to GitHub, in batches of fifty. Which advisory belongs to which locked version is worked out on the machine |
-| the polish request | `--polish` | an API key, from the environment or Code Sleuth's `.env` | each card's text, already masked, to `https://api.anthropic.com/v1/messages` ([POLISH.md](POLISH.md)) |
+| the polish request | `--polish` | an API key, from the environment or Code Sleuth's `.env`, and not `--offline` | each card's text, already masked, to `https://api.anthropic.com/v1/messages` ([POLISH.md](POLISH.md)) |
 
 With `--offline`, `deps.outdated` and `deps.advisories` make no call and read *not investigated*: with the
-reason `--offline`, or with one that comes first, such as no npm. Code Sleuth sends nothing else: no telemetry, no update check. npm's own update notice and
+reason `--offline`, or with one that comes first, such as no npm. With `--offline --polish`, no polish request
+is built or sent: polish reads off, with the reason `--offline`, and that is not a refusal. Code Sleuth sends nothing else: no telemetry, no update check. npm's own update notice and
 funding message, and gh's update notice and prompts, are turned off for the calls it makes.
 
 ## The cases folder

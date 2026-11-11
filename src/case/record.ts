@@ -33,6 +33,8 @@ export interface CheckRecord {
 /** What the run did with ToolKit. Recorded when the run looked for it; the CLI always does. */
 export type ToolkitRecord =
   | { state: "not-installed" }
+  /** Not looked for: under --offline no PowerShell is started. */
+  | { state: "not-probed"; reason: "--offline" }
   | {
       state: "detected";
       via: "cli";
@@ -68,7 +70,7 @@ export type PolishState =
   | { state: "on"; model: string; keyFrom?: string }
   | {
       state: "off";
-      reason: "no --polish" | "no key" | "no --polish, no key";
+      reason: "no --polish" | "no key" | "no --polish, no key" | "--offline";
       keyFrom?: string;
       keyFile?: string;
       /** The `.env.example` to copy to `keyFile`, in its ~ form: a record, not a line to run. */
