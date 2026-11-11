@@ -1,4 +1,4 @@
-import { onPath, spawnChild } from "../spawn.js";
+import { onPath, OWN_FOLDER, spawnChild } from "../spawn.js";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -137,9 +137,11 @@ export function findGh(
   platform: NodeJS.Platform = process.platform,
 ): ToolRunner | undefined {
   const gh = onPath(platform === "win32" ? "gh.exe" : "gh", env, platform);
-  return gh === undefined
-    ? undefined
-    : runner(gh, [], { ...env, GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1" });
+  if (gh === undefined) return undefined;
+  const run = runner(gh, [], { ...env, GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1" });
+  // gh reads the git remotes of the folder it starts in; it asks GitHub for names only, so it starts in Code
+  // Sleuth's own folder, never the repository.
+  return { run: (args) => run.run(args, OWN_FOLDER) };
 }
 
 /**

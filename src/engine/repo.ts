@@ -1,8 +1,9 @@
 import { Refusal } from "../refusal.js";
 import { spawnChild } from "../spawn.js";
 import { gitTooOld, gitTooOldHint } from "./copy.js";
-import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
-import { delimiter, join, resolve, sep } from "node:path";
+import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync } from "node:fs";
+import { devNull } from "node:os";
+import { delimiter, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 /** Folders the text checks never read, at any depth. */
 export const SKIPPED_FOLDERS: readonly string[] = ["node_modules", "vendor", "dist", "build"];
@@ -26,6 +27,11 @@ export interface RepoReader {
   readonly isShallow: boolean;
   /** Every file: tracked files in a repository, else every file under the root. Sorted, relative, `/`. */
   readonly files: readonly string[];
+  /**
+   * Paths the index lists that lead outside the repository (`..`, an absolute path, a NUL), or whose real path
+   * does: never read. A check that would read clean beside one reads not investigated instead, naming it.
+   */
+  readonly refused: readonly string[];
   /** `files` without anything under a skipped folder. What the text checks read. */
   readonly textFiles: readonly string[];
   has(path: string): boolean;
@@ -58,8 +64,21 @@ export function openRepo(root: string): RepoReader {
   const absolute = resolve(root);
   const tracked = gitTrackedFiles(absolute);
   const folders = new Map<string, boolean>();
+  const refused: string[] = [];
+  const realRoot = realRoot_(absolute);
   const files = (tracked ?? walk(absolute))
-    .filter((path) => isFileHere(absolute, path, folders))
+    .filter((path) => {
+      if (leadsOutside(path)) {
+        refused.push(path);
+        return false;
+      }
+      if (!isFileHere(absolute, path, folders)) return false;
+      if (!realPathInside(join(absolute, path), realRoot)) {
+        refused.push(path);
+        return false;
+      }
+      return true;
+    })
     .sort(byBytes);
   const known = new Set(files);
   const cache = new Map<string, string>();
@@ -68,6 +87,7 @@ export function openRepo(root: string): RepoReader {
 
   return {
     root: absolute,
+    refused,
     top: tracked === undefined ? absolute : outermostWorkTree(absolute),
     isGitRepository: tracked !== undefined,
     isPartialClone: tracked !== undefined && partialClone(absolute),
@@ -138,6 +158,9 @@ function readHistory(root: string): AddedLine[] | undefined {
     "--no-renames",
     // Every file as text: a `-diff` or `binary` attribute, the repository's to set, would hide a file's lines.
     "--text",
+    // The `+++ b/<path>` the parser reads, whatever diff.noprefix or diff.dstPrefix a config sets.
+    "--src-prefix=a/",
+    "--dst-prefix=b/",
     // A merge's own lines too: what was added in resolving one, against its first parent.
     "--diff-merges=first-parent",
     "-U0",
@@ -261,7 +284,15 @@ export const GIT_SAFE_CONFIG: readonly string[] = [
  * `filter.a`, and leave a driver named `a=b` running.
  */
 export function gitEnv(config: readonly string[] = []): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: "0", GIT_NO_LAZY_FETCH: "1" };
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    GIT_OPTIONAL_LOCKS: "0",
+    GIT_NO_LAZY_FETCH: "1",
+    // The history as its commits hold it: no replacement object, and no graft, can put other content in its
+    // place or hide a commit. A repository handed over whole can carry either.
+    GIT_NO_REPLACE_OBJECTS: "1",
+    GIT_GRAFT_FILE: devNull,
+  };
   for (const name of Object.keys(env))
     if (/^GIT_CONFIG_(?:COUNT|KEY_\d+|VALUE_\d+|PARAMETERS)$/i.test(name)) delete env[name];
   for (const name of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CEILING_DIRECTORIES"])
@@ -276,12 +307,21 @@ export function gitEnv(config: readonly string[] = []): NodeJS.ProcessEnv {
   return env;
 }
 
+/**
+ * How long a git call may take before it is stopped and read as failed: a minute, or ten for reading the whole
+ * history. A setting or a file the repository holds (an include that never ends, a work tree set far above it)
+ * cannot hold the run.
+ */
+export const GIT_TIMEOUT_MS = 60_000;
+export const GIT_HISTORY_TIMEOUT_MS = 600_000;
+
 function spawnGit(root: string, config: readonly string[], args: readonly string[]) {
   return spawnChild("git", [...args], {
     cwd: root,
     env: gitEnv(config),
     encoding: "buffer",
     maxBuffer: 1024 * 1024 * 1024,
+    timeout: args.includes("log") ? GIT_HISTORY_TIMEOUT_MS : GIT_TIMEOUT_MS,
   });
 }
 
@@ -433,6 +473,36 @@ function walk(root: string, prefix = ""): string[] {
  * been replaced in the work tree by a link, and reading through that link would read outside the repository.
  * Each folder is asked once.
  */
+/**
+ * A tracked path that leads outside the repository: empty, absolute, holding a NUL, with an empty, `.` or `..`
+ * part, or on Windows a backslash, a colon or a drive. git writes none of these into an index it makes; one a
+ * repository hands over whole can hold them, and none is read.
+ */
+export function leadsOutside(path: string, platform: NodeJS.Platform = process.platform): boolean {
+  if (path === "" || path.includes("\0") || path.startsWith("/")) return true;
+  if (platform === "win32" && /[\\:]/.test(path)) return true;
+  return path.split("/").some((part) => part === "" || part === "." || part === "..");
+}
+
+/** The root's real path, or the root as given when it cannot be resolved. */
+function realRoot_(root: string): string {
+  try {
+    return realpathSync.native(root);
+  } catch {
+    return root;
+  }
+}
+
+/** True when the file's real path is inside the root's: links and case resolved, as the write guard compares. */
+function realPathInside(file: string, realRoot: string): boolean {
+  try {
+    const rel = relative(realRoot, realpathSync.native(file));
+    return rel !== "" && !isAbsolute(rel) && rel !== ".." && !rel.startsWith(`..${sep}`);
+  } catch {
+    return false;
+  }
+}
+
 function isFileHere(root: string, path: string, folders: Map<string, boolean>): boolean {
   const parts = path.split("/");
   for (let i = 1; i < parts.length; i++) {

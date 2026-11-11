@@ -36,6 +36,11 @@ of them is a security problem:
 - The model key is read from `ANTHROPIC_API_KEY`, in the environment or in Code Sleuth's own `.env`, and is
   never written or printed. The key is read from no other `.env`, and it never reaches a process Code Sleuth
   starts.
+- What it reads, and where the programs it starts begin, never come from a string the repository supplies: a
+  path the index lists that leads outside the repository is not read; git reads the history as its commits
+  hold it, with no replacement object or graft, and stops a call that would not end; PowerShell and gh start in
+  Code Sleuth's own folder; and Code Sleuth's own folder counts only when its setting names an absolute folder,
+  and a key file inside the repository is never read.
 - It sends nothing over the network except the calls the run names on its `Out` line before it makes them:
   the dependency lookups, which `--offline` turns off, and the polish request you asked for with `--polish`
   ([CONFIGURATION.md](docs/CONFIGURATION.md#what-leaves-the-machine)). npm runs on a copy of the project's

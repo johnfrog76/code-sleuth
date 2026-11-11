@@ -2,7 +2,7 @@ import { maskSecrets } from "./secrets/scan.js";
 import { createHmac, randomBytes } from "node:crypto";
 import type { Check, CheckContext, Evidence, Need, Result } from "./check.js";
 import { CHECKS } from "./checks/index.js";
-import { checkFailed, needReasons } from "./copy.js";
+import { checkFailed, needReasons, refusedReasons } from "./copy.js";
 import { type ExampleLocations, exampleLocations, isExampleEvidence } from "./examples.js";
 import { WEIGHTS, type Goal, type Weight } from "./goals.js";
 import type { RepoReader } from "./repo.js";
@@ -148,6 +148,13 @@ export function runCheck(
       reason: checkFailed(error instanceof Error ? error.message : String(error)),
     };
   }
+  // A path the index lists that leads outside the repository was not read, and may be the file this check
+  // would have found something in: clean would claim what nobody looked at.
+  if (result.verdict === "clean" && repo.refused.length > 0)
+    result = {
+      verdict: "not-investigated",
+      reason: refusedReasons.leadsOutside(repo.refused[0]!, repo.refused.length - 1),
+    };
   return masked(result);
 }
 

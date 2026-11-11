@@ -7,6 +7,14 @@ import {
 } from "node:child_process";
 import { accessSync, constants, statSync } from "node:fs";
 import { posix, win32 } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/**
+ * Code Sleuth's own folder for the children that need one: the folder that holds `handoff.ps1`, shipped with the
+ * package. PowerShell and gh start here, never in the investigated repository or the person's working folder,
+ * so nothing in either can be read as their configuration. The same relative path from `src/` and `dist/`.
+ */
+export const OWN_FOLDER = fileURLToPath(new URL("../toolkit/", import.meta.url));
 
 /** The variable the model key is read from. Its value never reaches a process Code Sleuth starts. */
 export const KEY_VARIABLE = "ANTHROPIC_API_KEY";
@@ -63,13 +71,26 @@ export function pathFolders(env: NodeJS.ProcessEnv, platform: NodeJS.Platform = 
   return value.split(path.delimiter).filter((folder) => folder !== "" && path.isAbsolute(folder));
 }
 
-/** The environment with its PATH cut to absolute folders, so a child the child starts cannot be found in the repository either. */
+/**
+ * The environment with its PATH cut to absolute folders, so a child the child starts cannot be found in the
+ * repository either. PSModulePath, where PowerShell looks for a module, keeps its absolute folders only too:
+ * a relative one is read against PowerShell's own working folder.
+ */
 function absolutePathOnly(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const out: NodeJS.ProcessEnv = { ...env };
   const delimiter = process.platform === "win32" ? win32.delimiter : posix.delimiter;
-  for (const name of Object.keys(out))
-    if (name.toUpperCase() === "PATH") out[name] = pathFolders(env).join(delimiter);
+  for (const name of Object.keys(out)) {
+    const upper = name.toUpperCase();
+    if (upper === "PATH") out[name] = pathFolders(env).join(delimiter);
+    if (upper === "PSMODULEPATH") out[name] = absoluteFolders(out[name] ?? "").join(delimiter);
+  }
   return out;
+}
+
+/** A list of folders, absolute ones only. */
+export function absoluteFolders(value: string, platform: NodeJS.Platform = process.platform): string[] {
+  const path = platform === "win32" ? win32 : posix;
+  return value.split(path.delimiter).filter((folder) => folder !== "" && path.isAbsolute(folder));
 }
 
 /**

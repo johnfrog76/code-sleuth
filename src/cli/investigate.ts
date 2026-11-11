@@ -60,7 +60,11 @@ export async function investigate(
   const colour = (flags.json ? terminal.stderr : terminal.stdout) && !env.NO_COLOR;
   const casesFolder = flags.out === undefined ? (io.casesFolder ?? defaultCasesFolder()) : resolve(flags.out);
 
-  const polish = preparePolish(flags.polish ?? false, io);
+  // The key is read from Code Sleuth's own .env only: never one inside the repository, wherever a setting puts it.
+  const keyFileOutside = io.keyFile === undefined || !isInside(io.keyFile, repo.top);
+  const withoutKeyFile: Io = { ...io };
+  delete withoutKeyFile.keyFile;
+  const polish = preparePolish(flags.polish ?? false, keyFileOutside ? io : withoutKeyFile);
 
   // What may leave the machine is decided, and named, before any check runs; --offline turns it all off.
   const network = !(flags.offline ?? false);

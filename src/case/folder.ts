@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { Refusal } from "../refusal.js";
 import { copy } from "./copy.js";
 
@@ -12,8 +12,16 @@ export function userFolder(
   home: string = homedir(),
 ): string {
   if (platform === "darwin") return join(home, "Library", "Application Support", "code-sleuth");
-  if (platform === "win32") return join(env.LOCALAPPDATA ?? join(home, "AppData", "Local"), "code-sleuth");
-  return join(env.XDG_DATA_HOME || join(home, ".local", "share"), "code-sleuth");
+  // A setting from the environment counts only when it names an absolute folder: an empty or relative one would
+  // be read against the working folder, which is often the repository. The XDG rules say to ignore it, too.
+  if (platform === "win32")
+    return join(absoluteOr(env.LOCALAPPDATA, win32, join(home, "AppData", "Local")), "code-sleuth");
+  return join(absoluteOr(env.XDG_DATA_HOME, posix, join(home, ".local", "share")), "code-sleuth");
+}
+
+/** The setting when it names an absolute folder, else the default. */
+function absoluteOr(value: string | undefined, path: typeof posix, fallback: string): string {
+  return value !== undefined && value !== "" && path.isAbsolute(value) ? value : fallback;
 }
 
 /** The per-user cases folder, for this platform. Never inside a repository. */

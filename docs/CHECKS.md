@@ -7,7 +7,8 @@ table from the code, and a test holds this page to it.
 A **smoking gun** stands between the repository and the goal, and makes a Bug card. A **loose end** should
 be dealt with before the goal is met, and makes a Task card. A **hunch** is worth a look, and makes a card
 only with `--all`. A check that cannot run reads **not investigated**, with the reason; it never reads
-clean.
+clean. So does a check that would read clean beside a path the index lists that leads outside the repository (a
+`..`, an absolute path): that path is never read, and the reason names it.
 
 The security and quality goals are listed, and a case can be taken for them in a later release.
 

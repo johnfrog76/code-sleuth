@@ -1,4 +1,4 @@
-import { onPath, spawnChild } from "../spawn.js";
+import { onPath, OWN_FOLDER, spawnChild } from "../spawn.js";
 import { fileURLToPath } from "node:url";
 
 /** The one PowerShell file Code Sleuth ships. The same relative path from `src/toolkit/` and `dist/toolkit/`. */
@@ -39,6 +39,8 @@ export interface HandoffResult {
  */
 export function runHandoff(shell: Shell, args: readonly string[], env: NodeJS.ProcessEnv): HandoffResult {
   const result = spawnChild(shell.path, ["-NoProfile", "-NonInteractive", "-File", HANDOFF, ...args], {
+    // Code Sleuth's own folder, never the person's working folder, which is often the repository.
+    cwd: OWN_FOLDER,
     env,
     encoding: "utf8",
     windowsHide: true,

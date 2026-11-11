@@ -227,6 +227,12 @@ export const workflowReasons = {
     `${line > 0 ? `Line ${line} of ${path}` : `A line of ${path}`} is longer than 65,536 characters, so I didn't read it.`,
 };
 
+/** Why a check that would read clean reads not investigated: the index names a path it would not read. */
+export const refusedReasons = {
+  leadsOutside: (path: string, more: number) =>
+    `The index lists ${path}${more > 0 ? `, and ${more} more,` : ""} leading outside the repository, so I didn't read it, and can't call this clean.`,
+};
+
 /** Why a deps check that found another ecosystem's manifest reads not investigated, not clean. */
 export const ecosystemReasons = {
   otherOnly: (path: string, ecosystem: string) =>

@@ -12,8 +12,8 @@ It has no configuration file, and it never writes a setting anywhere.
 | `HOME` (`USERPROFILE` on Windows) | the cases folder and Code Sleuth's own folder | your home folder, through Node's `os.homedir()`: both folders are under it unless `XDG_DATA_HOME` or `LOCALAPPDATA` says otherwise |
 | `CODE_SLEUTH_MODEL` | the polish pass | the model, in place of `claude-haiku-5-5` |
 | `NO_COLOR` | the terminal output | any value but an empty one turns colour off |
-| `XDG_DATA_HOME` | the cases folder, on Linux | where the cases folder goes, in place of `~/.local/share` |
-| `LOCALAPPDATA` | the cases folder, on Windows | where the cases folder goes |
+| `XDG_DATA_HOME` | the cases folder, on Linux | where the cases folder goes, in place of `~/.local/share`; only an absolute folder counts, and an empty or relative one is ignored |
+| `LOCALAPPDATA` | the cases folder, on Windows | where the cases folder goes; only an absolute folder counts, as above |
 | `PATH` | the checks and the ToolKit hand-off | where `git`, `gh`, and `pwsh` or `powershell.exe` are looked for, and `npm` everywhere but Windows, where npm's own `npm-cli.js` beside Node is used ([KNOWN-GAPS.md](KNOWN-GAPS.md#not-proven-yet)) |
 
 The API key goes in Code Sleuth's own `.env` ([POLISH.md](POLISH.md#where-the-api-key-goes)), or set the
