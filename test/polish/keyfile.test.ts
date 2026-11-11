@@ -162,19 +162,39 @@ describe("the model key from Code Sleuth's own .env", () => {
 describe("what a person reads", () => {
   // The variable's name is for .env.example alone, and the rules (AGENTS.md, SECURITY.md, the spec): what a
   // person reads, the output and the docs, says "API key".
-  it("never prints the variable's name, with a key or without, from the file or the environment", async () => {
+  // One run to a row: seven whole runs and the help in one test passed the time limit under a loaded full run (#71). Each
+  // run is given its environment and its .env, so nothing the process holds reaches it.
+  type Source = "none" | "environment" | "file" | "missing file";
+  it.each([
+    ["none", ["--polish"]],
+    ["none", []],
+    ["environment", ["--polish"]],
+    ["environment", []],
+    ["file", ["--polish"]],
+    ["file", []],
+    ["missing file", []],
+  ] as [Source, string[]][])(
+    "never prints the variable's name, with the key from %s, given %j",
+    async (source, argv) => {
+      await withScratch(async (home) => {
+        const file =
+          source === "file"
+            ? keyFile(home, `ANTHROPIC_API_KEY=${FAKE_KEY}\n`)
+            : source === "missing file"
+              ? join(home, "missing", ".env")
+              : undefined;
+        const { result } = await polishRun({
+          argv,
+          ...(source === "environment" ? { env: { ANTHROPIC_API_KEY: FAKE_KEY } } : {}),
+          ...(file === undefined ? {} : { file }),
+        });
+        expect(result.stdout + result.stderr).not.toContain("ANTHROPIC_API_KEY");
+      });
+    },
+  );
+
+  it("never prints the variable's name in the help", async () => {
     await withScratch(async (home) => {
-      const file = keyFile(home, `ANTHROPIC_API_KEY=${FAKE_KEY}\n`);
-      const runs = [
-        await polishRun({}),
-        await polishRun({ argv: [] }),
-        await polishRun({ env: { ANTHROPIC_API_KEY: FAKE_KEY } }),
-        await polishRun({ env: { ANTHROPIC_API_KEY: FAKE_KEY }, argv: [] }),
-        await polishRun({ file }),
-        await polishRun({ file, argv: [] }),
-        await polishRun({ file: join(home, "missing", ".env"), argv: [] }),
-      ];
-      for (const { result } of runs) expect(result.stdout + result.stderr).not.toContain("ANTHROPIC_API_KEY");
       const help = await sleuth(["--help"], { casesFolder: join(home, "cases") });
       expect(help.stdout + help.stderr).not.toContain("ANTHROPIC_API_KEY");
     });

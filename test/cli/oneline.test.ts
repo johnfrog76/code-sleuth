@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -205,24 +205,32 @@ describe("the polish client, given an answer it cannot read", () => {
 });
 
 describe("a closed pipe", () => {
+  // The built command in a child, over a scratch copy outside any repository, with an empty PATH and a
+  // scratch home. It once ran over the fixture in place, with the test's own environment: the child read
+  // Code Sleuth's whole git history and probed the real PowerShell, and under a loaded full run it passed
+  // the time limit (#71).
   it.skipIf(process.platform === "win32")(
     "ends what is printed, not the run: no stack trace, the run's own exit code",
     () =>
-      withScratch((scratch) => {
-        const err = join(scratch, "err.txt");
-        const result = spawnSync(
-          "bash",
-          [
-            "-c",
-            `"${process.execPath}" "${MAIN}" "${fileURLToPath(new URL("../fixtures/repos/whole/bare", import.meta.url))}" --goal public --offline --out "${join(scratch, "cases")}" 2>"${err}" | head -1 >/dev/null; echo "\${PIPESTATUS[0]}"`,
-          ],
-          { encoding: "utf8" },
-        );
-        expect(result.stdout.trim()).toBe("0");
-        expect(
-          readdirSync(join(scratch, "cases"), { recursive: true }).some((f) => String(f).endsWith("case.md")),
-        ).toBe(true);
-        expect(spawnSync("cat", [err], { encoding: "utf8" }).stdout).not.toMatch(/EPIPE|\n\s+at /);
-      }),
+      withScratch((scratch) =>
+        investigateAsync("whole/bare", async (root) => {
+          const err = join(scratch, "err.txt");
+          const result = spawnSync(
+            "/bin/bash",
+            [
+              "-c",
+              `PATH= "${process.execPath}" "${MAIN}" "${root}" --goal public --offline --out "${join(scratch, "cases")}" 2>"${err}" | head -1 >/dev/null; echo "\${PIPESTATUS[0]}"`,
+            ],
+            { encoding: "utf8", env: { PATH: "/usr/bin:/bin", HOME: join(scratch, "home") } },
+          );
+          expect(result.stdout.trim()).toBe("0");
+          expect(
+            readdirSync(join(scratch, "cases"), { recursive: true }).some((f) =>
+              String(f).endsWith("case.md"),
+            ),
+          ).toBe(true);
+          expect(readFileSync(err, "utf8")).not.toMatch(/EPIPE|\n\s+at /);
+        }),
+      ),
   );
 });
