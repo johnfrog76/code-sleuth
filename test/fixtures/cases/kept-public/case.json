@@ -2,7 +2,7 @@
   "caseFile": 1,
   "tool": {
     "name": "code-sleuth",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "case": "2026-10-31-public-1",
   "goal": "public",

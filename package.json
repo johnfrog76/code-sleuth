@@ -1,6 +1,6 @@
 {
   "name": "code-sleuth",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Point it at a repo, pick a goal, run. A checklist and card-ready issues come back.",
   "license": "MIT",
   "type": "module",

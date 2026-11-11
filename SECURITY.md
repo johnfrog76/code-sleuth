@@ -48,6 +48,9 @@ of them is a security problem:
   commands too (a file-system monitor, a filter, a signature program, a hook), and so can a submodule's; Code
   Sleuth turns off the ones its read-only git calls could reach, on every call, and never reads into a
   submodule.
+
+What happens before Code Sleuth starts is outside what it can defend. npm reads the `.npmrc` of the folder it
+starts in, so the quick start runs npx from your home folder, never inside the repository you are checking.
 - git never reaches the network on Code Sleuth's behalf. Every git call turns off each transport by name, which
   outranks the repository's own config, and lazy fetching, so a partial clone's missing objects are never
   fetched from its remote.

@@ -8,6 +8,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Changed
 
+- The package's version is 0.2.0, the release the quick start pins.
 - **The verdict is MET, NEARLY MET or NOT MET.** `case.json`'s `verdict` values change from `ready`, `nearly` and `not-ready` to `met`, `nearly-met` and `not-met`, decided as before. The stamps read MET, NEARLY MET and NOT MET, and every goal's sentence reads `met for <goal>`: `By my checklist: nearly met for public facing.` The verdict says it is the checklist's, and under MET and NEARLY MET one line says your software may have requirements of its own and points to a new section, [what MET doesn't cover](docs/CHECKS.md#what-met-doesnt-cover). `docs/CHECKS.md` says where the bar comes from, how a project's own context moves it, and what Code Sleuth doesn't judge. `caseFile` stays 1.
 - Code Sleuth's own words claim no state they cannot know. The page, the quick start and `docs/CHECKS.md` say the verdict is a finding by this checklist, not permission to publish. A test holds the docs, the page, the templates and the copy files to it, with each remaining use of those words listed and its reason given.
 - The docs open with what each one gives you, and claim only what the code and tests back. `docs/CHECKS.md` says what being public facing opens (the files, the history and the tracker) and that the tracker is not read yet. A goal that is not ready says it is planned for a later release, not that it comes in the next one.
@@ -18,7 +19,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 ### Added
 
 - The project's page, `site/`, for GitHub Pages: what Code Sleuth gives you, what it looks for, a real checklist and card from a sample run, and how to try it. Light and dark, at phone width, with no script and no web font. Its verdict stamps are green, amber and red, from one set of colour tokens in `src/atoms/figures.tsx`, and each keeps its word.
-- `docs/QUICKSTART.md` shows `npx github:johnfrog76/code-sleuth --goal public`, which runs it from GitHub with no clone.
+- `docs/QUICKSTART.md` and the project's page show `cd ~ && npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public`, which runs a pinned release from GitHub with no clone. It starts outside the repository, because npm reads the `.npmrc` of the folder it starts in. The first run builds Code Sleuth from source, with its development tools.
 - The API key can live in a `.env` in Code Sleuth's own folder, beside the cases folder: copy `.env.example` there and fill it in. A key in your environment still wins. No other `.env` is read, the key never reaches a process Code Sleuth starts, the run says where the key came from and never what it is, and it warns when others can read the file. With no key, the run prints the one line that copies the `.env.example` beside the command into place, both paths in full; the case file keeps it with both paths in their `~` form.
 - A project contact, `codesleuth.project (at) outlook.com`, for conduct reports (`CODE_OF_CONDUCT.md`) and security reports (`SECURITY.md`, beside GitHub's private vulnerability reporting). It is written out, not linked, to slow down address scrapers.
 

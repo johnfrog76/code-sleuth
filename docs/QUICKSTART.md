@@ -19,14 +19,19 @@ Code Sleuth is not on npm yet. You run it straight from GitHub with npx, or from
 
 ## Try it with npx
 
-In the repository you want to know about:
+From your home folder, not the repository you want to know about, with the path to that repository:
 
 ```sh
-npx github:johnfrog76/code-sleuth --goal public
+cd ~ && npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public
 ```
 
-npx fetches and builds it the first time, then keeps it in its own cache. Wherever these docs say
-`code-sleuth`, put `npx github:johnfrog76/code-sleuth` in its place.
+Start npx outside the repository: npm reads the `.npmrc` of the folder it starts in, so a repository's own
+settings would reach npm before Code Sleuth starts. On Windows PowerShell 5.1, run `cd ~` first, then the npx
+line.
+
+`#v0.2.0` pins the release you run, so a new commit on GitHub doesn't change what runs. The first run builds
+Code Sleuth from source, with its development tools, then runs it. Wherever these docs say `code-sleuth`, put
+`npx github:johnfrog76/code-sleuth#v0.2.0` in its place, from outside the repository.
 
 ## Install from a clone
 

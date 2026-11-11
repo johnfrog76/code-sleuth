@@ -15,8 +15,9 @@ and its license, and no row for one that is not there. -->
 
 ## Development dependencies
 
-None of them ship. TypeScript, Vitest, ESLint, Prettier and their dependencies are used to build and test Code
-Sleuth, and are not part of the installed package.
+None of them ship in the package. TypeScript, Vitest, ESLint, Prettier and their dependencies are used to build
+and test Code Sleuth, and are not part of the installed package. Run from GitHub with npx, the first run fetches
+them to build it.
 
 ## Repeating the scan
 

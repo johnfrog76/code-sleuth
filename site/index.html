@@ -182,16 +182,17 @@ Add a workflow in .github/workflows/ that runs on push and pull_request, checks 
           <h2 id="lp-quick">Try it</h2>
           <div class="lp-quick-row">
             <div class="lp-quick-steps">
-              <p>In the repository you want to know about, with Node 24 and git 2.31 or newer:</p>
+              <p>From your home folder, not the repository, with Node 24 and git 2.31 or newer:</p>
               <pre
                 class="lp-code"
                 tabindex="0"
-              ><code data-sample="try">npx github:johnfrog76/code-sleuth --goal public</code></pre>
+              ><code data-sample="try">cd ~ &amp;&amp; npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public</code></pre>
               <p>
-                It isn't on npm yet, so this runs it straight from GitHub. The case file goes to your own
-                cases folder, never into the repository. Without <code>--polish</code>, the only calls it
-                makes are the dependency lookups; it names them first, and <code>--offline</code> turns them
-                off.
+                It isn't on npm yet, so this runs a pinned release straight from GitHub. Start it outside the
+                repository: npm reads the <code>.npmrc</code> of the folder it starts in. The case file goes
+                to your own cases folder, never into the repository. Without <code>--polish</code>, the only
+                calls it makes are the dependency lookups; it names them first, and
+                <code>--offline</code> turns them off.
               </p>
               <p>
                 Two extras, neither required: <code>--polish</code> rewords each card with a small model and
