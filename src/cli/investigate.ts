@@ -14,6 +14,7 @@ import { openRepo } from "../engine/repo.js";
 import { terminalSafe } from "./printable.js";
 import { copy } from "./copy.js";
 import { header, OWN_STYLES, painter, report } from "./output.js";
+import { probed } from "../toolkit/detect.js";
 import { EXIT_FOUND, EXIT_OK, type Io, Refusal } from "./refusal.js";
 import { polishAll, preparePolish } from "./polish.js";
 import { fileCards, prepareToolkit, type ToolkitFlags, toolkitRecord } from "./toolkit.js";
@@ -81,6 +82,8 @@ export async function investigate(
     ...(gh === undefined ? {} : { gh }),
   });
   const outgoing = [
+    // Looking for ToolKit ran first, before any check: it is named here whenever it started a PowerShell.
+    ...(probed(detection) ? [copy.run.probeRan] : []),
     ...outgoingCalls(goal, repo, capabilities).map(copy.run.offlineSkips),
     ...(polish.client === undefined ? [] : [copy.run.polishLeaves]),
   ];

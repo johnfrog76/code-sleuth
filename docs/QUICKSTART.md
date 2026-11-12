@@ -26,8 +26,9 @@ cd ~ && npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public
 ```
 
 Start npx outside the repository: npm reads the `.npmrc` of the folder it starts in, so a repository's own
-settings would reach npm before Code Sleuth starts. On Windows PowerShell 5.1, run `cd ~` first, then the npx
-line.
+settings would reach npm before Code Sleuth starts. On Windows, in PowerShell 5.1, which has no `&&`, run
+`cd ~` first, then the npx line; in cmd, which does not read `~`, run `cd %USERPROFILE%` first, then the npx
+line with the path to your repository.
 
 `#v0.2.0` pins the release you run, so a new commit on GitHub doesn't change what runs. The first run builds
 Code Sleuth from source, with its development tools, then runs it. Wherever these docs say `code-sleuth`, put

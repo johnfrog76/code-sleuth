@@ -61,7 +61,9 @@ leaves the machine: it turns off every call below, the polish request included, 
 Without `--offline`, every run also probes for ToolKit, before any check, with or without `--toolkit`: it starts
 `pwsh` (else `powershell.exe`) when one is on the PATH, and the probe loads ToolKit's module in that shell
 ([TOOLKIT.md](TOOLKIT.md#how-it-is-found)). Code Sleuth sends nothing through it, and turns off PowerShell's own
-telemetry and update check for it. With `--offline`, no PowerShell is started, and ToolKit is not probed.
+telemetry and update check for it, but ToolKit, once loaded, may reach GitHub through `gh`: that is ToolKit's
+call, not Code Sleuth's. The `Out` line names the probe whenever it started a PowerShell. With `--offline`, no
+PowerShell is started, and ToolKit is not probed.
 
 | Call | Made by | When | What is sent |
 | --- | --- | --- | --- |

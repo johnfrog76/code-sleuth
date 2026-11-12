@@ -57,10 +57,11 @@ describe("the first command", () => {
     }
   });
 
-  it("tells Windows PowerShell 5.1, which has no &&, to run the two parts apart", () => {
-    expect(text("docs/QUICKSTART.md").replace(/\s+/g, " ")).toContain(
-      "On Windows PowerShell 5.1, run cd ~ first, then the npx line.",
-    );
+  it("tells the Windows shells that read the line differently how to start in the home folder", () => {
+    const note = text("docs/QUICKSTART.md").replace(/\s+/g, " ");
+    // PowerShell 5.1 has no &&; cmd does not read ~.
+    expect(note).toContain("in PowerShell 5.1, which has no &&, run cd ~ first, then the npx line");
+    expect(note).toContain("in cmd, which does not read ~, run cd %USERPROFILE% first, then the npx line");
   });
 
   it("says outside what Code Sleuth can defend what npm does before it starts", () => {

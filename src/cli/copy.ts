@@ -123,6 +123,8 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
     out: "Out",
     nothingLeaves: "nothing: this run makes no network calls",
     polishLeaves: "the polish request: each card's text, masked, to the Anthropic API (--polish)",
+    probeRan:
+      "looking for ToolKit started PowerShell, which loads ToolKit if it is installed; ToolKit may reach GitHub through gh (--offline skips it)",
     offlineSkips: (call: string) => `${call} (--offline skips it)`,
     polishing: (n: number, model: string) => `Polishing ${n} card${n === 1 ? "" : "s"} with ${model} `,
     polish: "Polish",

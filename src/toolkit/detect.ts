@@ -63,9 +63,20 @@ export function commonArgs(prefix: string, moduleRoot: string | undefined): stri
 }
 
 /** Asks, in order: is there a shell, and does ToolKit's NewPrompt resolve in it. Never reads ToolKit's files. */
+/** Why ToolKit was not looked for at all: no PowerShell to start. Any other outcome started one. */
+export const NO_POWERSHELL = "no PowerShell on the PATH";
+
+/** True when looking for ToolKit started a PowerShell: whatever it found, ToolKit's module may have loaded. */
+export function probed(detection: Detection): boolean {
+  return (
+    detection.state === "detected" ||
+    (detection.state === "not-installed" && detection.reason !== NO_POWERSHELL)
+  );
+}
+
 export function detectToolkit(options: DetectOptions): Detection {
   const shell = findShell(options.env, options.platform);
-  if (shell === undefined) return { state: "not-installed", reason: "no PowerShell on the PATH" };
+  if (shell === undefined) return { state: "not-installed", reason: NO_POWERSHELL };
   const prefix = options.prefix ?? DEFAULT_PREFIX;
   const result = runHandoff(shell, ["-Probe", ...commonArgs(prefix, options.moduleRoot)], childEnv(options));
   const line = result.status === 0 ? PROBE_LINE.exec(plain(result.stdout))?.[1] : undefined;
