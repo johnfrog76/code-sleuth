@@ -27,12 +27,15 @@ export interface PreparedPolish {
  * own .env (never one in the repository or the current folder); the environment wins. It is held here for the
  * polish request alone, never written to the environment, and only where it came from is said. Without a key,
  * --polish is not a refusal: the run goes on and says so. --offline wins over --polish: no client is made, so no
- * request is built or sent, and that is not a refusal either.
+ * request is built or sent, and that is not a refusal either. Under --offline the line says so whether or not
+ * --polish was given, and no key is read.
  */
 export function preparePolish(asked: boolean, io: Io, offline = false): PreparedPolish {
   const env = io.env ?? {};
   const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
-  if (asked && offline) return { state: { state: "off", reason: "--offline" }, model };
+  // Under --offline, polish is off and no key is read, asked or not: telling the person to add --polish would
+  // send them to a flag --offline turns off.
+  if (offline) return { state: { state: "off", reason: "--offline" }, model };
   const fromEnv = env[KEY_VARIABLE]?.trim() || undefined;
   const file = io.keyFile === undefined ? {} : readKeyFile(io.keyFile);
   if (file.loose && io.keyFile !== undefined) io.stderr(copy.polish.looseKeyFile(io.keyFile));

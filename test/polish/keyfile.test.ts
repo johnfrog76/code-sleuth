@@ -3,6 +3,7 @@ import { chmodSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSyn
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { copy as caseCopy } from "../../src/case/copy.js";
 import { defaultKeyFile } from "../../src/case/folder.js";
 import { copyCommand, exampleFile, readKeyFile, shownPath } from "../../src/cli/keyFile.js";
 import type { PolishClient } from "../../src/polish/client.js";
@@ -347,7 +348,9 @@ describe("the command, as a person runs it", () => {
       writeFileSync(join(here, "README.md"), "# here\n");
       writeFileSync(join(here, ".env"), `ANTHROPIC_API_KEY=${FAKE_KEY}\n`);
       const out = join(scratch, "cases");
-      const args = [".", "--goal", "public", "--offline", "--out", out];
+      // No --offline, which reads no key at all: PATH is empty, so no npm, gh or PowerShell is found, and
+      // nothing leaves the machine all the same.
+      const args = [".", "--goal", "public", "--out", out];
 
       const before = command(here, args, home);
       // With no key, it says where one goes, with the line that copies the example beside the command.
@@ -363,6 +366,35 @@ describe("the command, as a person runs it", () => {
       expect(after.stdout).toContain("an API key is set (from ~");
       expect(after.stdout + after.stderr).not.toContain(OTHER_KEY);
       expect(after.stdout + after.stderr).not.toContain(FAKE_KEY);
+    });
+  });
+});
+
+describe("--offline, with or without --polish", () => {
+  it("says polish is off because of --offline, and reads no key to say it", () => {
+    withScratch((scratch) => {
+      const home = join(scratch, "home");
+      const here = join(scratch, "here");
+      mkdirSync(home, { recursive: true });
+      mkdirSync(here, { recursive: true });
+      writeFileSync(join(here, "README.md"), "# here\n");
+      const own = defaultKeyFile(process.platform, { LOCALAPPDATA: join(home, "AppData", "Local") }, home);
+      mkdirSync(dirname(own), { recursive: true });
+      writeFileSync(own, `ANTHROPIC_API_KEY=${OTHER_KEY}\n`, { mode: 0o600 });
+      for (const polish of [[], ["--polish"]]) {
+        const run = spawnSync(
+          process.execPath,
+          [MAIN, ".", "--goal", "public", "--offline", "--out", join(scratch, "cases"), ...polish],
+          {
+            cwd: here,
+            encoding: "utf8",
+            env: { HOME: home, USERPROFILE: home, LOCALAPPDATA: join(home, "AppData", "Local"), PATH: "" },
+          },
+        );
+        const line = run.stdout.split("\n").find((l) => l.startsWith("Polish"));
+        expect(line, polish.join(" ")).toContain(caseCopy.polish.offline);
+        expect(run.stdout).not.toContain("add --polish");
+      }
     });
   });
 });
