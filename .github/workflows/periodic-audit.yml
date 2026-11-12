@@ -1,0 +1,179 @@
+# The periodic audit: once a month, on every v* tag, and by hand, it runs the docs' first command, the npx line
+# from the home folder with --offline and --out added, against the decoy case on Linux, macOS and Windows, and
+# checks every expected result (docs/TESTING.md). When a run fails or times out, one last job opens an issue
+# that links it, or adds the link to the one already open.
+#
+# It runs only in this repository, and only while it is public, as CI does: a private repository here has no
+# hosted minutes, and the npx line fetches the release from the public repository. It holds no secret. No pull
+# request starts it, so no fork's code ever runs here.
+name: periodic-audit
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: periodic-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: ${{ github.repository == 'johnfrog76/code-sleuth' && !github.event.repository.private }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      # The checkout is for the two scripts, the quick start, and the tags. The release under test comes
+      # through npx.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      # The pushed tag on a tag push; otherwise the newest v* release, a pre-release only when no release is
+      # newer. The quick start must name it: on a tag push, that holds the release to its docs. A tag that
+      # carries the two scripts is checked with its own; an older one with these.
+      - name: Work out the tag to run
+        id: tag
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT" = "push" ]; then
+            tag="$REF_NAME"
+          else
+            tag="$(git -c versionsort.suffix=- for-each-ref --count=1 --sort=-version:refname --format='%(refname:short)' 'refs/tags/v*')"
+          fi
+          if ! printf '%s' "$tag" | grep -Eq '^v[0-9][0-9A-Za-z.+-]*$'; then
+            echo "No v* tag to run: '$tag'."
+            exit 1
+          fi
+          if ! grep -Fq "code-sleuth#$tag" docs/QUICKSTART.md; then
+            echo "docs/QUICKSTART.md does not name code-sleuth#$tag."
+            exit 1
+          fi
+          if git cat-file -e "$tag:scripts/check-decoy-case.mjs" 2>/dev/null; then
+            git checkout "$tag" -- scripts/make-decoy-case.mjs scripts/check-decoy-case.mjs
+            echo "Running $tag, with its own scripts."
+          else
+            echo "Running $tag, with the scripts from $(git rev-parse --short HEAD)."
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      # The decoy case, outside the checkout, fingerprinted before any run.
+      - name: Make the decoy case
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/audit/runs"
+          node scripts/make-decoy-case.mjs "$RUNNER_TEMP/audit/decoy" | tee "$RUNNER_TEMP/audit/runs/make.txt"
+          node scripts/check-decoy-case.mjs --before "$RUNNER_TEMP/audit/decoy" "$RUNNER_TEMP/audit/runs"
+      # The docs' first command, from the home folder, once per decoy, then once refused (--toolkit with
+      # --offline). Each run's output and exit code are kept for the checker. A step that times out fails, so
+      # a hang reaches the issue.
+      - name: Run the first command against each decoy
+        if: runner.os != 'Windows'
+        timeout-minutes: 25
+        shell: bash
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          decoy="$RUNNER_TEMP/audit/decoy"
+          runs="$RUNNER_TEMP/audit/runs"
+          for name in npmrc index huge names env bidi replace slowgit; do
+            [ -d "$decoy/$name" ] || continue
+            status=0
+            cd ~ && npx "github:johnfrog76/code-sleuth#$TAG" "$decoy/$name" --goal public --offline --out "$runs/cases" > "$runs/$name.txt" 2>&1 || status=$?
+            echo "$status" > "$runs/$name.exit"
+            echo "$name exited $status"
+          done
+          status=0
+          cd ~ && npx "github:johnfrog76/code-sleuth#$TAG" "$decoy/env" --goal public --offline --toolkit --out "$runs/cases" > "$runs/toolkit-offline.txt" 2>&1 || status=$?
+          echo "$status" > "$runs/toolkit-offline.exit"
+          echo "--toolkit with --offline exited $status"
+      # PowerShell 7, where the docs' one-line form works. Output is read as UTF-8 and written as it came,
+      # with no colour and no error prefix on standard error, so the checker sees each character as printed.
+      - name: Run the first command against each decoy (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 25
+        shell: pwsh
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+          $PSStyle.OutputRendering = 'PlainText'
+          $decoy = Join-Path $env:RUNNER_TEMP 'audit\decoy'
+          $runs = Join-Path $env:RUNNER_TEMP 'audit\runs'
+          $cases = Join-Path $runs 'cases'
+          $package = "github:johnfrog76/code-sleuth#$env:TAG"
+          foreach ($name in 'npmrc', 'index', 'huge', 'names', 'env', 'bidi', 'replace', 'slowgit') {
+            $target = Join-Path $decoy $name
+            if (-not (Test-Path -LiteralPath $target)) { continue }
+            cd ~ && npx $package $target --goal public --offline --out $cases 2>&1 | ForEach-Object { "$_" } | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $runs "$name.txt")
+            "$LASTEXITCODE" | Set-Content -LiteralPath (Join-Path $runs "$name.exit")
+            "$name exited $LASTEXITCODE"
+          }
+          $target = Join-Path $decoy 'env'
+          cd ~ && npx $package $target --goal public --offline --toolkit --out $cases 2>&1 | ForEach-Object { "$_" } | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $runs 'toolkit-offline.txt')
+          "$LASTEXITCODE" | Set-Content -LiteralPath (Join-Path $runs 'toolkit-offline.exit')
+          "--toolkit with --offline exited $LASTEXITCODE"
+          exit 0
+      - name: Check every expected result
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: node scripts/check-decoy-case.mjs "$RUNNER_TEMP/audit/decoy" "$RUNNER_TEMP/audit/runs"
+      # The control for D1: npx started inside a second npmrc decoy must set its trap off, or D1's pass proves
+      # nothing on this system. Its own decoy case, so the trap never touches the one checked above.
+      - name: Check that the npmrc trap can fire
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        shell: bash
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          control="$RUNNER_TEMP/audit/control"
+          node scripts/make-decoy-case.mjs "$control" > /dev/null
+          cd "$control/npmrc" && npx "github:johnfrog76/code-sleuth#$TAG" . --goal public --offline --out "$RUNNER_TEMP/audit/control-cases" > /dev/null 2>&1 || true
+          if [ -f "$control/FIRED-npmrc.txt" ]; then
+            echo "PASS  D1 control: npx started inside the npmrc decoy set its trap off"
+          else
+            echo "FAIL  D1 control: npx started inside the npmrc decoy did not set its trap off, so D1 proves nothing here"
+            exit 1
+          fi
+
+  # Only when an audit job failed or timed out: an issue that names the run and links it, or a comment on the
+  # one still open. This job alone may write issues.
+  report:
+    needs: audit
+    if: ${{ always() && github.repository == 'johnfrog76/code-sleuth' && !github.event.repository.private && (needs.audit.result == 'failure' || needs.audit.result == 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open an issue for the failed run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body="The periodic audit failed or timed out on at least one system. Each job's check steps list every check, PASS or FAIL, with the reason: $RUN_URL"
+          gh label create periodic-audit --color 5319e7 --description "A periodic-audit run failed" --force || true
+          open="$(gh issue list --state open --label periodic-audit --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "Run $RUN_NUMBER failed too. $body"
+          else
+            gh issue create --title "The periodic audit failed (run $RUN_NUMBER)" --label periodic-audit --body "$body"
+          fi

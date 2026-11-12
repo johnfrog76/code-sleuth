@@ -59,7 +59,7 @@ folder is ever rewritten.
 | `assets/` | the logo (light and dark), the favicon and the social preview, made by `scripts/render-atoms.mjs` |
 | `site/` | the project's page on GitHub Pages: plain HTML and CSS, with no script. It holds copies of the logo, favicon and social preview, and still sloths, stamps and `tokens.css`, all from `scripts/render-atoms.mjs`. A stamp is one SVG that follows the viewer's appearance. Its layout is copied from ToolKit's landing page; its words are its own. `.github/workflows/pages.yml` publishes it. Not shipped |
 | `agentic/` | prompts for agents that work on the project, such as the claims review of a doc. Not shipped |
-| `scripts/` | development tools, not shipped |
+| `scripts/` | development tools, not shipped: `render-atoms.mjs`, and `make-decoy-case.mjs` and `check-decoy-case.mjs` for the periodic audit ([TESTING.md](TESTING.md#the-periodic-audit)) |
 | `test/` | the tests ([TESTING.md](TESTING.md)) |
 | `docs/` | these documents ([README.md](README.md) is the map) |
 | `design/` | design notes: ideas being worked out |

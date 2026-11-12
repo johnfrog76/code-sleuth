@@ -22,6 +22,7 @@ npm run lint     # type check, ESLint and Prettier
 | `test/spawn.test.ts` | the model key never reaches a child process, in any letter case, and every child starts through `src/spawn.ts` |
 | `test/gitsafe.test.ts` | with a real git, a repository's own configuration never has Code Sleuth run a command: a file-system monitor, each kind of filter, a signature program, a hook; a partial clone fetches nothing, with both guards and with `protocol.allow=never` alone; and only `src/engine/repo.ts` spawns git |
 | `test/notices.test.ts` | `THIRD-PARTY-NOTICES.md` against `package.json`: every runtime dependency, its version and its license |
+| `test/decoy.test.ts` | the words `scripts/check-decoy-case.mjs` expects, against the copy files they come from |
 
 ## What every test can rely on
 
@@ -51,10 +52,56 @@ npm run lint     # type check, ESLint and Prettier
   them with `UPDATE_GOLDEN=1 npx vitest run test/case`, and read the diff before you commit it.
 - `test/fixtures/polish/guard.json`: the polish guard's table.
 
+## The periodic audit
+
+`.github/workflows/periodic-audit.yml` runs the quick start's first command, the npx line from the home folder,
+with `--offline` and `--out` added, against the decoy case, on Linux, macOS and Windows (PowerShell 7) with
+Node 24. It runs once a month, on every `v*` tag, and by hand (Actions, periodic-audit, Run workflow). A tag
+push runs that tag; the others run the newest `v*` release. The quick start must name the tag, or the run
+fails, so a tag push also holds a release to its docs. A tag that carries the two scripts is checked with its
+own. Like CI, it runs only in this repository, while it is public. When a job fails or times out, a last job
+opens an issue that links the run, or comments on the audit's issue that is still open.
+
+The decoy case is a folder of small repositories, each made to trip Code Sleuth up one way: an `.npmrc` with a
+trap, an index that lists a file outside the repository, a 99 MB file, a file name holding a verdict line and
+a lone carriage return, a planted `.env` and token, terminal control characters in a file and in a file name,
+a replacement object that hides a commit, and a git config that never answers. Its tokens are made up at run
+time. On Windows, `names`, `slowgit` and the control-character file name in `bidi` are skipped, and both
+scripts say so; a skip anywhere else fails. `scripts/check-decoy-case.mjs` then checks each expected result,
+one PASS or FAIL line each: every run exits 0; the trap never fires; nothing reads clean that could not be
+read, and the outside file's text is nowhere; the large file is found and what was too large to read says so;
+the only verdict line is the real one; secrets are found, shown masked only, and no made-up value, nor any 12
+characters of its middle, is written or printed; no control, bidi or zero-width character or lone carriage
+return is written or printed, nor held in a string of a `.json` file; the hidden commit's token is found; the
+git checks are not investigated when git does not answer; every decoy is byte for byte unchanged; and
+`--offline --toolkit` is refused. It exits 1 on any FAIL. A last step is the control for the trap: npx started
+inside a second `npmrc` decoy must set its trap off, or passing the first check proves nothing on that system.
+
+To run it by hand against a build, from a clone, with two empty folders outside every repository:
+
+```sh
+node scripts/make-decoy-case.mjs <decoy> > <runs>/make.txt
+node scripts/check-decoy-case.mjs --before <decoy> <runs>
+cd ~
+code-sleuth <decoy>/env --goal public --offline --out <runs>/cases > <runs>/env.txt 2>&1; echo $? > <runs>/env.exit
+```
+
+Run the last line once for each decoy the first line made, then once more as
+`code-sleuth <decoy>/env --goal public --offline --toolkit --out <runs>/cases`, with its output in
+`<runs>/toolkit-offline.txt` and its exit code in `<runs>/toolkit-offline.exit`. Then:
+
+```sh
+node scripts/check-decoy-case.mjs <decoy> <runs>
+```
+
+The header of each script says what it reads and writes. `test/decoy.test.ts` holds the checker's expected
+words to the copy files, so a change to those words fails in `npm test` before it fails the audit.
+
 ## Not in the suite
 
 `scripts/render-atoms.mjs` renders the atoms with headless Chrome. It is a development tool: nothing in
-`npm test` runs it, and it says plainly when Chrome is not found.
+`npm test` runs it, and it says plainly when Chrome is not found. Nothing in `npm test` runs the two periodic
+audit scripts either.
 
 ## Named skips
 

@@ -29,6 +29,10 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
 - Paste the results of `npm test` and `npm run lint` in the description.
 - CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test`, `npm run lint` and `npm run build` on Node 24
   for every pull request and every push to main. It runs on the public repository; a private copy skips it.
+- The periodic audit (`.github/workflows/periodic-audit.yml`) runs the quick start's npx line, with `--offline`
+  and `--out` added, against the decoy case on Linux, macOS and Windows, monthly, on every `v*` tag and by
+  hand, and opens an issue when it fails.
+  It too runs only on the public repository. [TESTING.md](TESTING.md#the-periodic-audit) says what it checks.
 - The project's page is `site/`, plain HTML and CSS. `.github/workflows/pages.yml` publishes it to GitHub Pages
   when a change to it reaches main. A test holds its sample to a real run, so a change to the checklist's
   words may change the page too.
