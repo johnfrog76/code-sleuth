@@ -1,5 +1,5 @@
 import { COMMIT_MESSAGE, type Check, type Evidence, type Result } from "../check.js";
-import { cards, denyReasons, voices } from "../copy.js";
+import { cards, denyReasons, gitTimedOutReason, voices } from "../copy.js";
 import { readableLines } from "../files.js";
 import { isMarked } from "../examples.js";
 
@@ -50,7 +50,11 @@ export const namesDeny: Check = {
     }
     if (evidence.length > 0) return { verdict: "found", evidence };
     // Clean would claim the commit messages too, and without git they were never read.
-    if (messages === undefined) return { verdict: "not-investigated", reason: denyReasons.messagesUnread };
+    if (messages === undefined)
+      return {
+        verdict: "not-investigated",
+        reason: repo.gitTimedOut() ? gitTimedOutReason : denyReasons.messagesUnread,
+      };
     return repo.isShallow
       ? { verdict: "not-investigated", reason: denyReasons.messagesShallow }
       : { verdict: "clean" };

@@ -334,6 +334,9 @@ export const historyUnreadable =
   "git could not read the history: check that git log works in this repository.";
 
 /** Why a check could not run, and what would let it. */
+/** Why a check that needs git reads not investigated when git was there and did not answer in time. */
+export const gitTimedOutReason = "git did not answer in time, so I couldn't read what it would have told me.";
+
 export const needReasons: Record<Need, string> = {
   git: "This needs git: install git and point me at a git repository.",
   npm: "This needs npm on the PATH.",

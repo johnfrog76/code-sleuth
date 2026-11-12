@@ -1,6 +1,7 @@
 import type { Check, Evidence, Result } from "../check.js";
 import {
   cards,
+  gitTimedOutReason,
   historyPartial,
   historyShallow,
   historyUnreadable,
@@ -26,7 +27,11 @@ export const secretsHistory: Check = {
     if (added === undefined)
       return {
         verdict: "not-investigated",
-        reason: repo.historyTooLarge() ? tooLargeReasons.history : historyUnreadable,
+        reason: repo.historyTooLarge()
+          ? tooLargeReasons.history
+          : repo.gitTimedOut()
+            ? gitTimedOutReason
+            : historyUnreadable,
       };
     const kept = added.filter(({ path }) => !path.split("/").some((part) => SKIPPED_FOLDERS.includes(part)));
 

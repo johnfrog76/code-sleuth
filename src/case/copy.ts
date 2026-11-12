@@ -120,8 +120,10 @@ export const copy = {
     head: string | null,
     dirty: boolean | null,
     partial = false,
+    timedOut = false,
   ): string {
-    if (head === null && branch === null) return `${name} (not a git repository)`;
+    if (head === null && branch === null)
+      return `${name} (${timedOut ? "git did not answer in time" : "not a git repository"})`;
     const at = head === null ? "no commits" : head.slice(0, 7);
     const state = dirty === null ? "" : dirty ? ", dirty" : ", clean";
     return `${name} (${branch ?? "detached"} @ ${at}${state}${partial ? ", a partial clone" : ""})`;

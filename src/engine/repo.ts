@@ -53,6 +53,11 @@ export interface RepoReader {
    * first use. Undefined outside a repository, or when git cannot read the history.
    */
   addedLines(): readonly AddedLine[] | undefined;
+  /**
+   * True once a git call of this reader ran out of time (`GIT_TIMEOUT_MS`): listing the files, or reading the
+   * history. What it would have read is then said to be not read because git did not answer, never absent.
+   */
+  gitTimedOut(): boolean;
   /** True once `addedLines` stopped at `MAX_HISTORY_BYTES` or `MAX_ADDED_LINES`: the history is larger than is read. */
   historyTooLarge(): boolean;
 }
@@ -67,7 +72,9 @@ export interface AddedLine {
 /** Opens a repository for reading. It reads files and runs `git`; it never writes anything. */
 export function openRepo(root: string): RepoReader {
   const absolute = resolve(root);
-  const tracked = gitTrackedFiles(absolute);
+  const listed = gitTrackedFiles(absolute);
+  let timedOutGit = listed === "timed-out";
+  const tracked = listed === "timed-out" ? undefined : listed;
   const folders = new Map<string, boolean>();
   const refused: string[] = [];
   const realRoot = realRoot_(absolute);
@@ -93,6 +100,7 @@ export function openRepo(root: string): RepoReader {
 
   return {
     historyTooLarge: () => tooLargeHistory,
+    gitTimedOut: () => timedOutGit,
     root: absolute,
     refused,
     top: tracked === undefined ? absolute : outermostWorkTree(absolute),
@@ -115,7 +123,11 @@ export function openRepo(root: string): RepoReader {
     size: (path) => (known.has(path) ? lstatSync(join(absolute, path)).size : 0),
     tooLarge: (path) => known.has(path) && lstatSync(join(absolute, path)).size > MAX_TEXT_BYTES,
     commitMessages() {
-      if (messages === null) messages = tracked === undefined ? undefined : readMessages(absolute);
+      if (messages === null) {
+        const read = tracked === undefined ? undefined : readMessages(absolute);
+        if (read === "timed-out") timedOutGit = true;
+        messages = read === "timed-out" ? undefined : read;
+      }
       return messages;
     },
     isBinary(path) {
@@ -133,7 +145,8 @@ export function openRepo(root: string): RepoReader {
       if (history === null) {
         const read = tracked === undefined ? undefined : readHistory(absolute);
         tooLargeHistory = read === "too-large";
-        history = read === "too-large" ? undefined : read;
+        if (read === "timed-out") timedOutGit = true;
+        history = read === "too-large" || read === "timed-out" ? undefined : read;
       }
       return history;
     },
@@ -141,8 +154,9 @@ export function openRepo(root: string): RepoReader {
 }
 
 /** `git log --all --reverse`, one record per commit: its hash and its whole message. */
-function readMessages(root: string): { commit: string; text: string }[] | undefined {
+function readMessages(root: string): { commit: string; text: string }[] | "timed-out" | undefined {
   const log = git(root, ["log", "--all", "--reverse", "--no-color", "--format=%H%x00%B%x00"]);
+  if (timedOut(log)) return "timed-out";
   if (log.error) return undefined;
   if (log.status !== 0) return noHistory(root) ? [] : undefined;
   const parts = log.stdout.toString("utf8").split("\0");
@@ -154,7 +168,7 @@ function readMessages(root: string): { commit: string; text: string }[] | undefi
 }
 
 /** Parses `git log -p --all --reverse -U0`: only the `+` lines, each with its commit, path and line number. */
-function readHistory(root: string): AddedLine[] | "too-large" | undefined {
+function readHistory(root: string): AddedLine[] | "too-large" | "timed-out" | undefined {
   const log = git(root, [
     "-c",
     "core.quotepath=off",
@@ -179,6 +193,7 @@ function readHistory(root: string): AddedLine[] | "too-large" | undefined {
     "-U0",
     "--format=commit %H",
   ]);
+  if (timedOut(log)) return "timed-out";
   // Over MAX_HISTORY_BYTES git's output is cut and the call fails: the history is larger than is read.
   if (log.error) return (log.error as NodeJS.ErrnoException).code === "ENOBUFS" ? "too-large" : undefined;
   if (log.status !== 0) return noHistory(root) ? [] : undefined;
@@ -473,11 +488,18 @@ function outermostWorkTree(root: string): string {
   return top;
 }
 
-function gitTrackedFiles(root: string): string[] | undefined {
+/** True for a git call stopped at its timeout: it did not answer, which is not the same as failing. */
+export function timedOut(result: { error?: Error }): boolean {
+  return (result.error as NodeJS.ErrnoException | undefined)?.code === "ETIMEDOUT";
+}
+
+function gitTrackedFiles(root: string): string[] | "timed-out" | undefined {
   const inside = git(root, ["rev-parse", "--is-inside-work-tree"]);
+  if (timedOut(inside)) return "timed-out";
   if (inside.error || inside.status !== 0 || inside.stdout.toString("utf8").trim() !== "true")
     return undefined;
   const listed = git(root, ["ls-files", "-z"]);
+  if (timedOut(listed)) return "timed-out";
   if (listed.error || listed.status !== 0) return undefined;
   return listed.stdout
     .toString("utf8")

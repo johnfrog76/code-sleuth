@@ -11,11 +11,14 @@ export interface RepoInfo {
   remote: string | null;
   /** Present, and true, for a partial clone, whose history is not all here. */
   partialClone?: true;
+  /** Present, and true, when git did not answer in time: what git would have told is not known. */
+  gitTimedOut?: true;
 }
 
 /** What the case says about the repository. Outside git, everything but the name is null. */
 export function readRepoInfo(repo: RepoReader): RepoInfo {
   const info: RepoInfo = { name: basename(repo.root), head: null, branch: null, dirty: null, remote: null };
+  if (repo.gitTimedOut()) info.gitTimedOut = true;
   if (!repo.isGitRepository) return info;
   const out = (args: string[]) => {
     const result = git(repo.root, args);

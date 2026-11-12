@@ -49,7 +49,7 @@ export function header(
   const lines = [copy.run.title(id), ""];
   if (!asked) lines.push(copy.run.question, "");
   lines.push(
-    `  ${copy.run.repo}  ${printableLine(caseCopy.repoLine(repo.name, repo.branch, repo.head, repo.dirty, repo.partialClone === true))}`,
+    `  ${copy.run.repo}  ${printableLine(caseCopy.repoLine(repo.name, repo.branch, repo.head, repo.dirty, repo.partialClone === true, repo.gitTimedOut === true))}`,
     `  ${copy.run.goal}  ${caseCopy.goal[goal] ?? goal}`,
     ...(outgoing.length === 0
       ? [`  ${copy.run.out}   ${copy.run.nothingLeaves}`]

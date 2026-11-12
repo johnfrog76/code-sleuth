@@ -42,7 +42,7 @@ The record, for scripts. `--json` prints the same object.
 | `caseFile` | the format's version, `1`. It changes when a field changes meaning |
 | `tool` | `{ "name": "code-sleuth", "version": ... }` |
 | `case`, `goal` | the case's id (`2026-10-31-public-1`) and its goal |
-| `repo` | `name`, `head`, `branch`, `dirty`, and `remote`, the `origin` remote with no scheme, credentials (everything up to the last `@` before the host), query or fragment; null past the name outside git. `partialClone: true` on a partial clone |
+| `repo` | `name`, `head`, `branch`, `dirty`, and `remote`, the `origin` remote with no scheme, credentials (everything up to the last `@` before the host), query or fragment; null past the name outside git. `partialClone: true` on a partial clone; `gitTimedOut: true` when git did not answer in time, so what git would have told is not known |
 | `openedAt`, `closedAt` | UTC, to the second |
 | `verdict` | by the checklist: `met` (no smoking gun and no loose end), `nearly-met` (loose ends only) or `not-met` |
 | `counts` | `smoking-gun`, `loose-end`, `hunch`, `clean`, `not-investigated` |

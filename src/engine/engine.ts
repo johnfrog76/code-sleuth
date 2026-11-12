@@ -2,7 +2,7 @@ import { maskSecrets } from "./secrets/scan.js";
 import { createHmac, randomBytes } from "node:crypto";
 import type { Check, CheckContext, Evidence, Need, Result } from "./check.js";
 import { CHECKS } from "./checks/index.js";
-import { checkFailed, needReasons, refusedReasons, tooLargeReasons } from "./copy.js";
+import { checkFailed, gitTimedOutReason, needReasons, refusedReasons, tooLargeReasons } from "./copy.js";
 import { type ExampleLocations, exampleLocations, isExampleEvidence } from "./examples.js";
 import { WEIGHTS, type Goal, type Weight } from "./goals.js";
 import type { RepoReader } from "./repo.js";
@@ -136,7 +136,12 @@ export function runCheck(
   context: CheckContext,
 ): Result {
   const missing = check.needs.find((need) => !capabilities.has(need));
-  if (missing !== undefined) return { verdict: "not-investigated", reason: needReasons[missing] };
+  if (missing !== undefined)
+    return {
+      verdict: "not-investigated",
+      // git was there and did not answer: not the same as no git, and the reason says which.
+      reason: missing === "git" && repo.gitTimedOut() ? gitTimedOutReason : needReasons[missing],
+    };
   // A check that throws (a file it cannot open, a shape it did not expect) read nothing: not investigated, with
   // what went wrong, and the run goes on with the next check.
   // What the check asked to read and was not given: a text file over the size it is read up to.
