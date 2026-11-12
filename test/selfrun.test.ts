@@ -33,6 +33,7 @@ describe("Code Sleuth on its own repository", () => {
         checks: {
           id: string;
           verdict: string;
+          reason?: string;
           evidence?: { path: string; line?: number; rule?: string; commit?: string }[];
         }[];
       };
@@ -43,6 +44,8 @@ describe("Code Sleuth on its own repository", () => {
       // One finding is accepted, and only that one: made-up test data in #44's commit, kept in the history on
       // purpose (docs/KNOWN-GAPS.md). Any other secret in the history, a new one in the same file included, fails.
       const history = record.checks.find((c) => c.id === "secrets.history")!;
+      // A shallow clone stops the history at its cut and reads not investigated: this test needs a full clone.
+      expect(history.verdict, `secrets.history: ${history.reason ?? ""}`).toBe("found");
       expect(
         history.evidence?.map(({ path, rule, commit }) => ({ path, rule, commit })),
         JSON.stringify(history.evidence),

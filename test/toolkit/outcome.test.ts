@@ -85,65 +85,71 @@ function file(scratch: string, title: string) {
 
 const hasGit = spawnSync("git", ["--version"], { stdio: "ignore" }).status === 0;
 
-describe.skipIf(shell === undefined || !hasGit)("what handoff.ps1 reports is ToolKit's own outcome", () => {
-  it("files a card ToolKit made", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "plain")).toMatchObject({ status: "filed", card: "Task K7M2" }),
-    ));
+// Each test starts the real pwsh, and a first start on a fresh machine (a CI runner) takes seconds: the suite
+// gives every test 30 s, not Vitest's 5.
+describe.skipIf(shell === undefined || !hasGit)(
+  "what handoff.ps1 reports is ToolKit's own outcome",
+  { timeout: 30_000 },
+  () => {
+    it("files a card ToolKit made", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "plain")).toMatchObject({ status: "filed", card: "Task K7M2" }),
+      ));
 
-  it("reads a stated refusal, which ToolKit's guard throws under TOOLKIT_QUIET_STARTUP", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "refuses")).toMatchObject({ status: "refused", sentence: "no such Space" }),
-    ));
+    it("reads a stated refusal, which ToolKit's guard throws under TOOLKIT_QUIET_STARTUP", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "refuses")).toMatchObject({ status: "refused", sentence: "no such Space" }),
+      ));
 
-  it("reads a stated refusal from $LASTEXITCODE, from a ToolKit that returns without throwing", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "refuses-ignoring-the-marker")).toMatchObject({
-        status: "refused",
-        sentence: "no such Space",
-      }),
-    ));
+    it("reads a stated refusal from $LASTEXITCODE, from a ToolKit that returns without throwing", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "refuses-ignoring-the-marker")).toMatchObject({
+          status: "refused",
+          sentence: "no such Space",
+        }),
+      ));
 
-  it("fails on a script that exits non-zero without a word", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "fails-silently")).toMatchObject({ status: "failed", sentence: "exit code 5" }),
-    ));
+    it("fails on a script that exits non-zero without a word", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "fails-silently")).toMatchObject({ status: "failed", sentence: "exit code 5" }),
+      ));
 
-  it("reads a script that throws as the failure ToolKit states, its exit 2", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "throws")).toMatchObject({ status: "refused", sentence: "the hub is gone" }),
-    ));
+    it("reads a script that throws as the failure ToolKit states, its exit 2", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "throws")).toMatchObject({ status: "refused", sentence: "the hub is gone" }),
+      ));
 
-  it("fails when ToolKit writes an error it does not handle, and files nothing", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "writes-an-error")).toMatchObject({
-        status: "failed",
-        sentence: "the hub is read-only",
-      }),
-    ));
+    it("fails when ToolKit writes an error it does not handle, and files nothing", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "writes-an-error")).toMatchObject({
+          status: "failed",
+          sentence: "the hub is read-only",
+        }),
+      ));
 
-  it("files a card ToolKit made, though a native program it ran exited non-zero", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "a-native-program-fails")).toMatchObject({ status: "filed", card: "Task K7M2" }),
-    ));
+    it("files a card ToolKit made, though a native program it ran exited non-zero", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "a-native-program-fails")).toMatchObject({ status: "filed", card: "Task K7M2" }),
+      ));
 
-  it("files a card ToolKit made, though a native program it ran wrote to stderr", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "a-native-program-warns")).toMatchObject({ status: "filed", card: "Task K7M2" }),
-    ));
+    it("files a card ToolKit made, though a native program it ran wrote to stderr", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "a-native-program-warns")).toMatchObject({ status: "filed", card: "Task K7M2" }),
+      ));
 
-  // The code review's low finding TK-4: a value that is itself a parameter token could not be filed.
-  it.each(["-Probe", "--", "-x: y", "-ModuleRoot", "-Title:inner"])("files a card titled %j", (title) =>
-    withScratch((scratch) =>
-      expect(file(scratch, title)).toMatchObject({ status: "filed", card: "Task K7M2" }),
-    ),
-  );
+    // The code review's low finding TK-4: a value that is itself a parameter token could not be filed.
+    it.each(["-Probe", "--", "-x: y", "-ModuleRoot", "-Title:inner"])("files a card titled %j", (title) =>
+      withScratch((scratch) =>
+        expect(file(scratch, title)).toMatchObject({ status: "filed", card: "Task K7M2" }),
+      ),
+    );
 
-  it("files a card when ToolKit caught an error of its own on the way", () =>
-    withScratch((scratch) =>
-      expect(file(scratch, "handles-its-own-error")).toMatchObject({ status: "filed", card: "Task K7M2" }),
-    ));
-});
+    it("files a card when ToolKit caught an error of its own on the way", () =>
+      withScratch((scratch) =>
+        expect(file(scratch, "handles-its-own-error")).toMatchObject({ status: "filed", card: "Task K7M2" }),
+      ));
+  },
+);
 
 const CHECKOUT = process.env.CODE_SLEUTH_TOOLKIT;
 
