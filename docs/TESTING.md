@@ -75,7 +75,11 @@ characters of its middle, is written or printed; no control, bidi or zero-width 
 return is written or printed, nor held in a string of a `.json` file; the hidden commit's token is found; the
 git checks are not investigated when git does not answer; every decoy is byte for byte unchanged; and
 `--offline --toolkit` is refused. It exits 1 on any FAIL. A last step is the control for the trap: npx started
-inside a second `npmrc` decoy must set its trap off, or passing the first check proves nothing on that system.
+inside a second `npmrc` decoy must set its trap off, or passing the first check proves nothing on that system;
+when it does not, the step prints what npx said. On Windows the trap is the `node-options` one alone, with no
+`registry` line: npm starts `git` and `script-shell` with no shell, and Node does not start a `.cmd` that way, so
+a `.cmd` there could never fire and would stop npm first; and the `--require` fires only once npx has installed
+what it runs.
 
 To run it by hand against a build, from a clone, with two empty folders outside every repository:
 

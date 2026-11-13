@@ -144,11 +144,14 @@ jobs:
         run: |
           control="$RUNNER_TEMP/audit/control"
           node scripts/make-decoy-case.mjs "$control" > /dev/null
-          cd "$control/npmrc" && npx "github:johnfrog76/code-sleuth#$TAG" . --goal public --offline --out "$RUNNER_TEMP/audit/control-cases" > /dev/null 2>&1 || true
+          said="$RUNNER_TEMP/audit/control-output.txt"
+          (cd "$control/npmrc" && npx "github:johnfrog76/code-sleuth#$TAG" . --goal public --offline --out "$RUNNER_TEMP/audit/control-cases") > "$said" 2>&1 || true
           if [ -f "$control/FIRED-npmrc.txt" ]; then
             echo "PASS  D1 control: npx started inside the npmrc decoy set its trap off"
           else
             echo "FAIL  D1 control: npx started inside the npmrc decoy did not set its trap off, so D1 proves nothing here"
+            echo "What npx printed, inside the decoy:"
+            cat "$said"
             exit 1
           fi
 

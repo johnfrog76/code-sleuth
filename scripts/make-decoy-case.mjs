@@ -69,18 +69,26 @@ const readme = "# widget\n\nInstall with npm install. Usage: run it.\n";
 const made = [];
 
 // 1. npmrc: a .npmrc that would run a program of the repository's if npm ever started in this folder.
+//
+// On Linux and macOS the trap is a shell script that npm would start as its git or its script shell, a
+// node-options --require that every program npm starts would load, and a registry that answers nothing. On
+// Windows only the --require, with no registry: npm starts git and the script shell directly, with no shell,
+// and Node does not start a .cmd or .bat that way, so a .cmd there could never fire, for this decoy or for a
+// real repository (one would need an .exe); it would stop npm before anything else could. And the --require
+// only fires once npx has installed what it runs, which a registry that answers nothing would stop.
 {
   const fired = join(out, "FIRED-npmrc.txt");
-  const trap = windows ? join(out, "npmrc-trap.cmd") : join(out, "npmrc-trap.sh");
-  writeFileSync(
-    trap,
-    windows
-      ? `@echo off\r\necho fired>"${fired}"\r\nexit /b 1\r\n`
-      : `#!/bin/sh\necho fired > "${fired}"\nexit 1\n`,
-  );
-  if (!windows) chmodSync(trap, 0o755);
   const requireTrap = join(out, "npmrc-trap.cjs");
   writeFileSync(requireTrap, `require("fs").writeFileSync(${JSON.stringify(fired)}, "fired");\n`);
+  const lines = [];
+  if (!windows) {
+    const trap = join(out, "npmrc-trap.sh");
+    writeFileSync(trap, `#!/bin/sh\necho fired > "${fired}"\nexit 1\n`);
+    chmodSync(trap, 0o755);
+    lines.push(`git=${trap}`, `script-shell=${trap}`);
+  }
+  // Forward slashes: Node reads them on Windows, and nothing in .npmrc or NODE_OPTIONS reads them as escapes.
+  lines.push(`node-options=--require ${requireTrap.replaceAll("\\", "/")}`);
   repo("npmrc", {
     "README.md": readme,
     "package.json": JSON.stringify(
@@ -88,13 +96,7 @@ const made = [];
       null,
       2,
     ),
-    ".npmrc": [
-      `git=${trap}`,
-      `script-shell=${trap}`,
-      `node-options=--require ${requireTrap}`,
-      "registry=http://127.0.0.1:9/",
-      "",
-    ].join("\n"),
+    ".npmrc": [...lines, ...(windows ? [] : ["registry=http://127.0.0.1:9/"]), ""].join("\n"),
   });
   made.push(["npmrc", `the trap writes ${fired} if npm ever reads this .npmrc`]);
 }
