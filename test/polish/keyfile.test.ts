@@ -279,6 +279,19 @@ describe("where an API key goes, when there is none", () => {
     });
   });
 
+  it.skipIf(process.platform === "win32")(
+    "makes the example its owner's alone, as every file in Code Sleuth's own folder",
+    () => {
+      withScratch((home) => {
+        const file = join(home, "code-sleuth", ".env");
+        const placed = placeExample(exampleFile()!, file);
+        expect(placed).toBe(join(dirname(file), ".env.example"));
+        expect(statSync(placed).mode & 0o777).toBe(0o600);
+        expect(statSync(dirname(placed)).mode & 0o777).toBe(0o700);
+      });
+    },
+  );
+
   it("puts the example beside the .env only when none is there: never over a file", () => {
     withScratch((home) => {
       const file = join(home, "code-sleuth", ".env");

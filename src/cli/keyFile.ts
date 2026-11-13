@@ -1,4 +1,4 @@
-import { constants, copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { chmodSync, constants, copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import defaultPaths, { dirname, join, type PlatformPath, posix, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -73,8 +73,10 @@ export function placeExample(example: string, keyFile: string, repoTop?: string)
   if (repoTop !== undefined && isInside(target, repoTop)) return example;
   if (existsSync(target)) return target;
   try {
-    mkdirSync(dirname(target), { recursive: true });
+    // Owner only, as every folder and file Code Sleuth makes in its own folder (CONFIGURATION.md).
+    mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
     copyFileSync(example, target, constants.COPYFILE_EXCL);
+    chmodSync(target, 0o600);
     return target;
   } catch {
     return existsSync(target) ? target : example;
