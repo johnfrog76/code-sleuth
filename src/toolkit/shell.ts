@@ -55,6 +55,31 @@ export function runHandoff(shell: Shell, args: readonly string[], env: NodeJS.Pr
   };
 }
 
+/** The execution policies under which PowerShell will not run `handoff.ps1`, an unsigned script, with `-File`. */
+export const BLOCKING_POLICIES = ["Restricted", "AllSigned"] as const;
+export type BlockingPolicy = (typeof BLOCKING_POLICIES)[number];
+
+/**
+ * The shell's effective execution policy, asked with a fixed command, never one built from repository text:
+ * `-Command` is not held to the policy, so it answers where `-File` was refused. Undefined when it does not say.
+ */
+export function executionPolicy(shell: Shell, env: NodeJS.ProcessEnv): string | undefined {
+  const result = spawnChild(
+    shell.path,
+    ["-NoProfile", "-NonInteractive", "-Command", "Get-ExecutionPolicy"],
+    {
+      cwd: OWN_FOLDER,
+      env,
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 60_000,
+    },
+  );
+  if (result.status !== 0) return undefined;
+  const answer = plain(result.stdout ?? "").trim();
+  return /^[A-Za-z]+$/.test(answer) ? answer : undefined;
+}
+
 const ESC = String.fromCharCode(27);
 const STYLES = new RegExp(
   `${ESC}\\[[0-9;?]*[A-Za-z]|${ESC}\\][^${String.fromCharCode(7)}]*${String.fromCharCode(7)}`,

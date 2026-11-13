@@ -83,6 +83,10 @@ Exit codes: 0 the case is closed, whatever it found; 1 only with --fail-on; 2 a 
     onlyWithToolkit: (flag: string) => `${flag} only goes with --toolkit.`,
     onlyWithToolkitHint: "Add --toolkit to file the cards in ToolKit, or leave the flag off.",
     notInstalled: (reason: string) => `ToolKit isn't here to file the cards: ${reason}.`,
+    policyBlocked: (shell: string, policy: string) =>
+      `${shell}'s execution policy, ${policy}, won't run my hand-off script, so I can't file the cards in ToolKit.`,
+    policyBlockedHint:
+      "To allow local scripts for your account, run Set-ExecutionPolicy -Scope CurrentUser RemoteSigned in PowerShell yourself; I never change it. Or leave --toolkit off: the cards are in the case file either way.",
     notInstalledHint:
       "Install ToolKit (https://johnfrog76.github.io/toolkit/) and run its InstallAutoload, or leave --toolkit off: the cards are in the case file either way.",
     offline:

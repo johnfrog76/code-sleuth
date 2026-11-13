@@ -1,4 +1,12 @@
-import { findShell, plain, runHandoff, type Shell } from "./shell.js";
+import {
+  BLOCKING_POLICIES,
+  type BlockingPolicy,
+  executionPolicy,
+  findShell,
+  plain,
+  runHandoff,
+  type Shell,
+} from "./shell.js";
 import type { SpaceAddress } from "./space.js";
 
 /** ToolKit's shipped command prefix. */
@@ -9,6 +17,11 @@ export type Detection =
   | { state: "not-installed"; reason: string }
   /** Not looked for: under --offline no PowerShell is started, since it can make calls of its own. */
   | { state: "not-probed"; reason: "--offline" }
+  /**
+   * On Windows, PowerShell is there and its execution policy would not run the hand-off script. Code Sleuth never
+   * changes or goes around the policy: the person's own fix is theirs to make.
+   */
+  | { state: "blocked"; shell: Shell; policy: BlockingPolicy }
   | {
       state: "detected";
       via: "cli";
@@ -33,6 +46,8 @@ export interface DetectOptions {
   space?: string;
   /** Only for tests: the folder ToolKit is loaded from. */
   moduleRoot?: string;
+  /** Only for tests: ask the execution policy as on Windows, where only it is enforced. */
+  askPolicy?: boolean;
   platform?: NodeJS.Platform;
 }
 
@@ -70,6 +85,7 @@ export const NO_POWERSHELL = "no PowerShell on the PATH";
 export function probed(detection: Detection): boolean {
   return (
     detection.state === "detected" ||
+    detection.state === "blocked" ||
     (detection.state === "not-installed" && detection.reason !== NO_POWERSHELL)
   );
 }
@@ -80,8 +96,15 @@ export function detectToolkit(options: DetectOptions): Detection {
   const prefix = options.prefix ?? DEFAULT_PREFIX;
   const result = runHandoff(shell, ["-Probe", ...commonArgs(prefix, options.moduleRoot)], childEnv(options));
   const line = result.status === 0 ? PROBE_LINE.exec(plain(result.stdout))?.[1] : undefined;
-  if (line === undefined)
+  if (line === undefined) {
+    // On Windows a policy that refuses the script reads the same as no ToolKit; ask it, so the case says which.
+    if (options.askPolicy ?? (options.platform ?? process.platform) === "win32") {
+      const policy = executionPolicy(shell, childEnv(options));
+      const blocking = BLOCKING_POLICIES.find((p) => p.toLowerCase() === policy?.toLowerCase());
+      if (blocking !== undefined) return { state: "blocked", shell, policy: blocking };
+    }
     return { state: "not-installed", reason: `${prefix}NewPrompt does not resolve in ${shell.name}` };
+  }
 
   let answer: {
     prefix?: unknown;

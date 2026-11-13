@@ -72,8 +72,8 @@ to read wrong, and what has not been proven, with what you see when you hit each
   the hand-off runs under 5.1.
 - **Windows.** The suite has not run on Windows, and neither has the ToolKit hand-off. A test holds `handoff.ps1`
   free of the newer syntax Windows PowerShell 5.1 cannot parse (`??`, `?.`, a ternary, `&&` and `||` chains,
-  `-AsHashtable`), but it has not run under 5.1, and a `Restricted` execution
-  policy can stop it. Each card's values reach it as `-Title:<value>`, one token each, which 5.1 is documented
+  `-AsHashtable`), but it has not filed a card under 5.1 yet. A `Restricted` or `AllSigned` execution policy is
+  read and named, and CI proves that on Windows ([TOOLKIT.md](TOOLKIT.md#the-execution-policy-on-windows)). Each card's values reach it as `-Title:<value>`, one token each, which 5.1 is documented
   to bind the same way; unproven there too. Tracked with the Windows CI.
 
 ## Slow on purpose

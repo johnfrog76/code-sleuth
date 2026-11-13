@@ -35,6 +35,8 @@ export type ToolkitRecord =
   | { state: "not-installed" }
   /** Not looked for: under --offline no PowerShell is started. */
   | { state: "not-probed"; reason: "--offline" }
+  /** PowerShell's execution policy would not run the hand-off script; Code Sleuth never goes around it. */
+  | { state: "blocked"; shell: string; policy: "Restricted" | "AllSigned" }
   | {
       state: "detected";
       via: "cli";

@@ -109,11 +109,13 @@ audit scripts either.
 
 ## Named skips
 
-Two tests run only where they can, and say so in the summary as skipped, never passed:
+Three tests run only where they can, and say so in the summary as skipped, never passed:
 
 - **The real ToolKit run** (`test/toolkit/real.test.ts`) needs `CODE_SLEUTH_TOOLKIT` set to a ToolKit checkout.
   It files cards into a scratch copy of ToolKit's sample hub, and stops unless ToolKit resolved that hub.
 - **Windows PowerShell 5.1** runs only on Windows.
+- **The execution policy, for real** (`test/toolkit/policy-real.test.ts`) runs only on Windows with
+  `CODE_SLEUTH_POLICY_TEST=Restricted`, as CI's `windows-policy` job sets it after setting the policy.
 
 The count is the summary line `npm test` prints, and that line is the one to read: a skip is counted as a
-skip, never a pass. The two named skips above are the real-ToolKit rows, both in `test/toolkit/real.test.ts`.
+skip, never a pass. The named skips are the two real-ToolKit rows in `test/toolkit/real.test.ts` and the real policy row.

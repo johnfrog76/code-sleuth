@@ -82,8 +82,15 @@ function chooseSpace(
     ...(flags.toolkitPrefix === undefined ? {} : { prefix: flags.toolkitPrefix }),
     ...(flags.toolkitSpace === undefined ? {} : { space: flags.toolkitSpace }),
     ...(io.toolkitModuleRoot === undefined ? {} : { moduleRoot: io.toolkitModuleRoot }),
+    ...(io.toolkitAskPolicy === undefined ? {} : { askPolicy: io.toolkitAskPolicy }),
   };
   const detection = detectToolkit(options);
+  if (flags.toolkit && detection.state === "blocked") {
+    throw new Refusal(
+      copy.toolkit.policyBlocked(detection.shell.name, detection.policy),
+      copy.toolkit.policyBlockedHint,
+    );
+  }
   if (flags.toolkit && detection.state === "not-installed") {
     throw new Refusal(copy.toolkit.notInstalled(detection.reason), copy.toolkit.notInstalledHint);
   }
@@ -117,6 +124,8 @@ function chooseSpace(
 export function toolkitRecord(detection: Detection, filing?: Filing, spaceFrom?: SpaceSource): ToolkitRecord {
   if (detection.state === "not-installed") return { state: "not-installed" };
   if (detection.state === "not-probed") return { state: "not-probed", reason: detection.reason };
+  if (detection.state === "blocked")
+    return { state: "blocked", shell: detection.shell.name, policy: detection.policy };
   return {
     state: "detected",
     via: "cli",

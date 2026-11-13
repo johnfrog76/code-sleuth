@@ -22,6 +22,11 @@ export interface Scenario {
   fail?: string[];
   /** Titles ToolKit files but answers in words Code Sleuth does not recognise. */
   garble?: string[];
+  /**
+   * The shell's execution policy, as Get-ExecutionPolicy answers it; left out, RemoteSigned. Under Restricted or
+   * AllSigned, a -File run of the (unsigned) hand-off script is refused, as Windows PowerShell refuses it.
+   */
+  policy?: string;
 }
 
 export interface Call {
@@ -48,6 +53,9 @@ const scenario = JSON.parse(fs.readFileSync(process.env.STUB_SCENARIO, "utf8"));
 fs.appendFileSync(log, JSON.stringify({ shell: path.basename(process.argv[1]), argv, space: process.env.P20_ACTIVE_SPACE ?? null, key: process.env.ANTHROPIC_API_KEY ?? null, cwd: process.cwd(), telemetry: process.env.POWERSHELL_TELEMETRY_OPTOUT ?? null, updateCheck: process.env.POWERSHELL_UPDATECHECK ?? null }) + "\n");
 // As PowerShell binds them: -Name value, or -Name:value in one token.
 const arg = (name) => { const joined = argv.find((a) => a.startsWith(name + ":")); if (joined !== undefined) return joined.slice(name.length + 1); const i = argv.indexOf(name); return i < 0 ? undefined : argv[i + 1]; };
+const policy = scenario.policy ?? "RemoteSigned";
+if (argv.includes("-Command") && argv.includes("Get-ExecutionPolicy")) { process.stdout.write(policy + "\r\n"); process.exit(0); }
+if (argv.includes("-File") && ["restricted", "allsigned"].includes(policy.toLowerCase())) { process.stderr.write("handoff.ps1 cannot be loaded because running scripts is disabled on this system.\n+ FullyQualifiedErrorId : UnauthorizedAccess\n"); process.exit(1); }
 const probe = scenario.probe ?? { prefix: "tk", space: "widget", spaces: ["widget", "other"] };
 if (probe === "absent") { process.stderr.write("ToolKit's tkNewPrompt is not available in this shell.\n"); process.exit(3); }
 if (argv.includes("-Probe")) {

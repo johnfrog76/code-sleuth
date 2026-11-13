@@ -34,6 +34,8 @@ export interface Io {
   /** Only for tests: the polish client, in place of the real request. */
   polishClient?: (key: string, model: string) => PolishClient;
   /** Only for tests: the one folder ToolKit is loaded from in the child shell. */
+  /** Only for tests: ask PowerShell's execution policy as on Windows. */
+  toolkitAskPolicy?: boolean;
   toolkitModuleRoot?: string;
 }
 

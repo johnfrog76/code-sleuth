@@ -36,3 +36,35 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run build
+
+  # #2: on Windows, an execution policy that refuses the hand-off script reads as blocked, never as no ToolKit.
+  # The policy is set for this runner's account, in both shells, and the real test runs against them.
+  windows-policy:
+    if: ${{ !github.event.repository.private }}
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Set the execution policy to Restricted for this account, in both shells
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -Scope CurrentUser Restricted -Force
+          powershell.exe -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser Restricted -Force"
+          Get-ExecutionPolicy -List
+          powershell.exe -NoProfile -Command "Get-ExecutionPolicy -List"
+      # cmd, not pwsh: Actions runs a pwsh step as a script file, which Restricted now refuses too. The stub
+      # suites run on the test job: their stub shells are node scripts, which Windows does not start by name.
+      - name: The real test, under Restricted
+        shell: cmd
+        env:
+          CODE_SLEUTH_POLICY_TEST: Restricted
+        run: |
+          set PSExecutionPolicyPreference=
+          npx vitest run test/toolkit/policy-real.test.ts

@@ -23,6 +23,20 @@ records `toolkit: { "state": "not-probed", "reason": "--offline" }`, and its Too
 says ToolKit was not probed, because of `--offline`. `--offline --toolkit` is refused before the case is taken
 (exit 2): filing needs the probe.
 
+### The execution policy, on Windows
+
+On Windows, PowerShell's execution policy decides whether a script file may run. Under `Restricted` (Windows
+PowerShell 5.1's default on client editions), or `AllSigned` with an unsigned script, it will not run
+`handoff.ps1`. When the probe fails on Windows, Code Sleuth asks the policy (`Get-ExecutionPolicy`, a fixed
+command), and if it is one of those, the case records `toolkit: { "state": "blocked", "shell": ..., "policy": ... }`
+and its ToolKit line says the policy stood in the way, not that ToolKit is missing. `--toolkit` is refused, with
+your own fix as the hint: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, run by you.
+
+Code Sleuth never changes your execution policy and never goes around it: it passes no `-ExecutionPolicy`. A
+policy is often set on purpose, `AllSigned` above all, and quietly stepping past it would be the wrong habit.
+CI's `windows-policy` job sets the policy to `Restricted` on a Windows runner, in both shells, and runs the real
+test against them on every pull request.
+
 ## Which Space
 
 The cards go to the repository's own Space:
@@ -100,5 +114,5 @@ a name it does not declare, so Code Sleuth checks that the Space it was told is 
 
 It never writes a ToolKit card file, never changes ToolKit's configuration, never files a polished card,
 never files without asking (or `--yes`), and never files a check that is already on the ledger without `--refile`. The ledger belongs to one
-cases folder and one repository path: another `--out`, or a clone at another path, starts a ledger of its own. On Windows, a Restricted execution policy
-can stop the hand-off script; that case is tracked for the release that proves Windows.
+cases folder and one repository path: another `--out`, or a clone at another path, starts a ledger of its own. On Windows, an execution policy that
+will not run the hand-off script is named, never gone around ([the execution policy](#the-execution-policy-on-windows)).

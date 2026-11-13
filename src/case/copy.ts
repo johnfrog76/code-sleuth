@@ -196,6 +196,8 @@ export const copy = {
       `ToolKit refused the card for ${check}: ${sentence} The cards after it were not filed`,
     notFiled: (reason: string) => `nothing filed: ${reason}`,
     notProbed: "not probed, because of --offline: looking for ToolKit starts PowerShell.",
+    policyBlocked: (shell: string, policy: string) =>
+      `not reached: ${shell}'s execution policy, ${policy}, won't run Code Sleuth's hand-off script. To allow local scripts for your account, run Set-ExecutionPolicy -Scope CurrentUser RemoteSigned yourself; Code Sleuth never changes it.`,
   },
 
   card: {
