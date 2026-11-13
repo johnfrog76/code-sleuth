@@ -19,7 +19,7 @@ Options
   --all                hunches get cards too
   --polish             have each card reworded by a model, every cited path and number kept (needs an API key)
   --offline            nothing leaves the machine: no dependency lookups, no polish, no ToolKit probe
-  --examples <glob>    another example location, beside test/fixtures/ and __fixtures__/; repeatable
+  --examples <glob>    another example location, beside test/fixtures/, tests/fixtures/ and __fixtures__/
   --json               print case.json to stdout, and the report to stderr
   --fail-on <weight>   exit 1 when a smoking-gun (or a loose-end and worse) is found
 

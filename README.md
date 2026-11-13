@@ -33,8 +33,9 @@ It's a sloth private eye for your repository: point it at one and it investigate
 and a card for each item that needs work, written so you can file it. The lightest items, hunches, get a card
 when you ask with `--all`.
 
-It runs on your machine. Without `--polish`, the only calls it makes are the dependency lookups, which it
-names before it runs and `--offline` turns off. Two things make it better, and neither is required:
+It runs on your machine. Without `--polish`, it makes no calls of its own but the dependency lookups, and
+it looks for ToolKit by starting PowerShell, if there is one, which loads ToolKit if it is installed. It names
+both before it runs, and `--offline` turns both off. Two things make it better, and neither is required:
 
 | You have | You get |
 | --- | --- |
@@ -44,13 +45,16 @@ names before it runs and `--offline` turns off. Two things make it better, and n
 
 ## Quick start
 
-It is not on npm yet: run it from a clone, with Node 24.
+It is not on npm yet. With Node 24 and git 2.31 or newer, run the release straight from GitHub, from your home
+folder, not the repository:
 
 ```sh
-git clone https://github.com/johnfrog76/code-sleuth.git && cd code-sleuth
-npm ci && npm link
-code-sleuth path/to/your/repo --goal public
+cd ~ && npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public
 ```
+
+Start it outside the repository: npm reads the `.npmrc` of the folder it starts in. `#v0.2.0` pins the release,
+so a new commit doesn't change what runs. To keep it on your PATH, install it from a clone
+([docs/QUICKSTART.md](docs/QUICKSTART.md#install-from-a-clone)).
 
 You get the verdict and the checklist, and a case file in your own cases folder, never in the repository.
 [docs/QUICKSTART.md](docs/QUICKSTART.md) walks through it, and
