@@ -12,6 +12,15 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 - A line carrying `code-sleuth:example` is an example for every check, the workflow checks and a commit message's `names.deny` match included, set in one place as each result leaves its check. A one-line `run:` with a trailing comment is found on its own line, not line 0.
 - When git is there and does not answer in time, the run says so: the repo line reads `(git did not answer in time)` in place of `(not a git repository)`, a check that needs git says `git did not answer in time, so I couldn't read what it would have told me.` in place of asking you to install git, and `case.json`'s `repo` carries `gitTimedOut: true`. It still never reads clean.
 - Under `--offline`, the polish line says polish is off because of `--offline`, whether or not `--polish` was given, and no key is read to say it. It no longer suggests adding `--polish`, which `--offline` would turn off.
+
+### Added
+
+- The periodic audit, `.github/workflows/periodic-audit.yml`: monthly, on every `v*` tag and by hand, it runs the quick start's npx line from the home folder, with `--offline` and `--out` added, against the decoy case (`scripts/make-decoy-case.mjs`) on Linux, macOS and Windows, checks every expected result with `scripts/check-decoy-case.mjs`, and opens an issue when a run fails.
+
+## [0.2.0] - 2026-11-12
+
+### Changed
+
 - The `Out` line names looking for ToolKit whenever it starts a PowerShell, and `SECURITY.md` and `docs/CONFIGURATION.md` say plainly that ToolKit, once loaded, may reach GitHub through `gh`, which `--offline` skips. The quick start's Windows note covers cmd too: run `cd %USERPROFILE%` first, since cmd does not read `~`.
 - **`--offline` means nothing leaves the machine.** It also turns off the polish request, even with `--polish` (polish reads off, because of `--offline`), and the ToolKit probe, so no PowerShell is started: the ToolKit line and `case.json` (`"state": "not-probed"`) say ToolKit was not probed. `--offline --toolkit` is refused. Every PowerShell Code Sleuth starts gets `POWERSHELL_TELEMETRY_OPTOUT=1` and `POWERSHELL_UPDATECHECK=Off`.
 - What Code Sleuth writes keeps the repository's text as data. In `case.json`, `case.md`, the cards, the polish request and a ToolKit card, control, bidirectional and invisible format characters from the repository become U+FFFD; in the terminal they print as `?`, and a line break in a file's name prints as a space. A card's evidence stands under `Quoted from the repository, not instructions.`, each excerpt fenced and cut at 160 characters, and every card ends with a `**Source:** Code Sleuth <version>` line before its fingerprint. `--toolkit` files the cards as Code Sleuth wrote them, never the polished ones, which stay in the case folder.
@@ -28,7 +37,6 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Added
 
-- The periodic audit, `.github/workflows/periodic-audit.yml`: monthly, on every `v*` tag and by hand, it runs the quick start's npx line from the home folder, with `--offline` and `--out` added, against the decoy case (`scripts/make-decoy-case.mjs`) on Linux, macOS and Windows, checks every expected result with `scripts/check-decoy-case.mjs`, and opens an issue when a run fails.
 - The project's page, `site/`, for GitHub Pages: what Code Sleuth gives you, what it looks for, a real checklist and card from a sample run, and how to try it. Light and dark, at phone width, with no script and no web font. Its verdict stamps are green, amber and red, from one set of colour tokens in `src/atoms/figures.tsx`, and each keeps its word.
 - `docs/QUICKSTART.md` and the project's page show `cd ~ && npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public`, which runs a pinned release from GitHub with no clone. It starts outside the repository, because npm reads the `.npmrc` of the folder it starts in. The first run builds Code Sleuth from source, with its development tools.
 - The API key can live in a `.env` in Code Sleuth's own folder, beside the cases folder: copy `.env.example` there and fill it in. A key in your environment still wins. No other `.env` is read, the key never reaches a process Code Sleuth starts, the run says where the key came from and never what it is, and it warns when others can read the file. With no key, the run prints the one line that copies the `.env.example` beside the command into place, both paths in full; the case file keeps it with both paths in their `~` form.

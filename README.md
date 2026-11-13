@@ -83,7 +83,7 @@ before you act on one. A MET means the list is met; your software may have requi
 
 ## Status
 
-Version 0.1.0, the first release: the whole loop on one goal, the public-facing goal. It is not on npm yet. The
+Version 0.2.0, released as the `v0.2.0` tag on GitHub: the whole loop on one goal, the public-facing goal. It is not on npm yet. The
 security and quality goals are planned for a later release.
 
 ## License

@@ -11,10 +11,20 @@ const { version } = JSON.parse(read("package.json")) as { version: string };
 const NPX = /npx github:johnfrog76\/code-sleuth(\S*)/g;
 const REASON = "reads the .npmrc of the folder it starts in";
 
+/** The changelog's unreleased section and the section for this package's version, which is the release npx runs. */
+function currentChangelog(body: string): string {
+  const unreleased = body.split(/^## \[Unreleased\]$/m)[1]!.split(/^## \[/m)[0]!;
+  const current = body
+    .split(new RegExp(`^## \\[${version.replaceAll(".", "\\.")}\\].*$`, "m"))[1]
+    ?.split(/^## \[/m)[0];
+  return unreleased + (current ?? "");
+}
+
 /** A page's text as a person reads it: no tags, no code ticks, entities as their characters. */
 function text(path: string): string {
   let body = read(path);
-  if (path === "CHANGELOG.md") body = body.split(/^## \[Unreleased\]$/m)[1]!.split(/^## \[/m)[0]!;
+  // The changelog as it reads for the release being run: what is unreleased, and the package's own version.
+  if (path === "CHANGELOG.md") body = currentChangelog(body);
   // &amp; last, so an escaped entity such as &amp;lt; reads as the text it is, not as <.
   return withoutTags(body)
     .replaceAll("`", "")
