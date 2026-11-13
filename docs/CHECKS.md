@@ -375,11 +375,12 @@ and never changes the verdict. A real match elsewhere still counts.
 
 The example locations are:
 
-- a path under a `test/fixtures/` or `__fixtures__/` folder, at any depth, for every check;
+- a path under a `test/fixtures/`, `tests/fixtures/` or `__fixtures__/` folder, at any depth and in any case
+  (`Tests/fixtures/` too), for every check;
 - a line carrying `code-sleuth:example`, for the secret checks, `paths.machine`, `files.sensitive`,
   `quality.markers`, and `names.deny` in files (not yet `workflows.injection`, `workflows.prtarget`, or a commit
   message);
-- a path matching any `--examples <glob>` given on the run ([CLI.md](CLI.md#flags)).
+- a path matching any `--examples <glob>` given on the run, in any case too ([CLI.md](CLI.md#flags)).
 
 A check whose only matches were examples reads **Clean**, with its own line saying so:
 `[x] paths.machine  Clean, apart from 3 matches in example locations, not counted.` A check with real matches

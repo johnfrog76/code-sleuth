@@ -74,6 +74,11 @@ for review.
 > match under the check's `examples`, and records the locations in force as `exampleLocations`. `caseFile`
 > stays 1: nothing had been released.
 
+> **Amended 2026-11-13:** the built-in example folders are `test/fixtures/`, `tests/fixtures/` and
+> `__fixtures__/`, at any depth, and every example glob, built-in or `--examples`, matches in any case, on
+> every platform: `Tests/fixtures/` is an example folder. An example match is still shown, kept in `case.json`
+> and named on its check's line, never dropped.
+
 > **Amended 2026-11-04:** sections 6.3 and 9.2's verdict sentence. The verdict is a finding, not permission:
 > its sentence reads `By my checklist: not ready to go public. ...`, and a READY verdict adds one line,
 > `Nothing on my checklist stands in the way. Every case is different: the call is yours.` The stamps stay
@@ -328,8 +333,8 @@ an assignment of a long high-entropy string to a name that says `secret`, `token
 last one is weighed one step down (a smoking gun becomes a loose end), because it is a guess about a name.
 
 A rule matched inside a file the person has marked as an example (a path under `test/fixtures/`,
-`__fixtures__/`, or a line carrying `code-sleuth:example`) is shown and not counted, as the 2026-11-03
-amendment at this spec's head describes. The rules are not exhaustive and the docs say that plainly: a clean `secrets.*` means "none of
+`tests/fixtures/`, `__fixtures__/` in any case, or a line carrying `code-sleuth:example`) is shown and not counted, as the 2026-11-03
+and 2026-11-13 amendments at this spec's head describe. The rules are not exhaustive and the docs say that plainly: a clean `secrets.*` means "none of
 these rules matched", not "there is no secret".
 
 ### 5.4 What leaves the machine

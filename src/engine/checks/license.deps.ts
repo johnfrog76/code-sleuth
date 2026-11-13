@@ -1,8 +1,7 @@
-import { matchesGlob } from "node:path";
 import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
 import { cards, licenseDepsReasons, unreadableReasons, voices } from "../copy.js";
-import { BUILT_IN_EXAMPLE_GLOBS } from "../examples.js";
+import { BUILT_IN_EXAMPLE_GLOBS, inExampleGlob } from "../examples.js";
 import { isStrongCopyleft } from "../licenses.js";
 import { lineContaining, manifestOf, readManifest } from "../manifest.js";
 
@@ -33,7 +32,7 @@ export const licenseDeps: Check = {
     let unread: string | undefined;
     for (const lockfile of lockfiles) {
       const text = repo.readText(lockfile) ?? "";
-      const example = BUILT_IN_EXAMPLE_GLOBS.some((glob) => matchesGlob(lockfile, glob));
+      const example = BUILT_IN_EXAMPLE_GLOBS.some((glob) => inExampleGlob(lockfile, glob));
       let lock: { lockfileVersion?: number; packages?: unknown };
       try {
         lock = JSON.parse(text) as typeof lock;

@@ -19,6 +19,12 @@ describe("the example locations", () => {
     ["test/fixturesX/e.ts", false],
     ["fixtures/f.ts", false],
     ["src/test.ts", false],
+    // #11: case is ignored, on every platform.
+    ["Tests/fixtures/a.ps1", true],
+    ["test/Fixtures/b.ts", true],
+    ["src/__FIXTURES__/c.json", true],
+    ["tests/fixtures/e.py", true],
+    ["Tests/FixturesX/d.ts", false],
   ])("reads %s as an example: %s", (path, expected) => {
     expect(isExampleEvidence({ path }, builtIn)).toBe(expected);
   });
@@ -34,6 +40,13 @@ describe("the example locations", () => {
     expect(isExampleEvidence({ path: "spec/data/x.json" }, widened)).toBe(true);
     expect(isExampleEvidence({ path: "config/app.sample" }, widened)).toBe(true);
     expect(isExampleEvidence({ path: "spec/data/x.json" }, builtIn)).toBe(false);
+  });
+
+  it("matches an --examples glob ignoring case, both ways", () => {
+    const widened = exampleLocations(["Spec/Data/**"]);
+    expect(isExampleEvidence({ path: "spec/data/x.json" }, widened)).toBe(true);
+    expect(isExampleEvidence({ path: "SPEC/DATA/y.json" }, widened)).toBe(true);
+    expect(isExampleEvidence({ path: "spec/other/x.json" }, widened)).toBe(false);
   });
 });
 
@@ -125,7 +138,7 @@ describe("a case with matches in example locations", () => {
       "test/fixtures/build.sh",
     ]);
     expect(record.exampleLocations).toEqual({
-      globs: ["**/test/fixtures/**", "**/__fixtures__/**"],
+      globs: ["**/test/fixtures/**", "**/tests/fixtures/**", "**/__fixtures__/**"],
       added: [],
       marker: "code-sleuth:example",
     });
@@ -138,6 +151,15 @@ describe("a case with matches in example locations", () => {
     expect(result.stdout).toContain(
       "Examples   3 matches in example locations were not counted; check that they are fake.\n",
     );
+  });
+
+  it("reads a Tests/fixtures/ folder, as .NET and PowerShell projects spell it, as an example", async () => {
+    const { record } = await runKept([], {
+      "Tests/fixtures/build.ps1": `Copy-Item out ${mac}alice/backup/\n`,
+    });
+    const paths = record.checks.find((c: { id: string }) => c.id === "paths.machine");
+    expect(paths.verdict).toBe("clean");
+    expect(paths.examples.map((e: { path: string }) => e.path)).toEqual(["Tests/fixtures/build.ps1"]);
   });
 
   it("says so in case.md: the check's line, and the case's one Examples line", async () => {
@@ -169,6 +191,7 @@ describe("a case with matches in example locations", () => {
     expect(record.exampleLocations.added).toEqual(["spec/data/**", "**/*.sample"]);
     expect(record.exampleLocations.globs).toEqual([
       "**/test/fixtures/**",
+      "**/tests/fixtures/**",
       "**/__fixtures__/**",
       "spec/data/**",
       "**/*.sample",

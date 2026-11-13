@@ -8,8 +8,12 @@ import type { Evidence } from "./check.js";
  */
 export const EXAMPLE_MARKER = "code-sleuth:example";
 
-/** The built-in example folders, at any depth. `--examples <glob>` adds more. */
-export const BUILT_IN_EXAMPLE_GLOBS: readonly string[] = ["**/test/fixtures/**", "**/__fixtures__/**"];
+/** The built-in example folders, at any depth and in any case. `--examples <glob>` adds more. */
+export const BUILT_IN_EXAMPLE_GLOBS: readonly string[] = [
+  "**/test/fixtures/**",
+  "**/tests/fixtures/**",
+  "**/__fixtures__/**",
+];
 
 /** The example locations in force for one run, as the case records them. */
 export interface ExampleLocations {
@@ -19,6 +23,14 @@ export interface ExampleLocations {
   added: string[];
   /** A line carrying this text is an example wherever it is. */
   marker: string;
+}
+
+/**
+ * True when a path lies in an example location a glob names. Case is ignored, on every platform: `Tests/fixtures/`
+ * is as much an example folder as `test/fixtures/`, and an `--examples` glob follows the same rule.
+ */
+export function inExampleGlob(path: string, glob: string): boolean {
+  return matchesGlob(path.toLowerCase(), glob.toLowerCase());
 }
 
 export function exampleLocations(added: readonly string[] = []): ExampleLocations {
@@ -32,5 +44,5 @@ export function isMarked(text: string): boolean {
 
 /** True for evidence in an example location: on a marked line, or under a folder an example glob names. */
 export function isExampleEvidence(evidence: Evidence, locations: ExampleLocations): boolean {
-  return evidence.marked === true || locations.globs.some((glob) => matchesGlob(evidence.path, glob));
+  return evidence.marked === true || locations.globs.some((glob) => inExampleGlob(evidence.path, glob));
 }

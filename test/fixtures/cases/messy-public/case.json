@@ -26,6 +26,7 @@
   "exampleLocations": {
     "globs": [
       "**/test/fixtures/**",
+      "**/tests/fixtures/**",
       "**/__fixtures__/**"
     ],
     "added": [],
