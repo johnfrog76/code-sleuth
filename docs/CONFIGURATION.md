@@ -101,6 +101,11 @@ macOS, `$XDG_DATA_HOME/code-sleuth` or `~/.local/share/code-sleuth` on Linux, `%
 Windows). That folder also holds the one `.env` Code Sleuth reads, for the API key
 ([POLISH.md](POLISH.md#where-the-api-key-goes)). `--out` moves the cases, never the `.env`.
 
+When a run has no API key and prints where one goes, it first puts a copy of `.env.example` beside where the
+`.env` goes, so the Polish line's copy command names this folder alone: not the package's own copy, which under
+npx sits in npm's cache. That template holds no secret. It is written only when none is there, never over a
+file, and never inside the repository investigated.
+
 It also holds `npm/`, npm's cache and logs for the lookups Code Sleuth runs, and for each lookup a short-lived
 copy of the project's `package.json` and lockfile, which npm reads in place of the repository. A cache of its own
 makes the first lookup on a machine a little slower than one through your usual npm cache. A

@@ -107,8 +107,8 @@ New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\code-sleuth" | Out-Null
 Copy-Item .env.example "$env:LOCALAPPDATA\code-sleuth\.env"
 ```
 
-Not working from a clone? Run Code Sleuth once with no API key: its Polish line names the `.env.example` that
-came with it and gives the one line that copies it into place, with both paths in full. Then:
+Not working from a clone? Run Code Sleuth once with no API key: it puts a copy of `.env.example` beside where
+the `.env` goes, and its Polish line gives the one line that copies it into place, with both paths in full. Then:
 
 ```sh
 code-sleuth --goal public --polish

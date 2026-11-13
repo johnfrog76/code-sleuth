@@ -10,7 +10,7 @@ import {
 } from "../polish/client.js";
 import { polishCards } from "../polish/pass.js";
 import { copy } from "./copy.js";
-import { copyCommand, exampleFile, readKeyFile, shownPath } from "./keyFile.js";
+import { copyCommand, exampleFile, placeExample, readKeyFile, shownPath } from "./keyFile.js";
 import type { Io } from "./refusal.js";
 
 export interface PreparedPolish {
@@ -30,7 +30,13 @@ export interface PreparedPolish {
  * request is built or sent, and that is not a refusal either. Under --offline the line says so whether or not
  * --polish was given, and no key is read.
  */
-export function preparePolish(asked: boolean, io: Io, offline = false): PreparedPolish {
+export function preparePolish(
+  asked: boolean,
+  io: Io,
+  offline = false,
+  /** The investigated repository's top folder: the example is never written inside it. */
+  repoTop?: string,
+): PreparedPolish {
   const env = io.env ?? {};
   const model = env[MODEL_VARIABLE]?.trim() || DEFAULT_MODEL;
   // Under --offline, polish is off and no key is read, asked or not: telling the person to add --polish would
@@ -48,7 +54,7 @@ export function preparePolish(asked: boolean, io: Io, offline = false): Prepared
         : undefined;
   const from = keyFrom === undefined ? {} : { keyFrom };
   // With no key, where to put one: the .env, and the one line that copies the example there.
-  const example =
+  const shipped =
     io.keyFile === undefined
       ? undefined
       : io.keyExample === undefined
@@ -56,6 +62,11 @@ export function preparePolish(asked: boolean, io: Io, offline = false): Prepared
         : existsSync(io.keyExample)
           ? io.keyExample
           : undefined;
+  // Put in Code Sleuth's own folder, beside the .env, so the hint names no path in npm's cache (#98).
+  const example =
+    shipped === undefined || io.keyFile === undefined || key !== undefined
+      ? shipped
+      : placeExample(shipped, io.keyFile, repoTop);
   const where =
     io.keyFile === undefined
       ? {}

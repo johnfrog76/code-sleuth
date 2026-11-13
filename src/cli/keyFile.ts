@@ -1,8 +1,9 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { constants, copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import defaultPaths, { type PlatformPath, posix, win32 } from "node:path";
+import defaultPaths, { dirname, join, type PlatformPath, posix, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
+import { isInside } from "../case/folder.js";
 import { KEY_VARIABLE } from "../polish/client.js";
 
 export interface KeyFileRead {
@@ -58,6 +59,26 @@ export function shownPath(
 export function exampleFile(): string | undefined {
   const path = fileURLToPath(new URL("../../.env.example", import.meta.url));
   return existsSync(path) ? path : undefined;
+}
+
+/**
+ * The example, put beside the .env in Code Sleuth's own folder, where the hint can name it: the package's own
+ * copy sits in npm's cache under npx, which npm may clear and which changes with each release. Written only when
+ * none is there, never over a file, and never anywhere but beside the .env, which is never in a repository.
+ * The package's own copy when it cannot be written.
+ */
+export function placeExample(example: string, keyFile: string, repoTop?: string): string {
+  const target = join(dirname(keyFile), ".env.example");
+  // Never into the investigated repository, whatever folder a setting names for the .env.
+  if (repoTop !== undefined && isInside(target, repoTop)) return example;
+  if (existsSync(target)) return target;
+  try {
+    mkdirSync(dirname(target), { recursive: true });
+    copyFileSync(example, target, constants.COPYFILE_EXCL);
+    return target;
+  } catch {
+    return existsSync(target) ? target : example;
+  }
 }
 
 /**

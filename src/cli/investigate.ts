@@ -67,6 +67,7 @@ export async function investigate(
     flags.polish ?? false,
     keyFileOutside ? io : withoutKeyFile,
     flags.offline ?? false,
+    repo.top,
   );
 
   // What may leave the machine is decided, and named, before any check runs; --offline turns it all off, the

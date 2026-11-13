@@ -1,11 +1,19 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { copy as caseCopy } from "../../src/case/copy.js";
 import { defaultKeyFile } from "../../src/case/folder.js";
-import { copyCommand, exampleFile, readKeyFile, shownPath } from "../../src/cli/keyFile.js";
+import { copyCommand, exampleFile, placeExample, readKeyFile, shownPath } from "../../src/cli/keyFile.js";
 import type { PolishClient } from "../../src/polish/client.js";
 import { sleuth } from "../helpers/cli.js";
 import { investigateAsync } from "../helpers/investigate.js";
@@ -232,8 +240,12 @@ describe("where an API key goes, when there is none", () => {
     await withScratch(async (home) => {
       const file = join(home, "code-sleuth", ".env");
       const { result } = await polishRun({ file });
-      const line = `Polish     No API key. The cards are as the sleuth wrote them. To add one, run \`${copyCommand(exampleFile()!, file)}\` and fill it in.`;
+      // The example, put beside the .env in Code Sleuth's own folder: never a path in the package, which under npx
+      // is npm's cache (#98).
+      const placed = join(dirname(file), ".env.example");
+      const line = `Polish     No API key. The cards are as the sleuth wrote them. To add one, run \`${copyCommand(placed, file)}\` and fill it in.`;
       expect(result.stdout).toContain(line + "\n");
+      expect(readFileSync(placed, "utf8")).toBe(readFileSync(exampleFile()!, "utf8"));
     });
   });
 
@@ -245,11 +257,13 @@ describe("where an API key goes, when there is none", () => {
       writeFileSync(example, readFileSync(exampleFile()!, "utf8"));
       for (const argv of [["--polish"], []]) {
         const { result, records } = await polishRun({ file, example, home, argv });
-        expect(result.stdout).toContain(copyCommand(example, file));
+        const placed = join(dirname(file), ".env.example");
+        expect(result.stdout).toContain(copyCommand(placed, file));
+        expect(result.stdout).not.toContain(example);
         expect(records).not.toContain(home);
-        expect(records).toContain(`"keyExample": "${shownPath(example, home)}"`);
+        expect(records).toContain(`"keyExample": "${shownPath(placed, home)}"`);
         expect(records).toContain(
-          `copy ${shownPath(example, home)} to ${shownPath(file, home)} and fill it in`,
+          `copy ${shownPath(placed, home)} to ${shownPath(file, home)} and fill it in`,
         );
         // A record holds no quoted ~ that a shell would leave unexpanded.
         expect(records).not.toContain("'~");
@@ -262,6 +276,25 @@ describe("where an API key goes, when there is none", () => {
       const file = join(home, "code-sleuth", ".env");
       const { result } = await polishRun({ file, argv: [], noExample: true });
       expect(result.stdout).toContain(`To add one, copy .env.example to ${shownPath(file)} and fill it in.`);
+    });
+  });
+
+  it("puts the example beside the .env only when none is there: never over a file", () => {
+    withScratch((home) => {
+      const file = join(home, "code-sleuth", ".env");
+      const placed = join(dirname(file), ".env.example");
+      mkdirSync(dirname(placed), { recursive: true });
+      writeFileSync(placed, "# the person's own\n");
+      expect(placeExample(exampleFile()!, file)).toBe(placed);
+      expect(readFileSync(placed, "utf8")).toBe("# the person's own\n");
+    });
+  });
+
+  it("never puts the example inside the repository, whatever folder the .env is named in", () => {
+    withScratch((root) => {
+      const file = join(root, "repo", "settings", ".env");
+      expect(placeExample(exampleFile()!, file, join(root, "repo"))).toBe(exampleFile());
+      expect(existsSync(join(root, "repo", "settings", ".env.example"))).toBe(false);
     });
   });
 
@@ -353,13 +386,14 @@ describe("the command, as a person runs it", () => {
       const args = [".", "--goal", "public", "--out", out];
 
       const before = command(here, args, home);
-      // With no key, it says where one goes, with the line that copies the example beside the command.
+      // With no key, it says where one goes, with the line that copies the example, put beside the .env.
       expect(before.stdout).toContain(
         "off. Add an API key and --polish to have the cards reworded. To add one, run `mkdir -p '",
       );
-      expect(before.stdout).toContain(`cp '${exampleFile()}' '`);
-
       const own = defaultKeyFile(process.platform, { LOCALAPPDATA: join(home, "AppData", "Local") }, home);
+      expect(before.stdout).toContain(`cp '${join(dirname(own), ".env.example")}' '`);
+      expect(before.stdout).not.toContain(exampleFile()!);
+
       mkdirSync(dirname(own), { recursive: true });
       writeFileSync(own, `ANTHROPIC_API_KEY=${OTHER_KEY}\n`, { mode: 0o600 });
       const after = command(here, args, home);

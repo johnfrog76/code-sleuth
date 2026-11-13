@@ -130,7 +130,14 @@ describe("a whole run writes nothing into the repository", () => {
         ),
       )
       .sort();
-    // engine/npm.ts writes only in npm's own folder, which the guard holds outside the repository.
-    expect(writers).toEqual(["case/folder.ts", "case/write.ts", "engine/npm.ts", "toolkit/ledger.ts"]);
+    // engine/npm.ts writes only in npm's own folder, which the guard holds outside the repository; cli/keyFile.ts
+    // only the .env.example template beside Code Sleuth's own .env, never over a file and never in the repository.
+    expect(writers).toEqual([
+      "case/folder.ts",
+      "case/write.ts",
+      "cli/keyFile.ts",
+      "engine/npm.ts",
+      "toolkit/ledger.ts",
+    ]);
   });
 });
