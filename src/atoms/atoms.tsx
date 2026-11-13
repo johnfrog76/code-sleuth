@@ -144,6 +144,14 @@ export function LogoMark({ title, size = 64 }: { title: string; size?: number })
 /** The wordmark's ink on each theme: the fedora's brown on light, the face's cream on dark. */
 export const LOCKUP_INK: Record<Theme, string> = { light: P.fedora, dark: P.face, office: P.face };
 
+/**
+ * The width the name is drawn to, in the lockup's units. The name is SVG text, so its natural width is the
+ * width of whatever font the machine has: Arial, where Helvetica is missing, is wider and ran past the
+ * canvas. A set width makes every machine draw it the same. "Code Sleuth" is 607 units in Helvetica Neue, so
+ * that is 55 units a letter, capped at the space the canvas has to the right of the mark.
+ */
+export const nameLength = (name: string) => Math.min(Math.round(name.length * 55.2), 607);
+
 /** The mark with the name beside it. The name is a prop, so the lockup carries no words of its own. */
 export function LogoLockup({
   title,
@@ -176,6 +184,8 @@ export function LogoLockup({
         fontSize={104}
         fontWeight={800}
         fill={LOCKUP_INK[theme]}
+        textLength={nameLength(name)}
+        lengthAdjust="spacingAndGlyphs"
       >
         {name}
       </text>

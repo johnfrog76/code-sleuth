@@ -6,6 +6,10 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ## [Unreleased]
 
+### Fixed
+
+- The project page's heading reads "Code Sleuth" in full on every machine. It was a picture of the name drawn in Helvetica Neue, and where that font is missing, as on Windows, the wider fallback cut off the last letter. The heading is now text in the page's own fonts, with the mark beside it as decoration. The logo files draw the name to a set width, so they fit their canvas in any font.
+
 ### Changed
 
 - One missing lockfile reads as one thing to do. `license.deps`, `deps.advisories` and `deps.outdated` still read not investigated without it, each with one short sentence pointing at `deps.lockfile`, whose line and card carry the fix. `license.deps` reads clean when no `package.json` has dependencies: there are no licenses to read.

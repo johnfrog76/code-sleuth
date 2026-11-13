@@ -27,6 +27,8 @@
   --lp-glow: rgba(143, 212, 94, 0.14);
   --lp-on-jungle: #eef6ea;
   --lp-on-jungle-muted: #cfe0d6;
+  /* The name in the banner: the logo's cream, the sloth's face. */
+  --lp-wordmark: #ece0c8;
   --lp-cta: var(--jungle-canopy-lit);
   --lp-cta-hover: #b5e68f;
   --lp-cta-text: var(--jungle-canopy-night);
@@ -151,13 +153,25 @@ img {
   width: min(240px, 60vw);
 }
 
+/* The name is text, in the page's own fonts, so it is never cut off by a font the machine lacks. The mark
+   beside it is decoration: the words are the heading. */
 .lp-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
   margin: 0 0 24px;
-  line-height: 0;
+  color: var(--lp-wordmark);
+  font-size: clamp(2.2rem, 5vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .lp-title img {
-  width: min(300px, 100%);
+  flex: none;
+  width: 1.3em;
+  height: auto;
 }
 
 .lp-offer {

@@ -69,6 +69,18 @@ describe("the atoms", () => {
     expect(render(<LogoLockup title="T" name="Some Name" />)).toContain(">Some Name<");
   });
 
+  // #103: drawn in a font wider than Helvetica Neue, the name ran past the canvas and lost its last letter.
+  it("draw the name to a set width inside the canvas, whatever font the machine has", () => {
+    const markup = render(<LogoLockup title="T" name="Code Sleuth" />);
+    const [, minX, , width] = /viewBox="([-\d.]+) ([-\d.]+) ([\d.]+)/.exec(markup)!.map(Number);
+    const text = /<text x="([\d.]+)"[^>]*textLength="([\d.]+)" lengthAdjust="spacingAndGlyphs"/.exec(markup);
+    expect(text).not.toBeNull();
+    expect(Number(text![1]) + Number(text![2])).toBeLessThan(minX! + width! - 8);
+    expect(render(<LogoLockup title="T" name="A much longer name than ours" />)).toContain(
+      'textLength="607"',
+    );
+  });
+
   it("still means still: no keyframes, no breathing", () => {
     const markup = render(<SleuthAtom pose="reading" title="T" still />);
     expect(markup).not.toContain("@keyframes");

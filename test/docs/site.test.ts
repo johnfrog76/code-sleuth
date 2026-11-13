@@ -77,6 +77,22 @@ describe("the project's page", () => {
     expect(read("site/site.css")).not.toMatch(/@import|url\(|@font-face/i);
   });
 
+  // #103: the heading was an image of the name, and a machine without its font cut the last letter off.
+  it("names itself in its heading as text, with the mark beside it as decoration", () => {
+    const heading = /<h1 class="lp-title">([\s\S]*?)<\/h1>/.exec(page)?.[1];
+    expect(heading).toBeDefined();
+    const images = heading!.match(/<img\b[^>]*>/g) ?? [];
+    for (const img of images) expect(img).toContain('alt=""');
+    // Outside its images, the heading is the name and nothing else: no other element, no hidden word.
+    expect(
+      heading!
+        .split(/<img\b[^>]*>/)
+        .join("")
+        .trim(),
+    ).toBe("Code Sleuth");
+    expect(heading).not.toContain("logo");
+  });
+
   it("carries no label that hedges for it", () => {
     expect(page).not.toMatch(/disclaimer/i);
   });
