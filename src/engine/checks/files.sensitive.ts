@@ -1,6 +1,5 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
-import { isMarked } from "../examples.js";
 import { mask } from "../secrets/scan.js";
 
 /** A file name that usually holds a secret, and the rule that names it. */
@@ -45,7 +44,6 @@ export const filesSensitive: Check = {
           excerpt,
           rule: "npmrc-token",
           valueHash: context.hashSecret(value),
-          ...(isMarked(text) ? { marked: true as const } : {}),
         });
       });
     }

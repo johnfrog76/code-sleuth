@@ -19,10 +19,6 @@ to read wrong, and what has not been proven, with what you see when you hit each
   *not investigated*, naming the file; what the npm side finds still stands.
 - **Issues and pull requests.** A public repository shows its tracker too ([CHECKS.md](CHECKS.md#public-facing-code)), and
   no check reads it yet: a secret or a name in an issue or a pull request comment is not looked for.
-- **The example marker in three places.** A line carrying `code-sleuth:example` is not yet an example for
-  `workflows.injection`, `workflows.prtarget`, or a `names.deny` match in a commit message: there it still
-  counts ([CHECKS.md](CHECKS.md#example-locations)).
-
 - **A very large file or history.** A text file over 5 MB is not read by the text checks, and a history over 64 MB
   of changes or two million added lines is not read by `secrets.history`: each reads *not investigated*, with
   the reason, rather than ask more memory than a laptop has. Reading them in pieces is planned.

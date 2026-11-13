@@ -1,6 +1,5 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
-import { isMarked } from "../examples.js";
 import { excerptOf, readableLines } from "../files.js";
 import { LOCKFILES } from "./deps.lockfile.js";
 
@@ -84,7 +83,6 @@ export const qualityMarkers: Check = {
             line: i + 1,
             excerpt: excerptOf(text, path),
             rule: marker[1]!,
-            ...(isMarked(text) ? { marked: true as const } : {}),
           });
         }
       });

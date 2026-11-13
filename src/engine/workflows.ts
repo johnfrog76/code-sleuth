@@ -151,6 +151,22 @@ export function keyOf(line: string): { key: Key; rest: string } | undefined {
 }
 
 /**
+ * A value with a trailing YAML comment taken off, as YAML reads it: in a plain value, `#` after a space starts
+ * one; after a value quoted whole, so does `#` after its closing quote. Read once, start to end.
+ */
+export function withoutComment(value: string): string {
+  const quote = value[0] === '"' || value[0] === "'" ? value[0] : undefined;
+  if (quote !== undefined) {
+    const close = value.indexOf(quote, 1);
+    if (close > 0 && /^\s+#/.test(value.slice(close + 1))) return value.slice(0, close + 1);
+    return value;
+  }
+  for (let i = 1; i < value.length; i++)
+    if (value[i] === "#" && /\s/.test(value[i - 1]!)) return value.slice(0, i).trimEnd();
+  return value;
+}
+
+/**
  * Every line that writes a step's key, read once: by its inline value, and, for a block (`run: |`), by the
  * block's first line. Each line is read once, start to end, so a long one costs its length and no more.
  */
@@ -165,7 +181,8 @@ function indexKeys(lines: readonly string[]): KeyIndex {
   lines.forEach((line, at) => {
     const keyed = keyOf(line);
     if (keyed === undefined) return;
-    const raw = keyed.rest.trim();
+    // A trailing comment is not part of the value YAML reads: ` #` ends a plain value, and follows a quoted one.
+    const raw = withoutComment(keyed.rest.trim());
     // A value quoted whole loses its quotes; one that only ends in a quote (`echo "hi"`) keeps them.
     const inline = /^(["']).*\1$/.test(raw) ? raw.slice(1, -1) : raw;
     add(keyed.key, inline, at, false);

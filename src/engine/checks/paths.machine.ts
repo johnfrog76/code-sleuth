@@ -1,7 +1,6 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cards, voices } from "../copy.js";
 import { excerptOf, readableLines } from "../files.js";
-import { isMarked } from "../examples.js";
 
 /** A home folder on macOS, Linux or Windows, with the name in it. */
 const HOME = /(?:\/Users\/|\/home\/|\b[A-Za-z]:(?:\\{1,2}|\/)Users(?:\\{1,2}|\/))([A-Za-z0-9._-]+)(?:\\|\/)/g;
@@ -51,7 +50,6 @@ export const pathsMachine: Check = {
           path,
           line: i + 1,
           excerpt: excerptOf(text, path),
-          ...(isMarked(text) ? { marked: true as const } : {}),
         });
       });
     }

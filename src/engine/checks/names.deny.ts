@@ -1,7 +1,6 @@
 import { COMMIT_MESSAGE, type Check, type Evidence, type Result } from "../check.js";
 import { cards, denyReasons, gitTimedOutReason, voices } from "../copy.js";
 import { readableLines } from "../files.js";
-import { isMarked } from "../examples.js";
 
 /**
  * One whole-word, any-case pattern per line of the deny list, numbered by its line there. Blank lines and
@@ -37,7 +36,6 @@ export const namesDeny: Check = {
             path,
             line: i + 1,
             rule,
-            ...(isMarked(text) ? { marked: true as const } : {}),
           });
         }
       });

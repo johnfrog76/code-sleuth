@@ -1,9 +1,17 @@
 import { maskSecrets } from "./secrets/scan.js";
 import { createHmac, randomBytes } from "node:crypto";
-import type { Check, CheckContext, Evidence, Need, Result } from "./check.js";
+import {
+  COMMIT_MESSAGE,
+  type Check,
+  type CheckContext,
+  type Evidence,
+  type Need,
+  type Result,
+} from "./check.js";
 import { CHECKS } from "./checks/index.js";
 import { checkFailed, gitTimedOutReason, needReasons, refusedReasons, tooLargeReasons } from "./copy.js";
-import { type ExampleLocations, exampleLocations, isExampleEvidence } from "./examples.js";
+import { type ExampleLocations, exampleLocations, isExampleEvidence, isMarked } from "./examples.js";
+import { readableLines } from "./files.js";
 import { WEIGHTS, type Goal, type Weight } from "./goals.js";
 import type { RepoReader } from "./repo.js";
 import { git } from "./repo.js";
@@ -176,7 +184,41 @@ export function runCheck(
       verdict: "not-investigated",
       reason: refusedReasons.leadsOutside(repo.refused[0]!, repo.refused.length - 1),
     };
-  return masked(result);
+  return masked(markedLines(result, repo));
+}
+
+/**
+ * Sets `marked` on every piece of evidence whose whole line carries the example marker, for every check, here and
+ * nowhere else: a check never has to remember. The line is read whole, so the marker counts even where the
+ * excerpt was cut to a window. A line in the tree is read from the file, and a commit message's line from the
+ * message. A line from the history (a file path with a commit) is no longer in the tree: the history reader
+ * marked it from the line as that commit added it, and it is kept as it is.
+ */
+export function markedLines(result: Result, repo: RepoReader): Result {
+  if (result.verdict !== "found") return result;
+  const files = new Map<string, string[]>();
+  let messages: Map<string, string[]> | undefined;
+  const lineOf = (piece: Evidence): string | undefined => {
+    if (piece.line === undefined) return undefined;
+    if (piece.path === COMMIT_MESSAGE) {
+      if (piece.commit === undefined) return undefined;
+      messages ??= new Map(
+        (repo.commitMessages() ?? []).map(({ commit, text }) => [commit, text.split("\n")]),
+      );
+      return messages.get(piece.commit)?.[piece.line - 1];
+    }
+    if (piece.commit !== undefined) return undefined;
+    if (!files.has(piece.path)) files.set(piece.path, readableLines(repo, piece.path));
+    return files.get(piece.path)![piece.line - 1];
+  };
+  return {
+    verdict: "found",
+    evidence: result.evidence.map((piece) => {
+      if (piece.marked === true) return piece;
+      const line = lineOf(piece);
+      return line !== undefined && isMarked(line) ? { ...piece, marked: true } : piece;
+    }),
+  };
 }
 
 /**
