@@ -249,9 +249,15 @@ export const ecosystemReasons = {
     `The npm side is clean, but Code Sleuth reads npm projects so far, and ${path} (${ecosystem}) was not read.`,
 };
 
+/**
+ * Why a check that reads the npm lockfile could not: there is none. One short sentence, the same for each, pointing
+ * at deps.lockfile, whose line and card carry the fix, so one missing lockfile reads as one thing to do (#99).
+ */
+const needsLockfile = "This reads the npm lockfile, and there isn't one: deps.lockfile has the fix.";
+
 /** Why license.deps could not read the dependencies' licenses, and what would let it. */
 export const licenseDepsReasons = {
-  noLockfile: "There's a package.json and no package-lock.json: run npm install to make one, and commit it.",
+  noLockfile: needsLockfile,
   unreadable: (lockfile: string) => `${lockfile} is not JSON I can read.`,
   oldLockfile: (lockfile: string) =>
     `${lockfile} is an old lockfile without license fields: regenerate it with npm 7 or later.`,
@@ -270,8 +276,7 @@ export const advisoriesReasons = {
     npm: "npm audit sends the lockfile's package names and versions to npm's configured registry",
     gh: "gh api asks GitHub's advisory database about the lockfile's package names and versions",
   },
-  noLockfile:
-    "There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it.",
+  noLockfile: needsLockfile,
   otherLockfile:
     "deps.advisories reads npm's package-lock.json, and this project locks with another package manager.",
   noTool: "This needs npm, or the GitHub CLI (gh) signed in, on the PATH.",
@@ -290,8 +295,7 @@ export const advisoriesReasons = {
 export const outdatedReasons = {
   outgoing:
     "npm outdated asks npm's configured registry for each direct dependency's latest version (names only)",
-  noLockfile:
-    "There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it.",
+  noLockfile: needsLockfile,
   otherLockfile:
     "deps.outdated reads npm's package-lock.json, and this project locks with another package manager.",
   noNpm: "This needs npm on the PATH.",

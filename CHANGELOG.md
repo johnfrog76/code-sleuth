@@ -8,6 +8,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Changed
 
+- One missing lockfile reads as one thing to do. `license.deps`, `deps.advisories` and `deps.outdated` still read not investigated without it, each with one short sentence pointing at `deps.lockfile`, whose line and card carry the fix. `license.deps` reads clean when no `package.json` has dependencies: there are no licenses to read.
 - `deps.advisories` and `deps.outdated` read every npm project, the root and each folder below it whose `package.json` has dependencies, one lookup in each folder, and the `Out` line names each (`(for web/)`). A workspace member is read through the workspace root that names it. Before, a project below the root read not investigated, named; now it is looked up.
 - Under `--offline`, `deps.advisories` and `deps.outdated` say `--offline` only where they would have looked something up. With no `package.json`, no dependencies or no npm lockfile, no call would be made, so they read as they do online: clean, or not investigated with the lockfile's reason.
 - On Windows, when PowerShell's execution policy (`Restricted`, or `AllSigned`) will not run the hand-off script, the case and the terminal say so, naming the policy, in place of "ToolKit isn't here", and `--toolkit` is refused with your own fix as the hint (`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`). Code Sleuth never changes the policy and never goes around it. CI proves it on a Windows runner set to `Restricted`.

@@ -1,5 +1,6 @@
 import type { Check, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
+import { hasAnyDependencies, npmProjects } from "../npmProjects.js";
 import { cards, licenseDepsReasons, unreadableReasons, voices } from "../copy.js";
 import { BUILT_IN_EXAMPLE_GLOBS, inExampleGlob } from "../examples.js";
 import { isStrongCopyleft } from "../licenses.js";
@@ -21,7 +22,8 @@ export const licenseDeps: Check = {
   run(repo): Result {
     const lockfiles = repo.textFiles.filter((path) => path.split("/").at(-1) === "package-lock.json");
     if (lockfiles.length === 0) {
-      const npmWithoutLock = repo.textFiles.some((path) => path.split("/").at(-1) === "package.json");
+      // Only a package.json with dependencies has licenses to read; one with none needs no lockfile (#99).
+      const npmWithoutLock = npmProjects(repo, hasAnyDependencies).length > 0;
       if (npmWithoutLock) return { verdict: "not-investigated", reason: licenseDepsReasons.noLockfile };
       return cleanOrUnread(repo, false);
     }

@@ -91,7 +91,7 @@
       "title": "Dependency licenses",
       "booksName": "license compliance",
       "verdict": "not-investigated",
-      "reason": "There's a package.json and no package-lock.json: run npm install to make one, and commit it."
+      "reason": "This reads the npm lockfile, and there isn't one: deps.lockfile has the fix."
     },
     {
       "id": "paths.machine",
@@ -292,7 +292,7 @@
       "title": "Known advisories in dependencies",
       "booksName": "known vulnerable component",
       "verdict": "not-investigated",
-      "reason": "There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it."
+      "reason": "This reads the npm lockfile, and there isn't one: deps.lockfile has the fix."
     },
     {
       "id": "deps.updates",
@@ -308,7 +308,7 @@
       "title": "Dependencies a major version behind",
       "booksName": "outdated dependency",
       "verdict": "not-investigated",
-      "reason": "There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it."
+      "reason": "This reads the npm lockfile, and there isn't one: deps.lockfile has the fix."
     },
     {
       "id": "quality.markers",

@@ -159,7 +159,11 @@ describe("license.deps", () => {
   });
 
   it.each([
-    ["a package.json with no lockfile", { "package.json": pkg({}) }, /no package-lock\.json/],
+    [
+      "a package.json with dependencies and no lockfile",
+      { "package.json": pkg({ dependencies: { a: "1" } }) },
+      /deps\.lockfile/,
+    ],
     ["another ecosystem", { "requirements.txt": "requests\n" }, /requirements\.txt/],
     [
       "an old lockfile",
@@ -174,6 +178,10 @@ describe("license.deps", () => {
     const result = check("license.deps", files);
     expect(result.verdict).toBe("not-investigated");
     if (result.verdict === "not-investigated") expect(result.reason).toMatch(reason);
+  });
+
+  it("reads clean with a package.json with no dependencies: there are no licenses to read, and no lockfile is needed", () => {
+    expect(check("license.deps", { "package.json": pkg({}) }).verdict).toBe("clean");
   });
 
   it.each([

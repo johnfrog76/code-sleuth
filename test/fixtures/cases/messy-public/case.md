@@ -41,9 +41,9 @@
 
 ## Not investigated
 
-- [ ] **Dependency licenses** (`license.deps`): Not investigated. There's a package.json and no package-lock.json: run npm install to make one, and commit it.
-- [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it.
-- [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it.
+- [ ] **Dependency licenses** (`license.deps`): Not investigated. This reads the npm lockfile, and there isn't one: deps.lockfile has the fix.
+- [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This reads the npm lockfile, and there isn't one: deps.lockfile has the fix.
+- [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This reads the npm lockfile, and there isn't one: deps.lockfile has the fix.
 
 Polish: No API key. The cards are as the sleuth wrote them.
 
