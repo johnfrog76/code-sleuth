@@ -305,9 +305,9 @@ A check that reads a `package.json` reads **not investigated** when that file is
   runs
 - **Reads clean** with no `package.json` at the root, or none with dependencies, and no other ecosystem's manifest and
   no npm project below the root, and makes
-  no call (with `--offline`, it reads not investigated even then). **Not investigated** with an npm project
-  below the root (it reads the root's alone so far, and names the other), with no npm lockfile, with another package manager's lockfile, with `--offline`,
-  with neither tool, or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
+  no call, `--offline` or not. **Not investigated** with an npm project
+  below the root (it reads the root's alone so far, and names the other), with no npm lockfile, with another package manager's lockfile, with `--offline` where it would look
+  something up, with neither tool, or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** known vulnerable component
 - **The fix:** Update each package listed to a version with the fix (`npm audit fix` does what it safely can), or replace it. A package deep in the tree is fixed by updating the dependency that pulls it in.
 
@@ -336,10 +336,10 @@ A check that reads a `package.json` reads **not investigated** when that file is
   registry settings (your `.npmrc`, a scoped or private registry) alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
 - **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest
   and no npm project below the root, and
-  makes no call, when npm is found and the run is not `--offline`; **not investigated** with an npm project
-  below the root, named, when `npm outdated` exits 1 with nothing printed, with no lockfile, a lockfile from another package manager, no npm,
+  makes no call, with or without npm, `--offline` or not; **not investigated** with an npm project
+  below the root, named, when `npm outdated` exits 1 with nothing printed, with no lockfile, a lockfile from another package manager, no npm where it would look something up,
   a dependency from a source other than npm's registry and none of the others behind (each one named),
-  `--offline`, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
+  `--offline` where it would look something up, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** outdated dependency
 - **The fix:** For each dependency listed, read its changelog for the breaking changes between your version and the latest, update it, and run the tests. npm outdated lists them all.
 
@@ -358,8 +358,8 @@ manifest of another ecosystem -- `requirements.txt`, `pyproject.toml` or `Pipfil
 `Cargo.toml` (Rust), `Gemfile` (Ruby), `pom.xml` or `build.gradle` (Java), `composer.json` (PHP) -- makes a
 check that would read clean read **not investigated** instead, naming the file. Beside an npm project, the npm
 side is still checked: what it finds stands, and a clean npm side says the other side was not read. With no
-manifest of any of these, there is nothing to check, and the checks read clean, unless one cannot run (with `--offline`, or with no npm
-for `deps.outdated`).
+manifest of any of these, there is nothing to check, and the checks read clean, `--offline` or not: with nothing to look up, no call
+would be made, so nothing stops them.
 
 ## A guess from a name
 

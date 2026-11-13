@@ -76,9 +76,10 @@ describe("a goal", () => {
       ["workflows.prtarget", "loose-end", "clean"],
       ["workflows.injection", "loose-end", "clean"],
       ["deps.lockfile", "hunch", "clean"],
-      ["deps.advisories", "smoking-gun", "not-investigated"],
+      // No package.json: no call would be made, so no network is needed, and both read clean (#12).
+      ["deps.advisories", "smoking-gun", "clean"],
       ["deps.updates", "hunch", "found"],
-      ["deps.outdated", "loose-end", "not-investigated"],
+      ["deps.outdated", "loose-end", "clean"],
       ["quality.markers", "hunch", "clean"],
     ]);
   });

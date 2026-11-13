@@ -20,8 +20,8 @@
     "smoking-gun": 1,
     "loose-end": 6,
     "hunch": 3,
-    "clean": 11,
-    "not-investigated": 3
+    "clean": 13,
+    "not-investigated": 1
   },
   "exampleLocations": {
     "globs": [
@@ -220,8 +220,7 @@
       "id": "deps.advisories",
       "title": "Known advisories in dependencies",
       "booksName": "known vulnerable component",
-      "verdict": "not-investigated",
-      "reason": "This makes a call off the machine, and --offline is set."
+      "verdict": "clean"
     },
     {
       "id": "deps.updates",
@@ -236,8 +235,7 @@
       "id": "deps.outdated",
       "title": "Dependencies a major version behind",
       "booksName": "outdated dependency",
-      "verdict": "not-investigated",
-      "reason": "This needs npm on the PATH."
+      "verdict": "clean"
     },
     {
       "id": "quality.markers",

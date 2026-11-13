@@ -110,6 +110,22 @@ describe("deps.outdated", () => {
     expect(calls).toEqual([]);
   });
 
+  // #12: under --offline (no network, so no npm either), --offline is the reason only where a call would be made.
+  it.each([
+    ["no package.json", { "README.md": "x\n" }, { verdict: "clean" }],
+    ["no dependencies", { "package.json": "{}" }, { verdict: "clean" }],
+    [
+      "dependencies and no lockfile",
+      { "package.json": manifest({ react: "^17.0.2" }) },
+      { verdict: "not-investigated", reason: outdatedReasons.noLockfile },
+    ],
+    ["a project it would look up", app, { verdict: "not-investigated", reason: needReasons.network }],
+  ])("under --offline with %s, says --offline only where a call would be made", (_, files, expected) => {
+    const { result, calls } = run(files, { outdated: {} }, []);
+    expect(result).toEqual(expected);
+    expect(calls).toEqual([]);
+  });
+
   it("says --offline when that is why", () => {
     expect(needReasons.network).toContain("--offline");
   });

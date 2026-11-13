@@ -137,13 +137,32 @@ export function splitExamples(
 }
 
 /** A check whose need is missing is `not-investigated` with the reason, and its rule never runs. */
+/** What a check lacks, when it does; the run says, before any check runs, what each would send off the machine. */
+const CALLING: readonly Need[] = ["network", "npm", "gh"];
+
+/**
+ * The need that stops a check, or undefined. A check that calls off the machine names its call (`outgoing`); when
+ * it would make none for this repository (no package.json, no dependencies, no npm lockfile), lacking the network,
+ * npm or gh does not stop it, and it reads as it would online. Without them the run has no npm and no gh to give
+ * it, so it cannot call out. When it would make a call and the network is off, `--offline` is the reason, first.
+ */
+function needed(check: Check, repo: RepoReader, capabilities: Capabilities): Need | undefined {
+  const missing = check.needs.filter((need) => !capabilities.has(need));
+  if (missing.length === 0) return undefined;
+  if (check.outgoing !== undefined && missing.every((need) => CALLING.includes(need))) {
+    const wouldCall = check.outgoing(repo, new Set([...capabilities, ...CALLING]));
+    if (wouldCall === undefined) return undefined;
+  }
+  return missing.includes("network") ? "network" : missing[0];
+}
+
 export function runCheck(
   check: Check,
   repo: RepoReader,
   capabilities: Capabilities,
   context: CheckContext,
 ): Result {
-  const missing = check.needs.find((need) => !capabilities.has(need));
+  const missing = needed(check, repo, capabilities);
   if (missing !== undefined)
     return {
       verdict: "not-investigated",

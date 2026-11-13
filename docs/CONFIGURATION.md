@@ -72,8 +72,10 @@ PowerShell is started, and ToolKit is not probed.
 | `gh api /advisories` | `deps.advisories` | no npm, `gh` found, not `--offline`, and the same lockfile | the ecosystem (`npm`) and every locked package's name and version, to GitHub, in batches of fifty. Which advisory belongs to which locked version is worked out on the machine |
 | the polish request | `--polish` | an API key, from the environment or Code Sleuth's `.env`, and not `--offline` | each card's text, already masked, to `https://api.anthropic.com/v1/messages` ([POLISH.md](POLISH.md)) |
 
-With `--offline`, `deps.outdated` and `deps.advisories` make no call and read *not investigated*: with the
-reason `--offline`, or with one that comes first, such as no npm. With `--offline --polish`, no polish request
+With `--offline`, `deps.outdated` and `deps.advisories` make no call. Where they would have looked something up,
+they read *not investigated*, with the reason `--offline`. Where there is nothing to look up (no `package.json`, no
+dependencies, no npm lockfile), they read as they would online: clean, or not investigated with the lockfile's
+reason. With `--offline --polish`, no polish request
 is built or sent: polish reads off, with the reason `--offline`, and that is not a refusal. Code Sleuth sends nothing else: no telemetry, no update check. npm's own update notice and
 funding message, and gh's update notice and prompts, are turned off for the calls it makes.
 

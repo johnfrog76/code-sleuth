@@ -8,6 +8,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Changed
 
+- Under `--offline`, `deps.advisories` and `deps.outdated` say `--offline` only where they would have looked something up. With no `package.json`, no dependencies or no npm lockfile, no call would be made, so they read as they do online: clean, or not investigated with the lockfile's reason.
 - Example folders match in any case, on every platform, and `tests/fixtures/` is one beside `test/fixtures/` and `__fixtures__/`: a `Tests/fixtures/` folder, as .NET, PowerShell and Python projects often spell it, is an example location. An `--examples` glob matches in any case too. Example matches are still shown and kept, never dropped.
 - A line carrying `code-sleuth:example` is an example for every check, the workflow checks and a commit message's `names.deny` match included, set in one place as each result leaves its check. A one-line `run:` with a trailing comment is found on its own line, not line 0.
 - When git is there and does not answer in time, the run says so: the repo line reads `(git did not answer in time)` in place of `(not a git repository)`, a check that needs git says `git did not answer in time, so I couldn't read what it would have told me.` in place of asking you to install git, and `case.json`'s `repo` carries `gitTimedOut: true`. It still never reads clean.

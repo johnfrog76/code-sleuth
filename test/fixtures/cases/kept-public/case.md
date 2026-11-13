@@ -6,7 +6,7 @@ Case closed: the list is met. Your software may have requirements of its own, an
 
 - Repo: kept (not a git repository)
 - Goal: public facing
-- Counts: 0 smoking guns, 0 loose ends, 1 hunch, 19 clean, 4 not investigated.
+- Counts: 0 smoking guns, 0 loose ends, 1 hunch, 21 clean, 2 not investigated.
 
 ## Hunches
 
@@ -32,14 +32,14 @@ Case closed: the list is met. Your software may have requirements of its own, an
 - [x] **pull_request_target with the pull request's code** (`workflows.prtarget`): No pull_request_target workflow runs a stranger's code.
 - [x] **Untrusted input in a workflow's shell** (`workflows.injection`): No stranger's text lands in a workflow's shell.
 - [x] **A lockfile** (`deps.lockfile`): Every package.json with dependencies has a lockfile.
+- [x] **Known advisories in dependencies** (`deps.advisories`): No known advisories in the dependencies.
+- [x] **Dependencies a major version behind** (`deps.outdated`): Every direct dependency is within a major version of its latest.
 - [x] **Markers left in the code** (`quality.markers`): No notes-to-self left in the code.
 
 ## Not investigated
 
 - [ ] **Secrets in the history** (`secrets.history`): Not investigated. This needs git: install git and point me at a git repository.
 - [ ] **Names on the deny list** (`names.deny`): Not investigated. This needs a deny list: give one with --deny \<file\>.
-- [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This makes a call off the machine, and --offline is set.
-- [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This needs npm on the PATH.
 
 Polish: off. Add an API key (see .env.example) and --polish to have the cards reworded.
 

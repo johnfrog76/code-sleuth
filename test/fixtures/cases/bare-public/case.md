@@ -4,7 +4,7 @@
 
 - Repo: bare (main @ cf617d7, clean)
 - Goal: public facing
-- Counts: 1 smoking gun, 6 loose ends, 3 hunches, 11 clean, 3 not investigated.
+- Counts: 1 smoking gun, 6 loose ends, 3 hunches, 13 clean, 1 not investigated.
 
 ## Smoking guns
 
@@ -37,13 +37,13 @@
 - [x] **pull_request_target with the pull request's code** (`workflows.prtarget`): No pull_request_target workflow runs a stranger's code.
 - [x] **Untrusted input in a workflow's shell** (`workflows.injection`): No stranger's text lands in a workflow's shell.
 - [x] **A lockfile** (`deps.lockfile`): Every package.json with dependencies has a lockfile.
+- [x] **Known advisories in dependencies** (`deps.advisories`): No known advisories in the dependencies.
+- [x] **Dependencies a major version behind** (`deps.outdated`): Every direct dependency is within a major version of its latest.
 - [x] **Markers left in the code** (`quality.markers`): No notes-to-self left in the code.
 
 ## Not investigated
 
 - [ ] **Names on the deny list** (`names.deny`): Not investigated. This needs a deny list: give one with --deny \<file\>.
-- [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This makes a call off the machine, and --offline is set.
-- [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This needs npm on the PATH.
 
 Polish: an API key is set: add --polish to have the cards polished.
 

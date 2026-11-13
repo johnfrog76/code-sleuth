@@ -292,7 +292,7 @@
       "title": "Known advisories in dependencies",
       "booksName": "known vulnerable component",
       "verdict": "not-investigated",
-      "reason": "This makes a call off the machine, and --offline is set."
+      "reason": "There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it."
     },
     {
       "id": "deps.updates",
@@ -308,7 +308,7 @@
       "title": "Dependencies a major version behind",
       "booksName": "outdated dependency",
       "verdict": "not-investigated",
-      "reason": "This needs npm on the PATH."
+      "reason": "There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it."
     },
     {
       "id": "quality.markers",

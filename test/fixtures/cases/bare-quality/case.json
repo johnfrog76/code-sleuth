@@ -20,8 +20,8 @@
     "smoking-gun": 0,
     "loose-end": 0,
     "hunch": 1,
-    "clean": 0,
-    "not-investigated": 1
+    "clean": 1,
+    "not-investigated": 0
   },
   "exampleLocations": {
     "globs": [
@@ -46,8 +46,7 @@
       "id": "deps.outdated",
       "title": "Dependencies a major version behind",
       "booksName": "outdated dependency",
-      "verdict": "not-investigated",
-      "reason": "This needs npm on the PATH."
+      "verdict": "clean"
     }
   ]
 }

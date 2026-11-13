@@ -42,8 +42,8 @@
 ## Not investigated
 
 - [ ] **Dependency licenses** (`license.deps`): Not investigated. There's a package.json and no package-lock.json: run npm install to make one, and commit it.
-- [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. This makes a call off the machine, and --offline is set.
-- [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. This needs npm on the PATH.
+- [ ] **Known advisories in dependencies** (`deps.advisories`): Not investigated. There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it.
+- [ ] **Dependencies a major version behind** (`deps.outdated`): Not investigated. There's a package.json with dependencies and no package-lock.json: run npm install to make one, and commit it.
 
 Polish: No API key. The cards are as the sleuth wrote them.
 

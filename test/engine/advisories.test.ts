@@ -269,6 +269,21 @@ describe("deps.advisories cannot look", () => {
     expect([...npmCalls, ...ghCalls]).toEqual([]);
   });
 
+  // #12: --offline is the reason only where a call would have been made; elsewhere the check reads as online.
+  it.each([
+    ["no package.json", { "README.md": "# a\n" }, { verdict: "clean" }],
+    ["no dependencies", { "package.json": "{}" }, { verdict: "clean" }],
+    [
+      "dependencies and no lockfile",
+      { "package.json": manifest({ a: "1" }) },
+      { verdict: "not-investigated", reason: advisoriesReasons.noLockfile },
+    ],
+  ])("under --offline with %s, reads as it would online, and makes no call", (_, files, expected) => {
+    const { result, npmCalls, ghCalls } = run(files, { npm: {}, gh: {}, needs: [] });
+    expect(result).toEqual(expected);
+    expect([...npmCalls, ...ghCalls]).toEqual([]);
+  });
+
   it("with neither npm nor gh", () => {
     expect(run(app, { needs: ["network"] }).result).toEqual({
       verdict: "not-investigated",

@@ -256,9 +256,9 @@ describe("deps.updates", () => {
 });
 
 describe("deps.advisories", () => {
-  it("says it is not investigated yet, never clean", () => {
+  it("reads clean with no dependencies, and makes no call: there is nothing to look up (#12)", () => {
     const result = check("deps.advisories", { "package.json": "{}", "package-lock.json": "{}" });
-    expect(result.verdict).toBe("not-investigated");
+    expect(result.verdict).toBe("clean");
   });
 });
 
