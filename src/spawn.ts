@@ -56,7 +56,8 @@ export function spawnChild(
   // name, it would be looked for in the child's folder first on Windows, and that folder is the repository.
   const file = isBare(command) ? onPath(command, env) : command;
   if (file === undefined) return notFound(command, options.encoding);
-  return spawnSync(file, args, { ...options, env });
+  // No shell, whatever a caller passes: the arguments go to the program as they are, never read by a shell.
+  return spawnSync(file, args, { ...options, env, shell: false });
 }
 
 /** A command named without a folder: `git`, not `/usr/bin/git`. */

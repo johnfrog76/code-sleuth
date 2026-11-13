@@ -14,6 +14,13 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const ROOT = resolve(import.meta.dirname, "..");
+
+/** A string as a JavaScript literal that is safe inside an inline <script>: no <, >, / or line separator in it. */
+const scriptString = (value) =>
+  JSON.stringify(value).replace(
+    /[<>/\u2028\u2029]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
 const BUILD = join(ROOT, ".atoms-build");
 
 function findChrome() {
@@ -127,7 +134,7 @@ if (mode === "preview") {
     screenshot(
       chrome,
       page(
-        `<canvas id="c" width="16" height="17" style="width:128px;height:136px;image-rendering:pixelated;margin:16px"></canvas><script>const i=new Image();i.onload=()=>document.getElementById("c").getContext("2d").drawImage(i,0,0);i.src=${JSON.stringify(tiny)};</script>`,
+        `<canvas id="c" width="16" height="17" style="width:128px;height:136px;image-rendering:pixelated;margin:16px"></canvas><script>const i=new Image();i.onload=()=>document.getElementById("c").getContext("2d").drawImage(i,0,0);i.src=${scriptString(tiny)};</script>`,
         bg,
       ),
       join(folder, `mark-16px-x8-${theme}.png`),

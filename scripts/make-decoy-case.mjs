@@ -29,8 +29,13 @@ const windows = process.platform === "win32";
 /** A made-up value of a token's shape: letters and digits from random bytes, never a real one. */
 function fake(prefix, length) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  // Bytes from 248 up are dropped, so each of the 62 characters is as likely as any other.
   let body = "";
-  for (const byte of randomBytes(length)) body += alphabet[byte % alphabet.length];
+  while (body.length < length) {
+    for (const byte of randomBytes(length)) {
+      if (byte < 248 && body.length < length) body += alphabet[byte % alphabet.length];
+    }
+  }
   return prefix + body;
 }
 const githubToken = fake(["gh", "p_"].join(""), 36);

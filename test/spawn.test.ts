@@ -106,6 +106,16 @@ describe("the model key never reaches a child process", () => {
       .map((file) => relative(SRC, file).split(sep).join("/"));
     expect(users).toEqual(["spawn.ts"]);
   });
+
+  it("never starts a shell, even when a caller asks for one: the arguments reach the program as they are", () => {
+    const word = "$HOME;%PATH%|x";
+    const result = spawnChild(process.execPath, ["-e", "console.log(process.argv[1])", word], {
+      encoding: "utf8",
+      shell: true,
+    });
+    expect(result.status).toBe(0);
+    expect(result.stdout.trim()).toBe(word);
+  });
 });
 
 describe("a command is found in the PATH's absolute folders only, never in the repository", () => {

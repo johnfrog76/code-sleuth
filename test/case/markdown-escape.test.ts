@@ -61,7 +61,7 @@ describe("text from the repository, in case.md and the cards", () => {
     });
     for (const [name, text] of Object.entries(written)) {
       expect(text, name).not.toMatch(/^# INJECTED HEADING/m);
-      expect(text, name).not.toMatch(/^<script>/m);
+      expect(text, name).not.toMatch(/^<script>/im);
     }
   });
 

@@ -15,12 +15,22 @@ const REASON = "reads the .npmrc of the folder it starts in";
 function text(path: string): string {
   let body = read(path);
   if (path === "CHANGELOG.md") body = body.split(/^## \[Unreleased\]$/m)[1]!.split(/^## \[/m)[0]!;
-  return body
-    .replace(/<[^>]+>/g, "")
+  // &amp; last, so an escaped entity such as &amp;lt; reads as the text it is, not as <.
+  return withoutTags(body)
     .replaceAll("`", "")
-    .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&");
+}
+
+/** Text with its tags taken out, again until none is left, so a tag split by another cannot come back. */
+function withoutTags(html: string): string {
+  let before: string;
+  do {
+    before = html;
+    html = html.replace(/<[^>]*>/g, "");
+  } while (html !== before);
+  return html;
 }
 
 const pages = [

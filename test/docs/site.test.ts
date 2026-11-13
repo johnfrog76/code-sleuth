@@ -11,15 +11,21 @@ const root = new URL("../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 const page = read("site/index.html");
 
+/** Text with its tags taken out, again until none is left, so a tag split by another cannot come back. */
+function withoutTags(html: string): string {
+  let before: string;
+  do {
+    before = html;
+    html = html.replace(/<[^>]*>/g, "");
+  } while (html !== before);
+  return html;
+}
+
 /** The text of a sample on the page, by its data-sample name. */
 function sample(name: string): string {
   const found = new RegExp(`data-sample="${name}">([^]*?)</code>`).exec(page);
   if (!found) throw new Error(`no ${name} sample on the page`);
-  return found[1]!
-    .replace(/<[^>]+>/g, "")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&amp;", "&");
+  return withoutTags(found[1]!).replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
 }
 
 describe("the project's page", () => {
