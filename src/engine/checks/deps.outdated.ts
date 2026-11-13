@@ -1,11 +1,10 @@
-import type { Check, Evidence, Result } from "../check.js";
+import { join } from "node:path";
+import type { Check, CheckContext, Evidence, Result } from "../check.js";
 import { cleanOrUnread } from "../ecosystems.js";
-import { cards, outdatedReasons, unreadableReasons, voices } from "../copy.js";
+import { callIn, cards, inFolder, outdatedReasons, unreadableReasons, voices } from "../copy.js";
 import { lineContaining, manifestOf, readManifest, lockedOf } from "../manifest.js";
-
-/** The lockfiles npm writes, which hold each direct dependency's installed version. */
-const NPM_LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json"];
-const OTHER_LOCKFILES = ["yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"];
+import { at, type NpmProject, npmProjects } from "../npmProjects.js";
+import type { RepoReader } from "../repo.js";
 
 interface Outdated {
   latest?: string;
@@ -100,17 +99,76 @@ export function namesOnly(manifest: Record<string, unknown>): {
   };
 }
 
-/** Whether there is anything for npm to look up: a package.json with dependencies, beside an npm lockfile. */
-function lookup(
-  repo: Parameters<Check["run"]>[0],
-): "nothing" | "unreadable" | "no-lockfile" | "other-lockfile" | "ready" {
-  const read = readManifest(repo);
-  if (read.state === "unreadable") return "unreadable";
-  const manifest = manifestOf(read);
-  if (manifest === undefined || directDependencies(manifest).length === 0) return "nothing";
-  if (NPM_LOCKFILES.some((file) => repo.has(file))) return "ready";
-  return OTHER_LOCKFILES.some((file) => repo.has(file)) ? "other-lockfile" : "no-lockfile";
+/** One project's lookup: npm outdated in its folder, and which direct dependencies are a major version behind. */
+function lookUp(repo: RepoReader, project: NpmProject, context: CheckContext): Result {
+  const manifestPath = at(project.folder, "package.json");
+  if (project.state === "unreadable")
+    return { verdict: "not-investigated", reason: unreadableReasons.manifest(manifestPath) };
+  if (project.state === "no-lockfile")
+    return { verdict: "not-investigated", reason: outdatedReasons.noLockfile };
+  if (project.state === "other-lockfile")
+    return { verdict: "not-investigated", reason: outdatedReasons.otherLockfile };
+  if (context.npm === undefined) return { verdict: "not-investigated", reason: outdatedReasons.noNpm };
+
+  // Package names go to npm's configured registry; nothing from the repository's files is sent. npm is given
+  // each direct dependency from its registry as a dependency at `*`, alone: with nothing installed, npm
+  // outdated leaves out each missing devDependency, and the installed versions come from the lockfile below.
+  const {
+    manifest: lookupManifest,
+    names,
+    leftOut,
+  } = namesOnly(manifestOf(readManifest(repo, manifestPath))!);
+  if (names === 0) return { verdict: "not-investigated", reason: outdatedReasons.allLeftOut(leftOut) };
+  const answer = context.npm.run(
+    ["outdated", "--json", "--long"],
+    join(repo.root, project.folder),
+    lookupManifest,
+  );
+  // npm outdated exits 1 when something is outdated, and 0 when nothing is.
+  if (answer.error !== undefined || (answer.status !== 0 && answer.status !== 1)) {
+    return { verdict: "not-investigated", reason: outdatedReasons.failed };
+  }
+  let outdated: Record<string, Outdated>;
+  try {
+    // Nothing printed is "nothing behind" only with exit 0: npm exits 1 for a failure too.
+    if (answer.stdout.trim() === "" && answer.status !== 0)
+      return { verdict: "not-investigated", reason: outdatedReasons.failed };
+    outdated = answer.stdout.trim() === "" ? {} : (JSON.parse(answer.stdout) as Record<string, Outdated>);
+  } catch {
+    return { verdict: "not-investigated", reason: outdatedReasons.failed };
+  }
+  if ("error" in outdated) return { verdict: "not-investigated", reason: outdatedReasons.failed };
+
+  const lockfile = project.lockfile!;
+  let locked: Record<string, { version?: string }>;
+  try {
+    locked = lockedOf(JSON.parse(repo.readText(lockfile) ?? "{}"));
+  } catch {
+    return { verdict: "not-investigated", reason: outdatedReasons.unreadableLockfile(lockfile) };
+  }
+
+  const manifestText = repo.readText(manifestPath) ?? "";
+  const evidence: Evidence[] = [];
+  for (const { name, dev } of directDependencies(manifestOf(readManifest(repo, manifestPath))!)) {
+    const current = locked[`node_modules/${name}`]?.version;
+    const latest = outdated[name]?.latest;
+    if (current === undefined || latest === undefined || !majorBehind(current, latest)) continue;
+    const line = lineContaining(manifestText, `"${name}"`);
+    evidence.push({
+      path: manifestPath,
+      ...(line === undefined ? {} : { line }),
+      excerpt: `${name} ${current}, latest ${latest}${dev ? " (dev)" : ""}`,
+      rule: "major-behind",
+    });
+  }
+  if (evidence.length > 0) return { verdict: "found", evidence };
+  // Clean on what was asked; with a dependency from another source unread, it is not a clean bill.
+  return leftOut.length === 0
+    ? { verdict: "clean" }
+    : { verdict: "not-investigated", reason: outdatedReasons.leftOut(leftOut) };
 }
+
+const hasDirect = (manifest: Record<string, unknown>) => directDependencies(manifest).length > 0;
 
 export const depsOutdated: Check = {
   id: "deps.outdated",
@@ -120,65 +178,22 @@ export const depsOutdated: Check = {
   needs: ["npm", "network"],
   voice: voices["deps.outdated"],
   card: cards["deps.outdated"],
-  outgoing: (repo) => (lookup(repo) === "ready" ? outdatedReasons.outgoing : undefined),
+  // One lookup per npm project, each named by its folder.
+  outgoing: (repo) =>
+    npmProjects(repo, hasDirect)
+      .filter((project) => project.state === "ready")
+      .map((project) => callIn(project.folder, outdatedReasons.outgoing)),
   run(repo, context): Result {
-    const state = lookup(repo);
-    // No package.json, or no dependencies in it: nothing can be behind, and no call is made.
-    if (state === "nothing") return cleanOrUnread(repo, false, true);
-    if (state === "unreadable")
-      return { verdict: "not-investigated", reason: unreadableReasons.manifest("package.json") };
-    if (state === "no-lockfile") return { verdict: "not-investigated", reason: outdatedReasons.noLockfile };
-    if (state === "other-lockfile")
-      return { verdict: "not-investigated", reason: outdatedReasons.otherLockfile };
-    if (context.npm === undefined) return { verdict: "not-investigated", reason: outdatedReasons.noNpm };
-
-    // Package names go to npm's configured registry; nothing from the repository's files is sent. npm is given
-    // each direct dependency from its registry as a dependency at `*`, alone: with nothing installed, npm
-    // outdated leaves out each missing devDependency, and the installed versions come from the lockfile below.
-    const { manifest: lookupManifest, names, leftOut } = namesOnly(manifestOf(readManifest(repo))!);
-    if (names === 0) return { verdict: "not-investigated", reason: outdatedReasons.allLeftOut(leftOut) };
-    const answer = context.npm.run(["outdated", "--json", "--long"], repo.root, lookupManifest);
-    // npm outdated exits 1 when something is outdated, and 0 when nothing is.
-    if (answer.error !== undefined || (answer.status !== 0 && answer.status !== 1)) {
-      return { verdict: "not-investigated", reason: outdatedReasons.failed };
-    }
-    let outdated: Record<string, Outdated>;
-    try {
-      // Nothing printed is "nothing behind" only with exit 0: npm exits 1 for a failure too.
-      if (answer.stdout.trim() === "" && answer.status !== 0)
-        return { verdict: "not-investigated", reason: outdatedReasons.failed };
-      outdated = answer.stdout.trim() === "" ? {} : (JSON.parse(answer.stdout) as Record<string, Outdated>);
-    } catch {
-      return { verdict: "not-investigated", reason: outdatedReasons.failed };
-    }
-    if ("error" in outdated) return { verdict: "not-investigated", reason: outdatedReasons.failed };
-
-    const lockfile = NPM_LOCKFILES.find((file) => repo.has(file))!;
-    let locked: Record<string, { version?: string }>;
-    try {
-      locked = lockedOf(JSON.parse(repo.readText(lockfile) ?? "{}"));
-    } catch {
-      return { verdict: "not-investigated", reason: outdatedReasons.unreadableLockfile(lockfile) };
-    }
-
-    const manifestText = repo.readText("package.json") ?? "";
-    const evidence: Evidence[] = [];
-    for (const { name, dev } of directDependencies(manifestOf(readManifest(repo))!)) {
-      const current = locked[`node_modules/${name}`]?.version;
-      const latest = outdated[name]?.latest;
-      if (current === undefined || latest === undefined || !majorBehind(current, latest)) continue;
-      const line = lineContaining(manifestText, `"${name}"`);
-      evidence.push({
-        path: "package.json",
-        ...(line === undefined ? {} : { line }),
-        excerpt: `${name} ${current}, latest ${latest}${dev ? " (dev)" : ""}`,
-        rule: "major-behind",
-      });
-    }
+    const projects = npmProjects(repo, hasDirect);
+    // No package.json with dependencies anywhere: nothing can be behind, and no call is made.
+    if (projects.length === 0) return cleanOrUnread(repo, false);
+    const results = projects.map((project) => ({ project, result: lookUp(repo, project, context) }));
+    const evidence = results.flatMap(({ result }) => (result.verdict === "found" ? result.evidence : []));
     if (evidence.length > 0) return { verdict: "found", evidence };
-    // Clean on what was asked; with a dependency from another source unread, it is not a clean bill.
-    return leftOut.length === 0
-      ? cleanOrUnread(repo, true, true)
-      : { verdict: "not-investigated", reason: outdatedReasons.leftOut(leftOut) };
+    // Clean would claim a project nobody could look up.
+    const unread = results.find(({ result }) => result.verdict === "not-investigated");
+    if (unread !== undefined && unread.result.verdict === "not-investigated")
+      return { verdict: "not-investigated", reason: inFolder(unread.project.folder, unread.result.reason) };
+    return cleanOrUnread(repo, true);
   },
 };

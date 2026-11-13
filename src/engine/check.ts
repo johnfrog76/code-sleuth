@@ -76,7 +76,7 @@ export interface Check {
    * The call this check would make off the machine, said in one line for the run's header, or undefined when
    * it would make none: a check that may call out says so before any check runs, and never calls unnamed.
    */
-  outgoing?(repo: RepoReader, capabilities: ReadonlySet<Need>): string | undefined;
+  outgoing?(repo: RepoReader, capabilities: ReadonlySet<Need>): string | readonly string[] | undefined;
   /** Pure over the repository reader and the context. */
   run(repo: RepoReader, context: CheckContext): Result;
 }

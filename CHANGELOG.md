@@ -8,6 +8,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Changed
 
+- `deps.advisories` and `deps.outdated` read every npm project, the root and each folder below it whose `package.json` has dependencies, one lookup in each folder, and the `Out` line names each (`(for web/)`). A workspace member is read through the workspace root that names it. Before, a project below the root read not investigated, named; now it is looked up.
 - Under `--offline`, `deps.advisories` and `deps.outdated` say `--offline` only where they would have looked something up. With no `package.json`, no dependencies or no npm lockfile, no call would be made, so they read as they do online: clean, or not investigated with the lockfile's reason.
 - On Windows, when PowerShell's execution policy (`Restricted`, or `AllSigned`) will not run the hand-off script, the case and the terminal say so, naming the policy, in place of "ToolKit isn't here", and `--toolkit` is refused with your own fix as the hint (`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`). Code Sleuth never changes the policy and never goes around it. CI proves it on a Windows runner set to `Restricted`.
 - Example folders match in any case, on every platform, and `tests/fixtures/` is one beside `test/fixtures/` and `__fixtures__/`: a `Tests/fixtures/` folder, as .NET, PowerShell and Python projects often spell it, is an example location. An `--examples` glob matches in any case too. Example matches are still shown and kept, never dropped.

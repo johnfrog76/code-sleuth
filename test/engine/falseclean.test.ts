@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CheckContext, Need, Result } from "../../src/engine/check.js";
 import { CHECKS } from "../../src/engine/checks/index.js";
-import { ecosystemReasons, licenseDepsReasons, outdatedReasons } from "../../src/engine/copy.js";
+import { licenseDepsReasons, outdatedReasons } from "../../src/engine/copy.js";
 import { runCheck, secretHasher } from "../../src/engine/engine.js";
 import { isStrongCopyleft } from "../../src/engine/licenses.js";
 import { findGh, findNpm } from "../../src/engine/npm.js";
@@ -118,16 +118,18 @@ describe("a check that has not read something says so", () => {
     );
   });
 
-  it.each(["deps.outdated", "deps.advisories"])(
-    "reads %s not investigated on an npm project below the root",
-    (id) => {
-      const files = { "app/package.json": manifest, "app/package-lock.json": v1 };
-      expect(check(id, files, { npm: {} }).result).toEqual({
-        verdict: "not-investigated",
-        reason: ecosystemReasons.nestedNpm("app/package.json"),
-      });
-    },
-  );
+  // #12: an npm project below the root is looked up in its own folder, never left out and never read clean.
+  it("looks up an npm project below the root, in its own folder, and names its file", () => {
+    const files = { "app/package.json": manifest, "app/package-lock.json": v1 };
+    const { result, npmCalls } = check("deps.outdated", files, {
+      npm: { outdated: { leftpad: { latest: "9.0.0" } } },
+    });
+    expect(result).toMatchObject({
+      verdict: "found",
+      evidence: [{ path: "app/package.json", excerpt: "leftpad 1.0.0, latest 9.0.0" }],
+    });
+    expect(npmCalls.filter((c) => c.argv[0] === "outdated")).toHaveLength(1);
+  });
 
   it("reads npm outdated's exit 1 with nothing printed as a failure", () => {
     const files = { "package.json": manifest, "package-lock.json": v1 };

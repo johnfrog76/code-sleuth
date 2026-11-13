@@ -1,12 +1,10 @@
-import type { Check, Evidence, Need, Result } from "../check.js";
-import { advisoriesReasons, cards, unreadableReasons, voices } from "../copy.js";
+import { join } from "node:path";
+import type { Check, CheckContext, Evidence, Need, Result } from "../check.js";
+import { advisoriesReasons, callIn, cards, inFolder, unreadableReasons, voices } from "../copy.js";
 import { cleanOrUnread } from "../ecosystems.js";
-import { lineContaining, manifestOf, readManifest, lockedOf } from "../manifest.js";
+import { lineContaining, lockedOf } from "../manifest.js";
+import { at, hasAnyDependencies, type NpmProject, npmProjects } from "../npmProjects.js";
 import type { RepoReader } from "../repo.js";
-
-/** The lockfiles npm writes, which hold every installed package's name and version. */
-const NPM_LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json"];
-const OTHER_LOCKFILES = ["yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"];
 
 /** npm's severities, heaviest first. GitHub says `medium` where npm says `moderate`. */
 export const SEVERITIES = ["critical", "high", "moderate", "low", "info"] as const;
@@ -22,23 +20,6 @@ interface Advisory {
   node: string | undefined;
   severity: Severity;
   title: string;
-}
-
-/** Whether there is anything to look up: a package.json with dependencies, beside an npm lockfile. */
-function lookup(repo: RepoReader): "nothing" | "unreadable" | "no-lockfile" | "other-lockfile" | "ready" {
-  const read = readManifest(repo);
-  if (read.state === "unreadable") return "unreadable";
-  const manifest = manifestOf(read);
-  if (manifest === undefined || !hasDependencies(manifest)) return "nothing";
-  if (NPM_LOCKFILES.some((file) => repo.has(file))) return "ready";
-  return OTHER_LOCKFILES.some((file) => repo.has(file)) ? "other-lockfile" : "no-lockfile";
-}
-
-function hasDependencies(manifest: Record<string, unknown>): boolean {
-  return ["dependencies", "devDependencies", "optionalDependencies"].some((field) => {
-    const value = manifest[field];
-    return typeof value === "object" && value !== null && Object.keys(value).length > 0;
-  });
 }
 
 /** The tool this run would ask: npm when it has npm, else gh. */
@@ -235,6 +216,75 @@ function evidenceFor(found: Advisory[], lockfile: string, lockText: string): Evi
     });
 }
 
+/** One project's lookup: npm audit in its folder, else gh, and what they found, or why they could not look. */
+function lookUp(repo: RepoReader, project: NpmProject, context: CheckContext): Result {
+  if (project.state === "unreadable")
+    return {
+      verdict: "not-investigated",
+      reason: unreadableReasons.manifest(at(project.folder, "package.json")),
+    };
+  if (project.state === "no-lockfile")
+    return { verdict: "not-investigated", reason: advisoriesReasons.noLockfile };
+  if (project.state === "other-lockfile")
+    return { verdict: "not-investigated", reason: advisoriesReasons.otherLockfile };
+  const lockfile = project.lockfile!;
+  const lockText = repo.readText(lockfile) ?? "";
+  let locked: Locked;
+  try {
+    locked = lockedOf(JSON.parse(lockText)) as Locked;
+  } catch {
+    return { verdict: "not-investigated", reason: advisoriesReasons.unreadableLockfile(lockfile) };
+  }
+
+  let found: Advisory[] | undefined;
+  if (context.npm !== undefined) {
+    // npm audit sends the lockfile's names and versions to npm's configured registry, as it always does.
+    const answer = context.npm.run(["audit", "--json"], join(repo.root, project.folder));
+    // npm audit exits 1 when it finds something, and 0 when it does not.
+    if (answer.error !== undefined || (answer.status !== 0 && answer.status !== 1))
+      return { verdict: "not-investigated", reason: advisoriesReasons.npmFailed };
+    found = fromNpmAudit(answer.stdout, locked);
+    if (found === undefined) return { verdict: "not-investigated", reason: advisoriesReasons.npmFailed };
+  } else if (context.gh !== undefined) {
+    const asked = lockedPackages(locked);
+    const names = [...asked.entries()].flatMap(([name, versions]) =>
+      versions.map((v) => `${name}@${v.version}`),
+    );
+    const lines: string[] = [];
+    for (let i = 0; i < names.length; i += GH_BATCH) {
+      // Only names and versions go to GitHub; the matching to the lockfile is done here.
+      const answer = context.gh.run(
+        [
+          "api",
+          "-X",
+          "GET",
+          "/advisories",
+          "-f",
+          "ecosystem=npm",
+          "-f",
+          `affects=${names.slice(i, i + GH_BATCH).join(",")}`,
+          "-f",
+          "per_page=100",
+          "--paginate",
+          "--jq",
+          ".[]",
+        ],
+        join(repo.root, project.folder),
+      );
+      if (answer.error !== undefined || answer.status !== 0)
+        return { verdict: "not-investigated", reason: advisoriesReasons.ghFailed };
+      lines.push(...answer.stdout.split("\n").filter((l) => l.trim() !== ""));
+    }
+    found = fromGh(lines, asked);
+    if (found === undefined) return { verdict: "not-investigated", reason: advisoriesReasons.ghFailed };
+  } else {
+    return { verdict: "not-investigated", reason: advisoriesReasons.noTool };
+  }
+
+  const evidence = evidenceFor(found, lockfile, lockText);
+  return evidence.length === 0 ? { verdict: "clean" } : { verdict: "found", evidence };
+}
+
 export const depsAdvisories: Check = {
   id: "deps.advisories",
   title: "Known advisories in dependencies",
@@ -244,75 +294,24 @@ export const depsAdvisories: Check = {
   voice: voices["deps.advisories"],
   card: cards["deps.advisories"],
   outgoing(repo, capabilities) {
-    if (lookup(repo) !== "ready") return undefined;
     const using = tool(capabilities);
-    return using === undefined ? undefined : advisoriesReasons.outgoing[using];
+    if (using === undefined) return undefined;
+    // One lookup per npm project, each named by its folder.
+    return npmProjects(repo, hasAnyDependencies)
+      .filter((project) => project.state === "ready")
+      .map((project) => callIn(project.folder, advisoriesReasons.outgoing[using]));
   },
   run(repo, context): Result {
-    const state = lookup(repo);
-    // No package.json, or no dependencies in it: nothing can carry an advisory, and no call is made.
-    if (state === "nothing") return cleanOrUnread(repo, false, true);
-    if (state === "unreadable")
-      return { verdict: "not-investigated", reason: unreadableReasons.manifest("package.json") };
-    if (state === "no-lockfile") return { verdict: "not-investigated", reason: advisoriesReasons.noLockfile };
-    if (state === "other-lockfile")
-      return { verdict: "not-investigated", reason: advisoriesReasons.otherLockfile };
-
-    const lockfile = NPM_LOCKFILES.find((file) => repo.has(file))!;
-    const lockText = repo.readText(lockfile) ?? "";
-    let locked: Locked;
-    try {
-      locked = lockedOf(JSON.parse(lockText)) as Locked;
-    } catch {
-      return { verdict: "not-investigated", reason: advisoriesReasons.unreadableLockfile(lockfile) };
-    }
-
-    let found: Advisory[] | undefined;
-    if (context.npm !== undefined) {
-      // npm audit sends the lockfile's names and versions to npm's configured registry, as it always does.
-      const answer = context.npm.run(["audit", "--json"], repo.root);
-      // npm audit exits 1 when it finds something, and 0 when it does not.
-      if (answer.error !== undefined || (answer.status !== 0 && answer.status !== 1))
-        return { verdict: "not-investigated", reason: advisoriesReasons.npmFailed };
-      found = fromNpmAudit(answer.stdout, locked);
-      if (found === undefined) return { verdict: "not-investigated", reason: advisoriesReasons.npmFailed };
-    } else if (context.gh !== undefined) {
-      const asked = lockedPackages(locked);
-      const names = [...asked.entries()].flatMap(([name, versions]) =>
-        versions.map((v) => `${name}@${v.version}`),
-      );
-      const lines: string[] = [];
-      for (let i = 0; i < names.length; i += GH_BATCH) {
-        // Only names and versions go to GitHub; the matching to the lockfile is done here.
-        const answer = context.gh.run(
-          [
-            "api",
-            "-X",
-            "GET",
-            "/advisories",
-            "-f",
-            "ecosystem=npm",
-            "-f",
-            `affects=${names.slice(i, i + GH_BATCH).join(",")}`,
-            "-f",
-            "per_page=100",
-            "--paginate",
-            "--jq",
-            ".[]",
-          ],
-          repo.root,
-        );
-        if (answer.error !== undefined || answer.status !== 0)
-          return { verdict: "not-investigated", reason: advisoriesReasons.ghFailed };
-        lines.push(...answer.stdout.split("\n").filter((l) => l.trim() !== ""));
-      }
-      found = fromGh(lines, asked);
-      if (found === undefined) return { verdict: "not-investigated", reason: advisoriesReasons.ghFailed };
-    } else {
-      return { verdict: "not-investigated", reason: advisoriesReasons.noTool };
-    }
-
-    const evidence = evidenceFor(found, lockfile, lockText);
-    return evidence.length === 0 ? cleanOrUnread(repo, true, true) : { verdict: "found", evidence };
+    const projects = npmProjects(repo, hasAnyDependencies);
+    // No package.json with dependencies anywhere: nothing can carry an advisory, and no call is made.
+    if (projects.length === 0) return cleanOrUnread(repo, false);
+    const results = projects.map((project) => ({ project, result: lookUp(repo, project, context) }));
+    const evidence = results.flatMap(({ result }) => (result.verdict === "found" ? result.evidence : []));
+    if (evidence.length > 0) return { verdict: "found", evidence };
+    // Clean would claim a project nobody could look up.
+    const unread = results.find(({ result }) => result.verdict === "not-investigated");
+    if (unread !== undefined && unread.result.verdict === "not-investigated")
+      return { verdict: "not-investigated", reason: inFolder(unread.project.folder, unread.result.reason) };
+    return cleanOrUnread(repo, true);
   },
 };

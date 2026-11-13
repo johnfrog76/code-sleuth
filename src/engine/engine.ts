@@ -60,6 +60,11 @@ export function detectCapabilities(repo: RepoReader, options: DetectOptions = {}
  * Every call a goal's checks would make off the machine, one line each, said before any of them runs: only the
  * checks that have what they need, and only those that would call for this repository.
  */
+/** A check's outgoing calls as a list: none, one, or one per project. */
+function calls(outgoing: string | readonly string[] | undefined): string[] {
+  return outgoing === undefined ? [] : typeof outgoing === "string" ? [outgoing] : [...outgoing];
+}
+
 export function outgoingCalls(
   goal: Goal,
   repo: RepoReader,
@@ -69,8 +74,7 @@ export function outgoingCalls(
   return goal.checks.flatMap(({ id }) => {
     const check = table.find((c) => c.id === id);
     if (check?.outgoing === undefined || !check.needs.every((need) => capabilities.has(need))) return [];
-    const call = check.outgoing(repo, capabilities);
-    return call === undefined ? [] : [call];
+    return calls(check.outgoing(repo, capabilities));
   });
 }
 
@@ -150,8 +154,8 @@ function needed(check: Check, repo: RepoReader, capabilities: Capabilities): Nee
   const missing = check.needs.filter((need) => !capabilities.has(need));
   if (missing.length === 0) return undefined;
   if (check.outgoing !== undefined && missing.every((need) => CALLING.includes(need))) {
-    const wouldCall = check.outgoing(repo, new Set([...capabilities, ...CALLING]));
-    if (wouldCall === undefined) return undefined;
+    const wouldCall = calls(check.outgoing(repo, new Set([...capabilities, ...CALLING])));
+    if (wouldCall.length === 0) return undefined;
   }
   return missing.includes("network") ? "network" : missing[0];
 }

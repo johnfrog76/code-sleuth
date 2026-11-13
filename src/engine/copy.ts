@@ -247,8 +247,6 @@ export const ecosystemReasons = {
     `Code Sleuth reads npm projects so far; this is a ${ecosystem} project (${path}).`,
   npmCleanOtherUnread: (path: string, ecosystem: string) =>
     `The npm side is clean, but Code Sleuth reads npm projects so far, and ${path} (${ecosystem}) was not read.`,
-  nestedNpm: (path: string) =>
-    `${path} is an npm project below the root, and this check reads the root's alone so far: its dependencies were not looked up.`,
 };
 
 /** Why license.deps could not read the dependencies' licenses, and what would let it. */
@@ -258,6 +256,13 @@ export const licenseDepsReasons = {
   oldLockfile: (lockfile: string) =>
     `${lockfile} is an old lockfile without license fields: regenerate it with npm 7 or later.`,
 };
+
+/** A reason about one npm project below the root names its folder first: `In web/: ...`. The root's stands alone. */
+export const inFolder = (folder: string, reason: string) =>
+  folder === "" ? reason : `In ${folder}/: ${reason}`;
+
+/** One lookup's call on the Out line, naming the folder it is for when that is not the root. */
+export const callIn = (folder: string, call: string) => (folder === "" ? call : `${call} (for ${folder}/)`);
 
 /** What deps.advisories says about its call, each finding, and why it could not look. */
 export const advisoriesReasons = {

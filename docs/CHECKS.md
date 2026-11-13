@@ -303,11 +303,15 @@ A check that reads a `package.json` reads **not investigated** when that file is
   `package.json` and the lockfile in Code Sleuth's own folder, so the repository's `.npmrc` is never read; your
   own npm settings, your auth among them, still apply. `--offline` turns it off, and the run's header names it before it
   runs
-- **Reads clean** with no `package.json` at the root, or none with dependencies, and no other ecosystem's manifest and
-  no npm project below the root, and makes
-  no call, `--offline` or not. **Not investigated** with an npm project
-  below the root (it reads the root's alone so far, and names the other), with no npm lockfile, with another package manager's lockfile, with `--offline` where it would look
-  something up, with neither tool, or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
+- **Reads every npm project:** each folder whose `package.json` has dependencies, the root and those below
+  it, outside the [example locations](#example-locations) and the folders the text checks skip. Each is looked up
+  in its own folder, once, and the `Out` line names each call (`(for web/)`). A workspace member is read through
+  its workspace root, when that root's `package.json` names it in `workspaces`: one lookup covers both
+- **Reads clean** with no `package.json` with dependencies anywhere, and no other ecosystem's manifest, and makes
+  no call, `--offline` or not; or when every project was looked up and none has an advisory. **Not
+  investigated**, naming the folder below the root it is about (`In web/: ...`), when a project has no npm
+  lockfile, another package manager's lockfile, or cannot be looked up (`--offline`, neither tool), and no project
+  found anything; or with another ecosystem's manifest ([other ecosystems](#other-ecosystems))
 - **What the books call it:** known vulnerable component
 - **The fix:** Update each package listed to a version with the fix (`npm audit fix` does what it safely can), or replace it. A package deep in the tree is fixed by updating the dependency that pulls it in.
 
@@ -334,12 +338,15 @@ A check that reads a `package.json` reads **not investigated** when that file is
   lockfile, on the machine. A dependency from anywhere else -- git (`git+ssh:`, `github:`, `user/repo`), a path
   (`file:`, `link:`, `workspace:`, a tarball), a URL, or an `npm:` alias -- is never looked up, and is named. It leaves your own npm
   registry settings (your `.npmrc`, a scoped or private registry) alone; it overrides only where npm keeps its cache and logs, and turns off npm's update and funding notices. `--offline` turns it off, and the run's header names it before it runs
-- **Reads clean** with no `package.json` at the root, or none of its dependencies, and no other ecosystem's manifest
-  and no npm project below the root, and
-  makes no call, with or without npm, `--offline` or not; **not investigated** with an npm project
-  below the root, named, when `npm outdated` exits 1 with nothing printed, with no lockfile, a lockfile from another package manager, no npm where it would look something up,
-  a dependency from a source other than npm's registry and none of the others behind (each one named),
-  `--offline` where it would look something up, or another ecosystem's manifest ([other ecosystems](#other-ecosystems))
+- **Reads every npm project**, as `deps.advisories` does: each folder whose `package.json` has dependencies, one
+  `npm outdated` in each, the `Out` line naming each; the evidence names each folder's `package.json`
+- **Reads clean** with no `package.json` with dependencies anywhere, and no other ecosystem's manifest, and makes
+  no call, with or without npm, `--offline` or not; or when every project was looked up and none is behind.
+  **Not investigated**, naming the folder below the root it is about, when `npm outdated` exits 1 with nothing
+  printed, with no lockfile, a lockfile from another package manager, no npm or `--offline` where it would look
+  something up, or a dependency from a source other than npm's registry and none of the others behind (each one
+  named), and no project found anything; or with another ecosystem's manifest
+  ([other ecosystems](#other-ecosystems))
 - **What the books call it:** outdated dependency
 - **The fix:** For each dependency listed, read its changelog for the breaking changes between your version and the latest, update it, and run the tests. npm outdated lists them all.
 

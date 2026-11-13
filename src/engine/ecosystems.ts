@@ -1,7 +1,5 @@
 import type { Result } from "./check.js";
 import { ecosystemReasons } from "./copy.js";
-import { BUILT_IN_EXAMPLE_GLOBS, inExampleGlob } from "./examples.js";
-import { manifestOf, readManifest } from "./manifest.js";
 import type { RepoReader } from "./repo.js";
 
 /** A manifest Code Sleuth knows the ecosystem of, and does not read yet. */
@@ -41,32 +39,11 @@ export function otherManifests(repo: Pick<RepoReader, "textFiles">): OtherManife
 export function cleanOrUnread(
   repo: Pick<RepoReader, "textFiles" | "readText" | "has">,
   npmRead: boolean,
-  rootOnly = false,
 ): Result {
-  // A check that reads the root's npm project alone has not read one in a folder below it.
-  const nested = rootOnly ? nestedNpmProject(repo) : undefined;
-  if (nested !== undefined)
-    return { verdict: "not-investigated", reason: ecosystemReasons.nestedNpm(nested) };
   const [first] = otherManifests(repo);
   if (first === undefined) return { verdict: "clean" };
   const reason = npmRead
     ? ecosystemReasons.npmCleanOtherUnread(first.path, first.ecosystem)
     : ecosystemReasons.otherOnly(first.path, first.ecosystem);
   return { verdict: "not-investigated", reason };
-}
-
-/** The first package.json below the root, outside the folders the text checks skip, that has dependencies. */
-export function nestedNpmProject(
-  repo: Pick<RepoReader, "textFiles" | "readText" | "has">,
-): string | undefined {
-  return repo.textFiles.find((path) => {
-    if (!path.includes("/") || path.split("/").at(-1) !== "package.json") return false;
-    // A test's fixture project is bait, not the repository's own: an example location is left out.
-    if (BUILT_IN_EXAMPLE_GLOBS.some((glob) => inExampleGlob(path, glob))) return false;
-    const manifest = manifestOf(readManifest(repo as RepoReader, path));
-    return ["dependencies", "devDependencies", "optionalDependencies"].some((field) => {
-      const deps = manifest?.[field];
-      return typeof deps === "object" && deps !== null && Object.keys(deps).length > 0;
-    });
-  });
 }

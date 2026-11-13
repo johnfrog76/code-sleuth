@@ -101,6 +101,57 @@ function run(files: Record<string, string>, stubs: Stubs = { npm: {} }) {
 
 const evidenceOf = (result: Result): Evidence[] => (result.verdict === "found" ? result.evidence : []);
 
+// #12: every npm project is looked up in its own folder, the root and those below it, one call each.
+describe("deps.advisories over npm projects below the root", () => {
+  const under = (folder: string, files: Record<string, string>) =>
+    Object.fromEntries(Object.entries(files).map(([path, text]) => [`${folder}/${path}`, text]));
+
+  it("finds web/'s advisory with only web/package.json and web/package-lock.json, under web/", () => {
+    const { result, npmCalls } = run(under("web", app), {
+      npm: {
+        audit: {
+          vulnerabilities: vulnerable("lodash", "node_modules/lodash", {
+            title: "Command injection",
+            severity: "high",
+          }),
+        },
+        auditStatus: 1,
+      },
+    });
+    expect(result).toMatchObject({ verdict: "found", evidence: [{ path: "web/package-lock.json" }] });
+    expect(npmCalls.map((c) => c.argv)).toEqual([["audit", "--json"]]);
+  });
+
+  it("makes one call per project, the root and web/, each on its own folder's files", () => {
+    const { result, npmCalls } = run({ ...app, ...under("web", app) });
+    expect(result).toEqual({ verdict: "clean" });
+    expect(npmCalls).toHaveLength(2);
+    expect(npmCalls.every((c) => c.files.includes("package-lock.json"))).toBe(true);
+  });
+
+  it("names each folder's call on the Out line", () => {
+    const calls = investigate({ name: "repo", files: { ...app, ...under("web", app) } }, (repo) =>
+      advisories.outgoing!(repo, new Set<Need>(["npm", "network"])),
+    );
+    expect(calls).toEqual([advisoriesReasons.outgoing.npm, `${advisoriesReasons.outgoing.npm} (for web/)`]);
+  });
+
+  it("covers a workspace member through its root's lockfile: one call, not two", () => {
+    const root = JSON.stringify({ ...JSON.parse(app["package.json"]), workspaces: ["packages/*"] });
+    const member = { "packages/a/package.json": manifest({ minimist: "^1.2.0" }) };
+    const { npmCalls } = run({ ...app, "package.json": root, ...member });
+    expect(npmCalls).toHaveLength(1);
+  });
+
+  it("reads not investigated, naming the folder, when one project cannot be looked up and none finds anything", () => {
+    const { result } = run({ ...app, "web/package.json": manifest({ a: "1" }) });
+    expect(result).toEqual({
+      verdict: "not-investigated",
+      reason: `In web/: ${advisoriesReasons.noLockfile}`,
+    });
+  });
+});
+
 describe("deps.advisories through npm audit", () => {
   it("is clean, and makes no call, with no package.json or no dependencies", () => {
     for (const files of [{ "README.md": "x\n" }, { "package.json": manifest({}) }]) {
