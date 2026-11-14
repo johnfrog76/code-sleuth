@@ -67,8 +67,12 @@ describe("the project's page", () => {
       .map((match) => match[1]!)
       .filter((path) => !/^https?:/.test(path));
     expect(local.length).toBeGreaterThan(5);
-    const files = readdirSync(new URL("site/", root));
+    // deck/ is the deck page, built from web/ and set beside the page by the Pages workflow (docs/DECK.md).
+    const files = [...readdirSync(new URL("site/", root)), "deck/"];
     expect(local.filter((path) => !files.includes(path))).toEqual([]);
+    expect(readFileSync(new URL(".github/workflows/pages.yml", root), "utf8")).toContain(
+      "web/dist _pages/deck",
+    );
   });
 
   it("loads no script, and nothing from another site", () => {
@@ -97,12 +101,12 @@ describe("the project's page", () => {
     expect(page).not.toMatch(/disclaimer/i);
   });
 
-  it("leads with the video, shown only once it has somewhere to go, and the README beside it", () => {
+  it("leads with the video, the deck page beside it, and the README", () => {
     const video = /<a\b[^>]*data-cta="video"[^>]*>/.exec(page)?.[0];
     expect(video).toBeDefined();
-    // Until the video exists (#4) the button is hidden, with no link to be dead; once shown, it has one.
-    if (/\shidden\b/.test(video!)) expect(video).not.toMatch(/href=/);
-    else expect(video).toMatch(/href="https:\/\//);
+    // The video is the deck, played by the deck page beside this one (#4).
+    expect(video).not.toMatch(/\shidden\b/);
+    expect(video).toContain('href="deck/"');
     expect(page).toMatch(/data-cta="video"[^>]*>Watch the video</);
     const readme = /<a\b[^>]*data-cta="readme"[^>]*>([^<]*)</.exec(page);
     expect(readme?.[0]).toContain('href="https://github.com/johnfrog76/code-sleuth#readme"');

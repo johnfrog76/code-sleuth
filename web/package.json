@@ -1,0 +1,33 @@
+{
+  "name": "code-sleuth-web",
+  "version": "0.0.0",
+  "description": "The deck page beside Code Sleuth's project page: a deck player and the home for its deck.",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "smoke:landing": "node tests/smokeLanding.mjs"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "9.74.11",
+    "@fluentui/react-icons": "2.0.344",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.18.5"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "playwright-core": "1.64.1",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

@@ -75,6 +75,7 @@ before you act on one. A MET means the list is met; your software may have requi
 | [docs/TOOLKIT.md](docs/TOOLKIT.md) | the ToolKit hand-off: how it is found, the call, the ledger |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the parts fit, and the repository's layout |
 | [docs/TESTING.md](docs/TESTING.md) | the suites, the fixtures, and the named skips |
+| [docs/DECK.md](docs/DECK.md) | the product deck: where it is made, its home in `web/`, and its page |
 | [docs/KNOWN-GAPS.md](docs/KNOWN-GAPS.md) | what is not built yet, known to read wrong, or not proven |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | helping: issues, pull requests, the rules |
 | [LICENSE](LICENSE) | MIT |

@@ -1,0 +1,49 @@
+{
+  "clips": {
+    "a-checklist-not-a-report": {
+      "en-US-BrianNeural": "55a8a8bddf0d611523c37123b2d52c26f00d9d84908de11c2905378d3a662eb3",
+      "en-US-JennyNeural": "55a8a8bddf0d611523c37123b2d52c26f00d9d84908de11c2905378d3a662eb3"
+    },
+    "a-real-toolkit-card": {
+      "en-US-BrianNeural": "010b627403d00e7e8759c36ab8b14fa8b91ee9554927be5a455bd17d5e82f7ee",
+      "en-US-JennyNeural": "010b627403d00e7e8759c36ab8b14fa8b91ee9554927be5a455bd17d5e82f7ee"
+    },
+    "a-repo-is-a-jungle": {
+      "en-US-BrianNeural": "39221722650a8b03a65d69a1e5a4003349af8f274f6c03c824b6a70891671842",
+      "en-US-JennyNeural": "39221722650a8b03a65d69a1e5a4003349af8f274f6c03c824b6a70891671842"
+    },
+    "card-ready": {
+      "en-US-BrianNeural": "e3036e1d2fdb7e1bf14c3bd0d4855020196a306150967ffe7f42ec6af1ea41b8",
+      "en-US-JennyNeural": "e3036e1d2fdb7e1bf14c3bd0d4855020196a306150967ffe7f42ec6af1ea41b8"
+    },
+    "case-closed": {
+      "en-US-BrianNeural": "da242244cb9ed72395f6a0c17fcc86a72c917a0fd0797ec664bac6e72b90dfeb",
+      "en-US-JennyNeural": "da242244cb9ed72395f6a0c17fcc86a72c917a0fd0797ec664bac6e72b90dfeb"
+    },
+    "one-goal-one-case": {
+      "en-US-BrianNeural": "6afbdcb4d84b5185c5db8307e0836031cd62823f362f321d19393ab3214fb838",
+      "en-US-JennyNeural": "6afbdcb4d84b5185c5db8307e0836031cd62823f362f321d19393ab3214fb838"
+    },
+    "polished-every-path-kept": {
+      "en-US-BrianNeural": "eea95a57886c95a1c3d3f0d5a25f3eb56accaa9d11ded74cc8d33f2673e41139",
+      "en-US-JennyNeural": "eea95a57886c95a1c3d3f0d5a25f3eb56accaa9d11ded74cc8d33f2673e41139"
+    },
+    "the-office": {
+      "en-US-BrianNeural": "82f0b5bf00ef869770d6e9ed9163c05eb63b975f2a37d4a27427d6c171373b8a",
+      "en-US-JennyNeural": "82f0b5bf00ef869770d6e9ed9163c05eb63b975f2a37d4a27427d6c171373b8a"
+    },
+    "the-sloth-detective": {
+      "en-US-BrianNeural": "1f5e42e0f3f1ebbd7c2524cf1d1182e6ea41978586fd545b97269cd54a620d9b",
+      "en-US-JennyNeural": "1f5e42e0f3f1ebbd7c2524cf1d1182e6ea41978586fd545b97269cd54a620d9b"
+    },
+    "the-stakeout": {
+      "en-US-BrianNeural": "c9c22a1593098a70af45c3a1317ac5a499097f62449923f212ada2d73a6b7321",
+      "en-US-JennyNeural": "c9c22a1593098a70af45c3a1317ac5a499097f62449923f212ada2d73a6b7321"
+    },
+    "the-verdict": {
+      "en-US-BrianNeural": "3b1e6d737886b08401af947cf8db0904d744b1df9d3c9f39d191ffbbb5dbad3f",
+      "en-US-JennyNeural": "3b1e6d737886b08401af947cf8db0904d744b1df9d3c9f39d191ffbbb5dbad3f"
+    }
+  },
+  "scheme": "sha256-utf8-hex"
+}

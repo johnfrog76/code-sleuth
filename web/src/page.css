@@ -1,0 +1,40 @@
+/* The page around the player. The deck brings its own colours; the empty state takes the project page's
+   jungle night, quietly. */
+
+html,
+body {
+  margin: 0;
+  background: #0b2e1e;
+  color: #eef3ec;
+}
+
+.empty {
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 1.5rem 1rem;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  background: linear-gradient(180deg, #0f2a2c 0%, #0b2e1e 100%);
+}
+
+.empty p {
+  margin: 0;
+}
+
+.empty-line {
+  font-size: 1.5rem;
+}
+
+.empty a {
+  color: #8fd45e;
+}
+
+.empty a:focus-visible {
+  outline: 2px solid #8fd45e;
+  outline-offset: 3px;
+}

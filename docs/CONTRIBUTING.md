@@ -34,7 +34,8 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
   hand, and opens an issue when it fails.
   It too runs only on the public repository. [TESTING.md](TESTING.md#the-periodic-audit) says what it checks.
 - The project's page is `site/`, plain HTML and CSS. `.github/workflows/pages.yml` publishes it to GitHub Pages
-  when a change to it reaches main. A test holds its sample to a real run, so a change to the checklist's
+  when a change to it reaches main, with the deck page built from `web/` beside it at `deck/`
+  ([DECK.md](DECK.md)). CI installs, type-checks and builds `web/` too. A test holds its sample to a real run, so a change to the checklist's
   words may change the page too.
 - Publishing the page the first time takes three steps, in order, since the workflow runs only on a public
   repository and a push that touches `site/`: make the repository public; set Settings, Pages, Build and

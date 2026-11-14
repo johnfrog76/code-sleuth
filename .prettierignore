@@ -4,3 +4,5 @@ package-lock.json
 test/fixtures/
 *.md
 .atoms-build/
+web/dist/
+web/src/deck/

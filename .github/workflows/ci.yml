@@ -36,6 +36,16 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run build
+      # The deck page (web/, its own npm project): it installs, type-checks, builds and plays.
+      - run: npm ci
+        working-directory: web
+      - run: npm run typecheck
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+      # Both pages together, as Pages serves them, in the runner's Chrome (web/tests/smokeLanding.mjs).
+      - run: npm run smoke:landing -- --no-build
+        working-directory: web
 
   # #2: on Windows, an execution policy that refuses the hand-off script reads as blocked, never as no ToolKit.
   # The policy is set for this runner's account, in both shells, and the real test runs against them.

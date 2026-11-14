@@ -13,6 +13,7 @@ Each subject lives in one file. Start with the quick start, then go to whichever
 | [TOOLKIT.md](TOOLKIT.md) | the ToolKit hand-off: how ToolKit is found, the call, consent and the ledger |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | how the parts fit, and the repository's layout |
 | [TESTING.md](TESTING.md) | the suites, the fixtures, and the tests that only run where they can |
+| [DECK.md](DECK.md) | the product deck: where it is made, its home in `web/`, registering it, and its page |
 | [KNOWN-GAPS.md](KNOWN-GAPS.md) | what is not built yet, known to read wrong, or not proven |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | the rules a contribution meets |
 

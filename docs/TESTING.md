@@ -22,6 +22,7 @@ npm run lint     # type check, ESLint and Prettier
 | `test/spawn.test.ts` | the model key never reaches a child process, in any letter case, and every child starts through `src/spawn.ts` |
 | `test/gitsafe.test.ts` | with a real git, a repository's own configuration never has Code Sleuth run a command: a file-system monitor, each kind of filter, a signature program, a hook; a partial clone fetches nothing, with both guards and with `protocol.allow=never` alone; and only `src/engine/repo.ts` spawns git |
 | `test/notices.test.ts` | `THIRD-PARTY-NOTICES.md` against `package.json`: every runtime dependency, its version and its license |
+| `web/tests/smokeLanding.mjs` | the project's page and the deck page together, in Chrome, as Pages serves them: "Watch the video" opens the deck, slide 1 plays, every clip answers, Escape comes back, no sideways scroll on a phone (`npm run smoke:landing` in `web/`; [DECK.md](DECK.md)) |
 | `test/decoy.test.ts` | the words `scripts/check-decoy-case.mjs` expects, against the copy files they come from |
 
 ## What every test can rely on
