@@ -15,7 +15,8 @@ never writes to it.
   that keep a repository from running its own commands. Without git, `secrets.history` reads *not investigated* and says why, and
   `names.deny` reads the files but not the commit messages, and says so when the files are clean.
 
-Code Sleuth is not on npm yet. You run it straight from GitHub with npx, or from a clone.
+Code Sleuth is not on npm yet. You run it straight from GitHub with npx, install a version from its GitHub
+Release, or install it from a clone.
 
 ## Try it with npx
 
@@ -34,9 +35,25 @@ line with the path to your repository.
 Code Sleuth from source, with its development tools, then runs it. Wherever these docs say `code-sleuth`, put
 `npx github:johnfrog76/code-sleuth#v0.2.0` in its place, from outside the repository.
 
+## Install a version
+
+The recommended way to install a version: each one has a
+[GitHub Release](https://github.com/johnfrog76/code-sleuth/releases) with its notes and its package attached,
+built already. Install the package by its link:
+
+```sh
+npm install -g https://github.com/johnfrog76/code-sleuth/releases/download/v0.2.0/code-sleuth-0.2.0.tgz
+code-sleuth --version
+```
+
+It installs with its one runtime dependency and no development tools, and nothing is built on your machine. A
+global install reads no folder's `.npmrc`, so it can run from anywhere. npm may say the package's `prepare`
+script was not run: it builds Code Sleuth from source, and the package is built already, so there is nothing to
+allow.
+
 ## Install from a clone
 
-To keep it on your PATH, or to work on it:
+To work on it:
 
 ```sh
 git clone https://github.com/johnfrog76/code-sleuth.git

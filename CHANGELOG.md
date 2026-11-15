@@ -24,6 +24,7 @@ All notable changes to Code Sleuth are written here, for the people who use it. 
 
 ### Added
 
+- Each version has a GitHub Release, with its changelog section as notes and its package attached, built already. The README and `docs/QUICKSTART.md` recommend installing a version from it (`npm install -g` with the package's link), which needs no development tools and builds nothing on your machine. `.github/workflows/release.yml` makes the Release when a version tag is pushed: it runs the tests, refuses a tag with no changelog section or another version than `package.json`, and attaches `npm pack`'s package.
 - "Watch the video" on the project's page plays the product deck: eleven slides, read aloud, the sloth's story from the jungle to the hat tip. It plays on its own page, `deck/`, beside the project's page, which still loads no script. `web/` is a small Vite and React project, apart from the published package, holding Connected Deck's deck player (copied, MIT) and the deck, carried here unchanged from where it is made. The Pages workflow builds it with the page. [docs/DECK.md](docs/DECK.md).
 - The periodic audit, `.github/workflows/periodic-audit.yml`: monthly, on every `v*` tag and by hand, it runs the quick start's npx line from the home folder, with `--offline` and `--out` added, against the decoy case (`scripts/make-decoy-case.mjs`) on Linux, macOS and Windows, checks every expected result with `scripts/check-decoy-case.mjs`, and opens an issue when a run fails.
 

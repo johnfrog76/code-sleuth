@@ -33,6 +33,12 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
   and `--out` added, against the decoy case on Linux, macOS and Windows, monthly, on every `v*` tag and by
   hand, and opens an issue when it fails.
   It too runs only on the public repository. [TESTING.md](TESTING.md#the-periodic-audit) says what it checks.
+- A release (`.github/workflows/release.yml`) starts from a pushed `vX.Y.Z` tag, and only from one. Before
+  the tag, a pull request sets `package.json`'s version and moves the unreleased notes under a
+  `## [X.Y.Z] - date` heading in `CHANGELOG.md`. The workflow refuses a tag that names another version than
+  `package.json`, or has no changelog section; it runs the tests, packs the package, and makes the GitHub Release
+  from the pushed tag, with that section as its notes and `code-sleuth-X.Y.Z.tgz` attached. The job that
+  publishes holds the one write permission, with no checkout and no install. A tag is never moved or made again.
 - The project's page is `site/`, plain HTML and CSS. `.github/workflows/pages.yml` publishes it to GitHub Pages
   when a change to it reaches main, with the deck page built from `web/` beside it at `deck/`
   ([DECK.md](DECK.md)). CI installs, type-checks and builds `web/` too. A test holds its sample to a real run, so a change to the checklist's
