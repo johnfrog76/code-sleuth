@@ -53,7 +53,21 @@ cd ~ && npx github:johnfrog76/code-sleuth#v0.2.0 path/to/your/repo --goal public
 ```
 
 Start it outside the repository: npm reads the `.npmrc` of the folder it starts in. `#v0.2.0` pins the release,
-so a new commit doesn't change what runs. To keep it on your PATH, install it from a clone
+so a new commit doesn't change what runs.
+
+## Install a version
+
+The recommended way to install a version is the package attached to its
+[GitHub Release](https://github.com/johnfrog76/code-sleuth/releases/tag/v0.2.0). It is built already, so it
+installs with no development tools and runs exactly what was shipped:
+
+```sh
+npm install -g https://github.com/johnfrog76/code-sleuth/releases/download/v0.2.0/code-sleuth-0.2.0.tgz
+code-sleuth --version
+```
+
+A global install reads no folder's `.npmrc`, so it can run from anywhere. Each Release page has that version's
+notes and its package. To work on Code Sleuth, install it from a clone
 ([docs/QUICKSTART.md](docs/QUICKSTART.md#install-from-a-clone)).
 
 You get the verdict and the checklist, and a case file in your own cases folder, never in the repository.
@@ -88,7 +102,7 @@ before you act on one. A MET means the list is met; your software may have requi
 
 ## Status
 
-Version 0.2.0, released as the `v0.2.0` tag on GitHub: the whole loop on one goal, the public-facing goal. It is not on npm yet. The
+Version 0.2.0, released as the `v0.2.0` tag and its [GitHub Release](https://github.com/johnfrog76/code-sleuth/releases/tag/v0.2.0): the whole loop on one goal, the public-facing goal. It is not on npm yet. The
 security and quality goals are planned for a later release.
 
 ## License
