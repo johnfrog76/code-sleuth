@@ -13,8 +13,8 @@
     "smoke:landing": "node tests/smokeLanding.mjs"
   },
   "dependencies": {
-    "@fluentui/react-components": "9.74.11",
-    "@fluentui/react-icons": "2.0.344",
+    "@fluentui/react-components": "9.75.2",
+    "@fluentui/react-icons": "2.0.346",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-router-dom": "7.18.5"
@@ -22,10 +22,10 @@
   "devDependencies": {
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@vitejs/plugin-react": "6.1.2",
-    "playwright-core": "1.64.1",
+    "@vitejs/plugin-react": "6.3.0",
+    "playwright-core": "1.65.1",
     "typescript": "6.0.3",
-    "vite": "8.3.5"
+    "vite": "8.3.8"
   },
   "engines": {
     "node": ">=24"
