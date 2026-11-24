@@ -99,7 +99,7 @@ keep the style they came in.
 
 ## The engine
 
-`web/src/deck/deck-engine/` is the deck player from Connected Deck, an MIT project, copied at commit `6e1293f`
+`web/src/deck/deck-engine/` is the deck player from Connected Deck, an MIT project, copied at commit `cbb3f9e5`
 without its tests. The files it imports from outside its folder came with it, to the same relative paths.
 `deck-engine/NOTICE.md` keeps the license and lists what changed here: `CopyLinkButton`'s default link, a
 `useCompactLayout` that asks the player's viewport, a plain-text notes viewer in place of the Markdown one, and

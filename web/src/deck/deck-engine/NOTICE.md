@@ -1,7 +1,9 @@
 # The deck engine
 
-This folder is the deck player from Connected Deck, copied as it was at commit `6e1293f`
-(<https://github.com/johnfrog76/connected-deck>, `src/deck-engine/`), without its tests. Connected Deck is
+This folder is the deck player from Connected Deck, copied as it was at commit `cbb3f9e5`
+(<https://github.com/johnfrog76/connected-deck>, `src/deck-engine/`), without its tests. It was first copied at
+`6e1293f`; at `cbb3f9e5` four files came again: `ComponentFrame.tsx` (its `transparent`, `inverse` and `zoomStep`,
+and its zoom on a phone), `artScale.tsx` (new), `SlideRenderer.tsx` and `../shared/ZoomControl.tsx`. Connected Deck is
 MIT licensed:
 
 ```text
