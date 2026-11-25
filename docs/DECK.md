@@ -101,7 +101,7 @@ keep the style they came in.
 
 `web/src/deck/deck-engine/` is the deck player from Connected Deck, an MIT project, copied at commit `0ac4a128`
 without its tests. The files it imports from outside its folder came with it, to the same relative paths.
-`deck-engine/NOTICE.md` keeps the license and lists what changed here: a
+`deck-engine/NOTICE.md` keeps the license and lists what changed here: `CopyLinkButton`'s default link, a
 `useCompactLayout` that asks the player's viewport, a plain-text notes viewer in place of the Markdown one, and
 two of the deck studio's words in `types.ts`. [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md) records the
 copy.

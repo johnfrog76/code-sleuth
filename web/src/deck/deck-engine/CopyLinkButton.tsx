@@ -113,7 +113,7 @@ interface CopyLinkButtonProps {
  * stage unless `inverse` says otherwise.
  */
 export function CopyLinkButton({
-  url = CONNECTED_DECK_REPO_URL,
+  url = "https://github.com/johnfrog76/code-sleuth",
   corner = "bottom-right",
   title = "Open the repo on GitHub",
   inverse,
