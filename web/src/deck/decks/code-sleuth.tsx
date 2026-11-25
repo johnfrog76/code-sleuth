@@ -715,7 +715,7 @@ function CaseClosedStage() {
           )}
         </Office>
       </Scene>
-      <CopyLinkButton />
+      <CopyLinkButton url="https://github.com/johnfrog76/code-sleuth" />
     </Stage>
   );
 }
