@@ -14,6 +14,7 @@ Each subject lives in one file. Start with the quick start, then go to whichever
 | [ARCHITECTURE.md](ARCHITECTURE.md) | how the parts fit, and the repository's layout |
 | [TESTING.md](TESTING.md) | the suites, the fixtures, and the tests that only run where they can |
 | [DECK.md](DECK.md) | the product deck: where it is made, its home in `web/`, registering it, and its page |
+| [RELEASING.md](RELEASING.md) | how a version is released: the tag, the GitHub Release, and staging it on npm |
 | [KNOWN-GAPS.md](KNOWN-GAPS.md) | what is not built yet, known to read wrong, or not proven |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | the rules a contribution meets |
 

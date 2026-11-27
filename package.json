@@ -3,6 +3,14 @@
   "version": "0.2.0",
   "description": "Point it at a repo, pick a goal, run. A checklist and card-ready issues come back.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnfrog76/code-sleuth.git"
+  },
+  "homepage": "https://johnfrog76.github.io/code-sleuth/",
+  "bugs": {
+    "url": "https://github.com/johnfrog76/code-sleuth/issues"
+  },
   "type": "module",
   "bin": {
     "code-sleuth": "dist/cli/main.js"
