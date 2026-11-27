@@ -39,6 +39,7 @@ says how the parts fit. [AGENTS.md](../AGENTS.md) lists the rules that are easy 
   `package.json`, or has no changelog section; it runs the tests, packs the package, and makes the GitHub Release
   from the pushed tag, with that section as its notes and `code-sleuth-X.Y.Z.tgz` attached. The job that
   publishes holds the one write permission, with no checkout and no install. A tag is never moved or made again.
+  The same tag stages the version on npm; [RELEASING.md](RELEASING.md) has the release from start to end.
 - The project's page is `site/`, plain HTML and CSS. `.github/workflows/pages.yml` publishes it to GitHub Pages
   when a change to it reaches main, with the deck page built from `web/` beside it at `deck/`
   ([DECK.md](DECK.md)). CI installs, type-checks and builds `web/` too. A test holds its sample to a real run, so a change to the checklist's

@@ -1,0 +1,79 @@
+# Publishing to npm: a version tag pushed (v0.3.0) stages that version on npm. Nothing else starts it; the tag
+# is the deliberate act, and it is never moved or made here. The GitHub Release is release.yml's, from the same
+# tag.
+#
+# It uses npm's trusted publishing: no npm token is stored anywhere. The job proves who it is to npm with a
+# short-lived token from GitHub (id-token: write, on this job only), and npm adds provenance on its own, a signed
+# record of the commit and the workflow that built the package. It stages the version and never publishes it
+# straight away: `npm stage publish` puts it in npm's staging area, and it goes live only when the maintainer
+# approves it on npm with two-factor authentication. docs/RELEASING.md has the whole release.
+#
+# It refuses, before anything is staged, a tag that is not vX.Y.Z, a tag whose package.json names another
+# version, a tag that fails the tests, and a package that packs a file package.json's files does not name. Like
+# CI, it runs only in this repository, while it is public. No pull request starts it, so no fork's code ever
+# runs here.
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    name: Test, check the files and stage on npm
+    if: ${{ github.repository == 'johnfrog76/code-sleuth' && !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      # The token npm's trusted publishing exchanges for a short-lived publish credential.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history: test/selfrun.test.ts reads it, and a shallow clone reads not investigated.
+          fetch-depth: 0
+          persist-credentials: false
+      # No npm cache here: this job can publish, so it installs from the lockfile alone.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or later, and `npm stage publish` 11.15.0 or later.
+      - run: npm install --global npm@11.19.1
+
+      # The tag is vX.Y.Z, and package.json names the same version, so a tag never stages a version it does not
+      # say. The same check as release.yml's.
+      - name: The tag names the package's version
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "The tag '$TAG' is not a version: a release tag reads vX.Y.Z." >&2
+            exit 1
+          fi
+          version="${TAG#v}"
+          package="$(node -p 'require("./package.json").version')"
+          if [ "$package" != "$version" ]; then
+            echo "The tag is $TAG, but package.json names $package." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # npm ci installs and builds, through prepare. The tests run on what is tagged, before anything is staged.
+      - run: npm ci
+      - run: npm test
+
+      # Every file npm would pack sits under package.json's files, or is one npm always packs, and every entry
+      # of files packs something. It names any file that does not belong.
+      - run: node scripts/check-pack.mjs
+
+      - run: npm stage publish
